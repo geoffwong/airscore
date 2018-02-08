@@ -539,6 +539,7 @@ sub read_region
 
         %wpt = ();
 
+        $wpt{'rwpPk'} = $ref->{'rwpPk'};
         $wpt{'name'} = $ref->{'rwpName'};
         $wpt{'lat'} = $ref->{'rwpLatDecimal'} * $pi / 180;
         $wpt{'long'} = $ref->{'rwpLongDecimal'} * $pi / 180;
