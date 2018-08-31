@@ -46,6 +46,7 @@ create table tblFormula
     forMinDistance   double default 5,
     forNomDistance   double default 40,
     forNomTime       double default 90,
+    forNomLaunch     double default 0.96,
     forArrival       enum ('none', 'place', 'timed') default 'place',
     forDeparture     enum ('none', 'departure', 'leadout', 'kmbonus') default 'leadout',
     forLinearDist    double default 0.5,
