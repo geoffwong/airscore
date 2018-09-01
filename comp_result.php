@@ -18,12 +18,20 @@ function overall_handicap($comPk, $how, $param, $cls, $link)
     while ($row = mysql_fetch_array($result))
     {
         $tasPk = $row['tasPk'];
-        $score = round($row['tarScore'] - $row['hanHandicap'] * $maxarr[$tasPk]);
+        if ($row['tasTaskType'] == 'free-pin')
+        {
+            $score = round($row['tarScore']);
+            $validity = 1000;
+        }
+        else
+        {
+            $score = round($row['tarScore'] - $row['hanHandicap'] * $maxarr[$tasPk]);
+            $validity = $row['tasQuality'] * 1000;
+        }
         if ($row['tarResultType'] == 'abs' || $row['tarResultType'] == 'dnf')
         {
             $score = 0;
         }
-        $validity = $row['tasQuality'] * 1000;
         $pilPk = $row['pilPk'];
         $tasName = $row['tasName'];
     
@@ -270,10 +278,13 @@ if (array_key_exists('class', $_REQUEST))
     else
     {
         $fdhv = $carr[reqival('class')];
-        $fdhv = "and T.traDHV<=$fdhv ";
         if ($forDiscreteClasses == 1)
         {
             $fdhv = "and T.traDHV=$fdhv ";
+        }
+        else
+        {
+            $fdhv = "and T.traDHV<=$fdhv";
         }
     }
 }

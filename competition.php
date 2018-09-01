@@ -15,7 +15,7 @@ adminbar($comPk);
 $usePk = auth('system');
 $link = db_connect();
 $query = "select comName from tblCompetition where comPk=$comPk";
-$result = mysql_query($query) or die('Task add failed: ' . mysql_error());
+$result = mysql_query($query, $link) or die('Task add failed: ' . mysql_error());
 $comName = mysql_result($result,0);
 
 echo "<p><h2><a href=\"comp_result.php?comPk=$comPk\">Competition - $comName</a></h2></p>";
@@ -44,7 +44,7 @@ if (array_key_exists('add', $_REQUEST))
     }
 
     $query = "select * from tblTask where tasDate='$Date' and comPk=$comPk";
-    $result = mysql_query($query) or die('Task check failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Task check failed: ' . mysql_error());
     if (mysql_num_rows($result) > 0)
     {
         echo "Unable to add task with duplicate date: $Date<br>";
@@ -52,7 +52,7 @@ if (array_key_exists('add', $_REQUEST))
     }
 
     $query = "insert into tblTask (comPk, tasName, tasDate, tasTaskStart, tasFinishTime, tasStartTime, tasStartCloseTime, tasSSInterval, tasTaskType, regPk, tasDeparture, tasArrival) values ($comPk, '$Name', '$Date', '$Date $TaskStart', '$Date $TaskFinish', '$Date $StartOpen', '$Date $StartClose', $Interval, '$TaskType', $regPk, '$depart', '$arrival')";
-    $result = mysql_query($query) or die('Task add failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Task add failed: ' . mysql_error());
 
     // Get the task we just inserted
     $tasPk = mysql_insert_id();
@@ -94,16 +94,16 @@ if (array_key_exists('delete', $_REQUEST))
     if ($id > 0)
     {
         $query = "delete from tblTask where tasPk=$id";
-        $result = mysql_query($query) or die('Task delete failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Task delete failed: ' . mysql_error());
     
         $query = "delete from tblComTaskTrack where tasPk=$id";
-        $result = mysql_query($query) or die('Task CTT delete failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Task CTT delete failed: ' . mysql_error());
     
         $query = "delete from tblTaskWaypoint where tasPk=$id";
-        $result = mysql_query($query) or die('Task TW delete failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Task TW delete failed: ' . mysql_error());
     
         $query = "delete from tblTaskResult where tasPk=$id";
-        $result = mysql_query($query) or die('Task TR delete failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Task TR delete failed: ' . mysql_error());
 
         echo "Task Removed\n";
     }
@@ -139,7 +139,7 @@ if (array_key_exists('update', $_REQUEST))
 
     # FIX: re-optimise tracks if change from Free to OLC and vice versa
 
-    $result = mysql_query($query) or die('Competition update failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Competition update failed: ' . mysql_error());
 }
 
 // Add/update the formula
@@ -153,6 +153,7 @@ if (array_key_exists('upformula', $_REQUEST))
     $regarr['forMinDistance'] = reqfval('mindist');
     $regarr['forNomTime'] = reqfval('nomtime');
     $regarr['forNomGoal'] = reqfval('nomgoal');
+    $regarr['forNomLaunch'] = reqfval('nomlaunch');
     $regarr['forGoalSSPenalty'] = reqfval('sspenalty');
     $regarr['forLinearDist'] = reqfval('lineardist');
     $regarr['forDiffDist'] = reqfval('diffdist');
@@ -184,7 +185,7 @@ if (array_key_exists('updateadmin', $_REQUEST))
     if ($adminPk > 0)
     {
         $query = "insert into tblCompAuth (usePk,comPk,useLevel) values ($adminPk,$comPk,'admin')";
-        $result = mysql_query($query) or die('Administrator addition failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Administrator addition failed: ' . mysql_error());
     }
 }
 
@@ -282,6 +283,7 @@ if (in_array($ctype, $has_formula))
         $weightarrival = $row['forWeightArrival'];
         $weightspeed = $row['forWeightSpeed'];
         $glidebonus = $row['forStoppedGlideBonus'];
+        $nomlaunch = $row['forNomLaunch'];
         $arrival = $row['forArrival'];
     }
     echo "<hr><h3>RACE Formula</h3>";
@@ -290,7 +292,7 @@ if (in_array($ctype, $has_formula))
         array(
           array('Formula:', fselect('formula', $class, array('gap', 'ozgap', 'pwc', 'sahpa', 'nzl', 'ggap', 'nogap', 'jtgap', 'rtgap', 'tmgap' )), 'Year:', fin('version', $version, 4)),
           array('Nom Dist (km):', fin('nomdist',$nomdist,4), 'Min Dist (km):', fin('mindist', $mindist, 4), 'Distance Measure:', fselect('distmeasure', $distmeasure, array('average', 'median'))),
-          array('Nom Time (min):', fin('nomtime', $nomtime, 4), 'Goal/SS Penalty (0-1):', fin('sspenalty', $sspenalty, 4), 'Nom Goal (%):', fin('nomgoal',$nomgoal,4)),
+          array('Nom Time (min):', fin('nomtime', $nomtime, 4), 'Goal/SS Penalty (0-1):', fin('sspenalty', $sspenalty, 4), 'Nom Goal (%):', fin('nomgoal',$nomgoal,4), 'Nom Launch (0-1):', fin('nomlaunch', $nomlaunch, 4)),
           array('Linear Dist (0-1):', fin('lineardist', $lineardist, 4),'Diff Dist (km):', fin('diffdist', $diffdist, 4), 'Diff Ramp:', fselect('difframp', $difframp, array('fixed', 'flexible')), 'Diff Calc:', fselect('diffcalc', $diffcalc, array('all', 'lo'))),
           array('Speed weighting:', fin('weightspeed', $weightspeed, 4), 'Start weighting:', fin('weightstart', $weightstart, 4), 'Arrival weighting:', fin('weightarrival', $weightarrival, 4), 'Method:', fselect('arrivalmethod', $arrival, [ 'place', 'timed' ])),
           array('Stopped Glide Bonus:', fin('glidebonus', $glidebonus, 4))

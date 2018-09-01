@@ -483,6 +483,7 @@ sub read_formula
         $formula{'nomgoal'} = $ref->{'forNomGoal'};
         $formula{'mindist'} = $ref->{'forMinDistance'} * 1000;
         $formula{'nomdist'} = $ref->{'forNomDistance'} * 1000;
+        $formula{'nomlaunch'} = $ref->{'forNomLaunch'} * 1000;
         $formula{'nomtime'} = $ref->{'forNomTime'} * 60;
         $formula{'lineardist'} = $ref->{'forLinearDist'};
         $formula{'difframp'} = $ref->{'forDiffRamp'};
