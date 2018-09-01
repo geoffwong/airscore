@@ -3,6 +3,9 @@
  * backwards compatibility old php functions - from info@itxplain.nl
  */
 
+if (!function_exists("mysql_connect"))
+{
+
 function mysql_connect($server, $username, $password, $new_link = false, $client_flags = null) 
 {
     $key = $server.$username.$password;
@@ -92,10 +95,14 @@ function mysql_fetch_array($result)
     return $row;
 }
 
-function mysql_result($result, $row, $col) 
+function mysql_result($result, $rown, $col) 
 {
     $row = $result->fetch_array();
-    return $row[$row][$col];
+    if (sizeof($row[$rown]) == 1 && $col == 0)
+    {
+        return $row[$rown];
+    }
+    return $row[$rown][$col];
 }
 
 function mysql_num_rows($result) 
@@ -103,14 +110,19 @@ function mysql_num_rows($result)
 	return $result->num_rows;
 }
 
+function mysql_close($con=null) 
+{
+	return null;
+}
+
+}
+
+if (!function_exists("split"))
+{
 function split($pattern, $string, $limit=-1) 
 {
 	return preg_split('/'.$pattern.'/', $string, $limit);
 }
-
-function mysql_close($con=null) 
-{
-	return null;
 }
 
 ?>

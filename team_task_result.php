@@ -4,10 +4,10 @@ require 'hc.php';
 require 'format.php';
 
 
-function  handicap_result($tasPk)
+function  handicap_result($tasPk, $link)
 {
     $query = "select max(TR.tarScore) as maxScore from tblTaskResult TR where TR.tasPk=$tasPk";
-    $result = mysql_query($query) or die('Team handicap query failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Team handicap query failed: ' . mysql_error());
     $maxscore = 1000;
     $row = mysql_fetch_array($result);
     if ($row)
@@ -16,7 +16,7 @@ function  handicap_result($tasPk)
     }
 
     $query = "select TM.teaPk,TM.teaName,P.pilLastName,P.pilFirstName,P.pilPk,TR.tarScore-H.hanHandicap*$maxscore as handiscore from tblTaskResult TR, tblTask TK, tblTrack K, tblPilot P, tblTeam TM, tblTeamPilot TP, tblHandicap H, tblCompetition C where TP.teaPk=TM.teaPk and P.pilPk=TP.pilPk and H.comPk=C.comPk and C.comPk=TK.comPk and K.traPk=TR.traPk and K.pilPk=P.pilPk and H.pilPk=P.pilPk and TK.tasPk=$tasPk and TR.tasPk=TK.tasPk and TM.comPk=C.comPk order by TM.teaPk";
-    $result = mysql_query($query) or die('Team handicap query failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Team handicap query failed: ' . mysql_error());
     $row = mysql_fetch_array($result);
     $htable = [];
     $hres = [];
@@ -79,10 +79,10 @@ function  handicap_result($tasPk)
     echo ftable($htable, "border=\"5\" cellpadding=\"3\" alternate-colours=\"yes\" align=\"center\"", array('class="l"', 'class="d"'), '');
 }
 
-function aggregate_result($tasPk,$teamsize)
+function aggregate_result($tasPk,$teamsize, $link)
 {
     $query = "select TM.teaPk,TM.teaName,P.pilLastName,P.pilFirstName,P.pilPk,TR.tarScore*TP.tepModifier as tepscore from tblTaskResult TR, tblTask TK, tblTrack K, tblPilot P, tblTeam TM, tblTeamPilot TP, tblCompetition C where TP.teaPk=TM.teaPk and P.pilPk=TP.pilPk and C.comPk=TK.comPk and K.traPk=TR.traPk and K.pilPk=P.pilPk and TK.tasPk=$tasPk and TR.tasPk=TK.tasPk and TM.comPk=C.comPk order by TM.teaPk,TR.tarScore*TP.tepModifier desc";
-    $result = mysql_query($query) or die('Team aggregate query failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Team aggregate query failed: ' . mysql_error());
     $row = mysql_fetch_array($result);
     $htable = [];
     $hres = [];
@@ -149,7 +149,7 @@ function aggregate_result($tasPk,$teamsize)
     echo ftable($htable, "border=\"5\" cellpadding=\"3\" alternate-colours=\"yes\" align=\"center\"", array('class="l"', 'class="d"'), '');
 }
 
-$comPk = intval($_REQUEST['comPk']);
+$comPk = reqival('comPk');
 
 $usePk = check_auth('system');
 $link = db_connect();
@@ -175,7 +175,7 @@ if (array_key_exists('tarup', $_REQUEST))
     }
 
     $query = "update tblTeamResult set tarDistance=$flown, tarPenalty=$penalty, tarResultType='$resulttype' where tarPk=$tarPk";
-    $result = mysql_query($query) or die('Team Result update failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Team Result update failed: ' . mysql_error());
     # recompute every time?
     $out = '';
     $retv = 0;
@@ -186,7 +186,7 @@ if (array_key_exists('addflight', $_REQUEST))
 {
     $fai = addslashes($_REQUEST['fai']);
     $query = "select pilPk from tblPilot where pilHGFA='$fai'";
-    $result = mysql_query($query) or die('Query pilot failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Query pilot failed: ' . mysql_error());
 
     if (mysql_num_rows($result) > 0)
     {
@@ -203,20 +203,20 @@ if (array_key_exists('addflight', $_REQUEST))
         }
 
         $query = "select tasDate from tblTask where tasPk=$tasPk";
-        $result = mysql_query($query) or die('Task date failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Task date failed: ' . mysql_error());
         $tasDate=mysql_result($result,0);
 
         $query = "insert into tblTrack (pilPk,traGlider,traDHV,traDate,traLength) values ($pilPk,'$glider','$dhv','$tasDate',$flown)";
-        $result = mysql_query($query) or die('Track Insert result failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Track Insert result failed: ' . mysql_error());
 
         $maxPk = mysql_insert_id();
 
         #$query = "select max(traPk) from tblTrack";
-        #$result = mysql_query($query) or die('Max track failed: ' . mysql_error());
+        #$result = mysql_query($query, $link) or die('Max track failed: ' . mysql_error());
         #$maxPk=mysql_result($result,0);
 
         $query = "insert into tblTaskResult (tasPk,traPk,tarDistance,tarPenalty,tarResultType) values ($tasPk,$maxPk,$flown,$penalty,'$resulttype')";
-        $result = mysql_query($query) or die('Insert result failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Insert result failed: ' . mysql_error());
 
         $out = '';
         $retv = 0;
@@ -229,7 +229,7 @@ if (array_key_exists('addflight', $_REQUEST))
 }
 
 $query = "select C.*, T.* from tblCompetition C, tblTask T where T.tasPk=$tasPk and T.comPk=C.comPk";
-$result = mysql_query($query) or die('Task select failed: ' . mysql_error());
+$result = mysql_query($query, $link) or die('Task select failed: ' . mysql_error());
 $row = mysql_fetch_array($result);
 if ($row)
 {
@@ -272,11 +272,11 @@ echo "<br>";
 
 if ($comTeamScoring == "handicap")
 {
-    return handicap_result($tasPk);
+    return handicap_result($tasPk, $link);
 }
 else if ($comTeamScoring == "aggregate")
 {
-    return aggregate_result($tasPk,$comTeamSize);
+    return aggregate_result($tasPk,$comTeamSize, $link);
 }
 
 

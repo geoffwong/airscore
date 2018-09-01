@@ -113,7 +113,7 @@ sub task_totals
 
     if ($task->{'sstopped'} > 0)
     {
-        print "F: glidebonus=$glidebonus\n";
+        # print "F: glidebonus=$glidebonus\n";
         $glidebonus = $formula->{'glidebonus'};
         $landed = 0 + $ref->{'Landed'};
     }
@@ -210,7 +210,7 @@ sub task_totals
     {
         $median = $ref->{'median'};
     }
-    print "Median=$median\n";
+    #print "Median=$median\n";
 
     
     # Find the distance spread
@@ -288,7 +288,7 @@ sub day_quality
         return ($distance,$time,$launch);
     }
 
-    $x = $taskt->{'launched'}/$taskt->{'pilots'};
+    $x = $taskt->{'launched'}/($taskt->{'pilots'}*$formula->{'nomlaunch'});
     $launch  = 0.028*$x + 2.917*$x*$x - 1.944*$x*$x*$x;
     if ($launch > 1) 
     {
@@ -556,7 +556,7 @@ sub pilot_departure_leadout
         my $kmarr = $taskt->{'kmmarker'};
         my @tmarker = @$kmarr;
 
-        #print "TMARKER=", Dumper(\@tmarker);
+        print "TMARKER=", Dumper(\@tmarker);
         # KmBonus award points
         if (scalar(@tmarker) > 0)
         {

@@ -1,9 +1,9 @@
 <?php
 
-function overall_handicap($comPk, $how, $param, $cls)
+function overall_handicap($comPk, $how, $param, $cls, $link)
 {
     $sql = "select T.tasPk, max(TR.tarScore) as maxScore from tblTask T, tblTaskResult TR where T.tasPk=TR.tasPk and T.comPk=$comPk group by T.tasPk";
-    $result = mysql_query($sql) or die('Handicap maxscore failed: ' . mysql_error());
+    $result = mysql_query($sql, $link) or die('Handicap maxscore failed: ' . mysql_error());
     $maxarr = [];
     while ($row = mysql_fetch_array($result))
     {
@@ -13,7 +13,7 @@ function overall_handicap($comPk, $how, $param, $cls)
     $sql = "select P.*,TK.*, TR.*, H.* from tblTaskResult TR, tblTask TK, tblTrack K, tblPilot P, tblHandicap H, tblCompetition C where H.comPk=C.comPk and C.comPk=TK.comPk and K.traPk=TR.traPk and K.pilPk=P.pilPk and H.pilPk=P.pilPk and H.comPk=TK.comPk and TK.comPk=$comPk and TR.tasPk=TK.tasPk order by P.pilPk, TK.tasPk";
     #$sql = "select TK.*,TR.*,P.* from tblTaskResult TR, tblTask TK, tblTrack T, tblPilot P, tblCompetition C where C.comPk=$comPk and TK.comPk=C.comPk and TK.tasPk=TR.tasPk and TR.traPk=T.traPk and T.traPk=TR.traPk and P.pilPk=T.pilPk $cls order by P.pilPk, TK.tasPk";
 
-    $result = mysql_query($sql) or die('Task result query failed: ' . mysql_error());
+    $result = mysql_query($sql, $link) or die('Task result query failed: ' . mysql_error());
     $results = [];
     while ($row = mysql_fetch_array($result))
     {
@@ -52,10 +52,10 @@ function overall_handicap($comPk, $how, $param, $cls)
     return filter_results($comPk, $how, $param, $results);
 }
 
-function comp_result($comPk, $how, $param, $cls, $tasktot)
+function comp_result($comPk, $how, $param, $cls, $tasktot, $link)
 {
     $sql = "select TK.*,TR.*,P.*,T.traGlider from tblTaskResult TR, tblTask TK, tblTrack T, tblPilot P, tblCompetition C where C.comPk=$comPk and TK.comPk=C.comPk and TK.tasPk=TR.tasPk and TR.traPk=T.traPk and T.traPk=TR.traPk and P.pilPk=T.pilPk $cls order by P.pilPk, TK.tasPk";
-    $result = mysql_query($sql) or die('Task result query failed: ' . mysql_error());
+    $result = mysql_query($sql, $link) or die('Task result query failed: ' . mysql_error());
     $results = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
@@ -206,7 +206,7 @@ $link = db_connect();
 $title = 'highcloud.net';
 
 $query = "SELECT T.*,F.* FROM tblCompetition T left outer join tblFormula F on F.comPk=T.comPk where T.comPk=$comPk";
-$result = mysql_query($query) or die('Comp query failed: ' . mysql_error());
+$result = mysql_query($query, $link) or die('Comp query failed: ' . mysql_error());
 $row = mysql_fetch_array($result, MYSQL_ASSOC);
 if ($row)
 {
@@ -298,7 +298,7 @@ else
 
 $tasTotal = 0;
 $query = "select count(*) from tblTask where comPk=$comPk";
-$result = mysql_query($query); // or die('Task total failed: ' . mysql_error());
+$result = mysql_query($query, $link); // or die('Task total failed: ' . mysql_error());
 if ($result)
 {
     $tasTotal = mysql_result($result, 0, 0);
@@ -321,7 +321,7 @@ else if ($comOverall == 'round-perc')
 else if ($comOverall == 'ftv')
 {
     $sql = "select sum(tasQuality) as totValidity from tblTask where comPk=$comPk";
-    $result = mysql_query($sql) or die('Task validity query failed: ' . mysql_error());
+    $result = mysql_query($sql, $link) or die('Task validity query failed: ' . mysql_error());
     $totalvalidity = round(mysql_result($result, 0, 0) * $comOverallParam * 10,0);
     $overstr = "FTV $comOverallParam% ($totalvalidity pts)";
     $comOverallParam = $totalvalidity;
@@ -413,7 +413,7 @@ if ($class == "8")
 else if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $comType == 'RACE-handicap')
 {
     $query = "select T.* from tblTask T where T.comPk=$comPk order by T.tasDate";
-    $result = mysql_query($query) or die('Task query failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Task query failed: ' . mysql_error());
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $alltasks[] = $row['tasName'];
@@ -427,12 +427,12 @@ else if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' ||
     }
     else if ($class == "9")
     {
-        $sorted = overall_handicap($comPk, $comOverall, $comOverallParam, $fdhv);
+        $sorted = overall_handicap($comPk, $comOverall, $comOverallParam, $fdhv, $link);
         $subtask = '';
     }
     else
     {
-        $sorted = comp_result($comPk, $comOverall, $comOverallParam, $fdhv, $tasTotal);
+        $sorted = comp_result($comPk, $comOverall, $comOverallParam, $fdhv, $tasTotal, $link);
         $subtask = '';
     }
 

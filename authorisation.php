@@ -1,4 +1,5 @@
 <?php
+require_once('oldmysql.php');
 require_once('defines.php');
 function redirect($loc)
 {

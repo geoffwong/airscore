@@ -36,7 +36,7 @@ if (reqexists('add'))
     {
         $query = "insert into tblCompetition (comName, comLocation, comDateFrom, comDateTo, comMeetDirName, forPk, comType, comCode, comTimeOffset) values ('$comname','$location', '$datefrom', '$dateto', '$director', 0, '$comptype', '$comcode', $timeoffset)";
     
-        $result = mysql_query($query) or die('Competition addition failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Competition addition failed: ' . mysql_error());
         $comPk = mysql_insert_id();
 
         $regarr = [];
@@ -63,10 +63,10 @@ if (reqexists('add'))
         $forPk = insertup($link, 'tblFormula', 'forPk', $clause,  $regarr);
 
         $query = "update tblCompetition set forPk=$forPk where $clause";
-        $result = mysql_query($query) or die('Competition formula update failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Competition formula update failed: ' . mysql_error());
     
         $query = "insert into tblCompAuth values ($usePk, $comPk, 'admin')";
-        $result = mysql_query($query) or die('CompAuth addition failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('CompAuth addition failed: ' . mysql_error());
     }
 }
 
@@ -87,7 +87,7 @@ if (reqexists('update'))
     check_admin('admin',$usePk,$comPk);
 
     $query = "update tblCompetition set comName='$comname', comLocation='$comLocation', comDateFrom='$datefrom', comDateTo='$dateto', comDirector='$director', forPk='$formula', comSanction='$sanction', comType='$comptype', comCode='$comcode',  comTimeOffset=$timeoffset where comPk=$comPk";
-    $result = mysql_query($query) or die('Competition update failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Competition update failed: ' . mysql_error());
 }
 
 $comparr = [];

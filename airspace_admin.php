@@ -224,12 +224,12 @@ if (reqexists('delete'))
     // implement a nice 'confirm'
     $delPk = reqival('delete');
     $query = "select * from tblAirspace where airPk=$delPk";
-    $result = mysql_query($query) or die('Airspace check failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Airspace check failed: ' . mysql_error());
     $row = mysql_fetch_array($result);
     $subregion = $row['airName'];
 
     #$query = "select * from tblTaskWaypoint T, tblRegionWaypoint W, tblRegion R where R.regPk=W.regPk and R.regPk=$delPk limit 1";
-    #$result = mysql_query($query) or die('Delete check failed: ' . mysql_error());
+    #$result = mysql_query($query, $link) or die('Delete check failed: ' . mysql_error());
     #if (mysql_num_rows($result) > 0)
     #{
     #    echo "Unable to delete $region ($delPk) as it is in use.\n";
@@ -237,9 +237,9 @@ if (reqexists('delete'))
     #}
 
     $query = "delete from tblAirspaceWaypoint where airPk=$delPk";
-    $result = mysql_query($query) or die('AirspaceWaypoint delete failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('AirspaceWaypoint delete failed: ' . mysql_error());
     $query = "delete from tblAirspace where airPk=$delPk";
-    $result = mysql_query($query) or die('Airspace delete failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Airspace delete failed: ' . mysql_error());
 
     echo "Airspace $subregion deleted<br>";
 }
@@ -252,7 +252,7 @@ if (reqexists('create'))
     $rsize = reqfval('regsize');
 
     $sql = "insert into tblAirspaceRegion (argRegion, argLatDecimal, argLongDecimal, argSize ) values ('$region', $rlat, $rlon, $rsize)";
-    $result = mysql_query($sql) or die('AirspaceRegion creation failed: ' . mysql_error());
+    $result = mysql_query($sql, $link) or die('AirspaceRegion creation failed: ' . mysql_error());
 
     echo "Region $region added<br>";
 }

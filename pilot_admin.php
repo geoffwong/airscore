@@ -144,7 +144,7 @@ if (reqexists('addpilot'))
     $sex = reqsval('sex');
 
     $query = "select * from tblPilot where pilHGFA=$fai";
-    $result = mysql_query($query) or die('Pilot select failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Pilot select failed: ' . mysql_error());
     if ($fai < 1000 or mysql_num_rows($result) > 0)
     {
         echo "Pilot insert failed, HGFA/FAI number ($fai) already exists or is too low (<1000) <br>";
@@ -152,7 +152,7 @@ if (reqexists('addpilot'))
     else
     {
         $query = "insert into tblPilot (pilHGFA, pilCIVL, pilLastName, pilFirstName, pilSex, pilNationCode) value ($fai, $civl,'$lname','$fname','$sex','AUS')";
-        $result = mysql_query($query) or die('Pilot insert failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Pilot insert failed: ' . mysql_error());
     }
 }
 
@@ -181,7 +181,7 @@ if (reqexists('update'))
     $sex = reqsval("sex$id");
     $nat = reqsval("nation$id");
     $query = "select * from tblPilot where pilHGFA=$fai and pilPk<>$id";
-    $result = mysql_query($query) or die('Pilot update select failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Pilot update select failed: ' . mysql_error());
     if ($fai < 1000 or mysql_num_rows($result) > 0)
     {
         echo "Pilot update failed, HGFA/FAI number ($fai) already exists or is too low (<1000) <br>";
@@ -189,7 +189,7 @@ if (reqexists('update'))
     else
     {
         $query = "update tblPilot set pilHGFA=$fai, pilLastName='$lname', pilFirstName='$fname', pilSex='$sex', pilNationCode='$nat' where pilPk=$id";
-        $result = mysql_query($query) or die('Pilot update failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Pilot update failed: ' . mysql_error());
     }
 }
 
@@ -198,7 +198,7 @@ if (reqexists('delete'))
     check_admin('admin',$usePk,-1);
     $id = reqival('delete');
     $query = "select count(*) as numtracks from tblTrack where pilPk=$id";
-    $result = mysql_query($query) or die('Pilot delete check failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or die('Pilot delete check failed: ' . mysql_error());
     $row = mysql_fetch_array($result, MYSQL_ASSOC);
     if ((0+$row['numtracks']) > 0)
     {
@@ -207,7 +207,7 @@ if (reqexists('delete'))
     else
     {
         $query = "delete from tblPilot where pilPk=$id";
-        $result = mysql_query($query) or die('Pilot delete failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or die('Pilot delete failed: ' . mysql_error());
     }
 }
 
