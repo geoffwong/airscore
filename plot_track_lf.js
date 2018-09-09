@@ -3,6 +3,7 @@ var current = -1;
 var pause = 1;
 var timer;
 var trackid;
+var tasPk;
 var interval = 5;
 
 String.prototype.format = function()
@@ -11,49 +12,11 @@ String.prototype.format = function()
     var args = arguments;
     return this.replace(pattern, function(capture){ return args[capture.match(/\d+/)]; });
 }
-function do_add_track(x) 
-{
-    if (!x || x == 0)
-    {
-        trackid = document.getElementById("trackid").value;
-    }
-    else
-    {
-        trackid = x;
-    }
-    x_get_track(trackid, interval, plot_track);
-}
-function do_track_speed(x,intv) 
-{
-    trackid = x;
-    x_get_track_speed(trackid, intv, plot_track);
-}
-function do_add_track_bounds(trackid) 
-{
-    x_get_track(trackid, interval, plot_track_bounds);
-}
-function do_add_track_wp(trackid) 
-{
-    x_get_track_wp(trackid, plot_track_wp);
-}
-function do_add_region(regPk,trackid) 
-{
-    x_get_region(regPk, trackid, plot_region);
-}
-function do_award_task(tasPk, x) 
-{
-    trackid = x;
-    x_get_task(tasPk, x, plot_award_task);
-}
-function done(x)
-{
-    // do nothing
-}
 function merge_tracks(tasPk, traPk, incPk)
 {
     microAjax("merge_track.php?tasPk="+tasPk+"&traPk="+traPk+"&incPk="+incPk, function(data) 
         { 
-            window.location.href="tracklog_map.php?trackid="+traPk;
+            window.location.href="tracklog_map.html?trackid="+traPk;
         } );
 }
 function plot_track(jstr)
@@ -106,7 +69,7 @@ function plot_track(jstr)
         //    map.setZoom(13); 
         //}
     
-        gll = new google.maps.LatLng(lasLat, lasLon);
+        gll = new L.LatLng(lasLat, lasLon);
         line.push(gll);
         trklog.push(track[row]);
     
@@ -114,13 +77,12 @@ function plot_track(jstr)
         {
             // color & 0x100 >> 2, color &0x010 >> 1, color &0x001
             //polyline = new google.maps.Polyline(line, sprintf("#%02x%02x%02x",lasAlt,color*32%256,color*128%256), 3, 1);
-            polyline = new google.maps.Polyline({   
-                    path: line, 
-                    strokeColor: sprintf("#%02x%02x%02x",lasAlt*((color&0x4)>>2) ,lasAlt*((color&0x2)>>1),lasAlt*(color&0x1)), 
-                    strokeWeight: 3, 
-                    strokeOpacity: 1
+            polyline = new L.Polyline(line, {   
+                    color: sprintf("#%02x%02x%02x",lasAlt*((color&0x4)>>2) ,lasAlt*((color&0x2)>>1),lasAlt*(color&0x1)), 
+                    weight: 3, 
+                    opacity: 1
                 });
-            polyline.setMap(map);
+            polyline.addTo(map);
             segments.push(polyline);
             line = Array();
             line.push(gll);
@@ -128,13 +90,12 @@ function plot_track(jstr)
         count = count + 1;    
     }
 
-    polyline = new google.maps.Polyline({   
-        path: line, 
-        strokeColor: sprintf("#%02x%02x%02x",lasAlt*((color&0x4)>>2) ,lasAlt*((color&0x2)>>1),lasAlt*(color&0x1)), 
-        strokeWeight: 3, 
-        strokeOpacity: 1
+    polyline = new L.Polyline(line, {   
+        color: sprintf("#%02x%02x%02x",lasAlt*((color&0x4)>>2) ,lasAlt*((color&0x2)>>1),lasAlt*(color&0x1)), 
+        weight: 3, 
+        opacity: 1
     });
-    polyline.setMap(map);
+    polyline.addTo(map);
     //polyline = new google.maps.Polyline(line, sprintf("#%02x%02x%02x",lasAlt*(color&0x100>>2) ,lasAlt*(color&0x010>>1),lasAlt*(color&0x1)), 3, 1);
     //map.addOverlay(polyline);
     //segments.push(polyline);
@@ -145,24 +106,26 @@ function plot_track(jstr)
     onscreen[trackid]["initials"] = initials;
     onscreen[trackid]["class"] = pngclass;
 }
+function add_track(comPk, traPk, interval)
+{
+    new microAjax("get_track.php?comPk="+comPk+"&trackid="+traPk+"&int="+interval, plot_track);
+}
 function plot_track_bounds(jstr)
 {
     var trk;
 
     plot_track(jstr);
-    bounds = new google.maps.LatLngBounds();
+    bounds = new L.LatLngBounds();
     trk = onscreen[trackid]["track"];
     for (row in trk)
     {
         lasLat = trk[row][1];
         lasLon = trk[row][2];
-        gll = new google.maps.LatLng(lasLat, lasLon);
+        gll = new L.LatLng(lasLat, lasLon);
         bounds.extend(gll);
     }
     map.fitBounds(bounds);
 }
-//    microAjax("get_region.php?regPk="+regPk,
-//          function(data) { }
 function plot_region(jstr)
 {
     var task;
@@ -185,13 +148,14 @@ function plot_region(jstr)
 
         if (count == 1)
         {
-            map.setCenter(new google.maps.LatLng(lasLat, lasLon), 13);
+            map.setCenter(new L.LatLng(lasLat, lasLon), 13);
         }
     
         count = count + 1;    
 
-        pos = new google.maps.LatLng(lasLat,lasLon);
-        overlay = new ELabel(map, pos, cname, "waypoint", new google.maps.Size(0,0), 60);
+        pos = new L.LatLng(lasLat,lasLon);
+        //overlay = new ELabel(map, pos, cname, "waypoint", new google.maps.Size(0,0), 60);
+        add_label(map, pos, cname, "waypoint");
 
         if (crad > 0)
         {
@@ -255,12 +219,11 @@ function plot_award_task(tasPk, trackid)
         ovhtml = ovhtml + "<br><center><input type=\"button\" name=\"domerge\" value=\"Merge "+incpk+"\" onclick=\"merge_tracks("+tasPk+","+trackid+","+incpk+");\"></center>";
     }
     ovhtml = ovhtml + "</form></div>";
-    ovlay = document.createElement('DIV');
-    ovlay.innerHTML = ovhtml;
+    add_panel(map, "bottomright", ovhtml, 'map_control');
     //ovlay = new HtmlControl(ovhtml, { visible:false, selectable:true, printable:true } );
     //ovlay = new HtmlControl('Hello World!', { visible:false, selectable:true, printable:true } );
     //map.addControl(ovlay, new google.maps.ControlPosition(G_ANCHOR_BOTTOM_RIGHT, new GSize(128, 256)));
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(ovlay);
+    //map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(ovlay);
     //map.addControl(ovlay, new google.maps.ControlPosition(G_ANCHOR_BOTTOM_RIGHT, new google.maps.Size(10, 10)));
     //ovlay.setVisible(true);
     });
@@ -286,10 +249,7 @@ function plot_track_header(body)
         ihtml = ihtml + body["comment"] + "<br>\n";
     }
     ihtml = ihtml + "</div>";
-    ovlay = document.createElement('DIV');
-    ovlay.style.padding = "5px";
-    ovlay.innerHTML = ihtml;
-    map.controls[google.maps.ControlPosition.RIGHT_TOP].push(ovlay);
+    add_panel(map, "topright", ihtml, 'map_panel');
 }
 function plot_track_wp(jstr)
 {
@@ -308,7 +268,7 @@ function plot_track_wp(jstr)
     line = Array();
     segments = Array();
     trklog = Array();
-    bounds = new google.maps.LatLngBounds();
+    bounds = new L.LatLngBounds();
     for (row in track)
     {
         lasLat = track[row][0];
@@ -320,15 +280,15 @@ function plot_track_wp(jstr)
         //    map.setCenter(new google.maps.LatLng(lasLat, lasLon), 13);
         //}
     
-        gll = new google.maps.LatLng(lasLat, lasLon);
+        gll = new L.LatLng(lasLat, lasLon);
         line.push(gll);
         bounds.extend(gll);
         trklog.push(track[row]);
     
         if (count % 10 == 0)
         {
-            polyline = new google.maps.Polyline({
-                path: line, strokeColor:"#ff0000", strokeWeight:2, strokeOpacity:1 });
+            polyline = new L.Polyline(line, {
+                color:"#ff0000", weight:2, opacity:1 });
             polyline.setMap(map);
             segments.push(polyline);
             line = Array();
@@ -336,13 +296,14 @@ function plot_track_wp(jstr)
         }
         count = count + 1;    
 
-        pos = new google.maps.LatLng(lasLat,lasLon);
-        wpt = new ELabel(map, pos, cname, "waypoint", new google.maps.Size(0,0), 60);
+        pos = new L.LatLng(lasLat,lasLon);
+        //wpt = new ELabel(map, pos, cname, "waypoint", new google.maps.Size(0,0), 60);
+        wpt = add_label(map, pos, cname, "waypoint");
     }
 
     polyline = new google.maps.Polyline({
-                path: line, strokeColor:"#ff0000", strokeWeight:2, strokeOpacity:1 });
-    polyline.setMap(map);
+                path: line, color:"#ff0000", weight:2, opacity:1 });
+    polyline.addTop(map);
     segments.push(polyline);
     map.fitBounds(bounds);
     //document.getElementById("foo").value = trackid;
