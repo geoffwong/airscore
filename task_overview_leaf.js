@@ -327,20 +327,18 @@ function add_map_row(comPk,task, count)
     var canvas = 'map_canvas' + count;
     var canvasdiv = document.createElement("div");
     canvasdiv.setAttribute('id', canvas);
-    canvasdiv.setAttribute('style', 'top: 10px; left: 25px; width:100%; height:300px; float: left');
+    canvasdiv.setAttribute('style', 'top: 10px; left: 10; width:100%; height:300px; float: left');
 
     //var createA = document.createElement('a');
     //createA.setAttribute('href', '#');
     //createA.appendChild(canvasdiv);
     colmd7.appendChild(canvasdiv);
 
-    var createh3 = document.createElement('h3');
-    createh3.setAttribute('id', 'task_header');
-    createh3.appendChild(document.createTextNode('Task '+task.tasName+' - '+task.tasDate));
     var body = document.createElement('div');
-    body.innerHTML = task.tasComment + 
+    body.innerHTML = '<br><h3 id=\"task_hd\">Task '+task.tasName+'</h3><h4>'+task.tasDate+'</h4>' +
+                    task.tasComment + 
                     '<br><table class="taskinfo">' +
-                    '<tr><td>Task Type:</td><td>' + task.tasTaskType + '</td></tr>' + 
+                    '<tr><td>Task Type:</td><td>' + task.tasTaskType.toUpperCase() + '</td></tr>' + 
                     '<tr><td>Task Distance:</td><td>' + task.tasShortest + ' km</td></tr>' + 
                     '<tr><td>Day Quality:</td><td>' + task.tasQuality + '</td></tr></table><br>';
 
@@ -349,9 +347,8 @@ function add_map_row(comPk,task, count)
     createB.className="btn btn-primary";
     createB.appendChild(document.createTextNode('Task Scores'));
 
-    colmd5.appendChild(createh3);
+    body.appendChild(createB);
     colmd5.appendChild(body);
-    colmd5.appendChild(createB);
 
     var ele = document.getElementById('row'+count);
     ele.appendChild(colmd7);

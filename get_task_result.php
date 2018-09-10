@@ -20,7 +20,7 @@ if (reqexists('rnd'))
 }
 
 $fdhv= '';
-$classstr = '';
+$classfilter = '';
 
 $depcol = 'Dpt';
 $row = get_comtask($link,$tasPk);
@@ -83,6 +83,8 @@ $tsinfo["dist_quality"] = number_format($tasDistQuality,3);
 $tsinfo["time_quality"] = number_format($tasTimeQuality,3);
 $tsinfo["launch_quality"] = number_format($tasLaunchQuality,3);
 $tsinfo["comment"] = $tasComment;
+$tsinfo["offset"] = $comTOffset;
+$tsinfo["hbess"] = $tasHeightBonus;
 $tsinfo["waypoints"] = $waypoints;
 
 # Pilot Info
@@ -97,7 +99,7 @@ $finfo = [];
 // add in country from tblCompPilot if we have entries ...
 
 
-function task_result($link, $comPk, $offset, $tasPk, $fdhv)
+function task_result($link, $comPk, $tsinfo, $tasPk, $fdhv)
 {
     $count = 1;
     $sql = "select TR.*, T.*, P.* from tblTaskResult TR, tblTrack T, tblPilot P where TR.tasPk=$tasPk $fdhv and T.traPk=TR.traPk and P.pilPk=T.pilPk order by TR.tarScore desc, P.pilFirstName";
@@ -106,6 +108,8 @@ function task_result($link, $comPk, $offset, $tasPk, $fdhv)
     $hh = 0;
     $mm = 0;
     $ss = 0;
+    $rnd = 1;
+    $offset=$tsinfo['offset'];
     while ($row = mysql_fetch_array($result))
     {
         $name = $row['pilFirstName'] . ' ' . $row['pilLastName'];
@@ -142,7 +146,7 @@ function task_result($link, $comPk, $offset, $tasPk, $fdhv)
         else
         {
             $timeinair = "";
-            if ($tasTaskType == 'speedrun-interval')
+            if ($tsinfo['task_type'] == 'speedrun-interval')
             {
                 $hh = floor(($offset + $start) / 3600) % 24;
                 $mm = floor((($offset + $start) % 3600) / 60);
@@ -206,11 +210,11 @@ function task_result($link, $comPk, $offset, $tasPk, $fdhv)
         $trrow[] = $endf;
         $trrow[] = $timeinair;
 
-        if ($tasStoppedTime != '')
+        if ($tsinfo['stopped'] != '')
         {
             $trrow[] = $lastalt;
         }
-        else if ($tasHeightBonus == 'on')
+        else if ($tsinfo['hbess'] == 'on')
         {
             if ($lastalt > 0)
             {
@@ -260,7 +264,7 @@ function task_result($link, $comPk, $offset, $tasPk, $fdhv)
 }
 
 
-$sorted = task_result($link, $comPk, $comTOffset, $tasPk, $fdhv);
+$sorted = task_result($link, $comPk, $tsinfo, $tasPk, $fdhv);
 $data = [ 'task' => $tsinfo, 'data' => $sorted ];
 //$data = [ 'data' => $sorted, 'extra' => [ 'foo' ] ];
 print json_encode($data);

@@ -1,0 +1,116 @@
+<!DOCTYPE html> <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>AirScore Tracklog Submission</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/1-col-portfolio.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
+    <script src="microajax.minified.js"></script>
+    <script src="url.js"></script>
+    <script>
+        // Initialise 
+        function initialize()
+        {
+            comPk = url_parameter("comPk");
+            tasPk = url_parameter("tasPk");
+        }
+    </script>
+  </head>
+
+  <body onload="initialize()">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li class="nav-item" id="comp_tab">
+              <a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a>
+              <span class="sr-only">(current)</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container" id="main">
+    <div class="row">
+    <div class="col-md-7" id="submission">
+    <br>
+    <h2>Tracklog Submission</h2>
+    <form enctype="multipart/form-data" action="submit_track.php" method="post">
+    <input type="hidden" name="MAX_FILE_SIZE" value="1000000000">
+    <input type="hidden" name="comid" value="245">
+    <table>
+    <tr><td>Competition</td><td><select name='comid' id='compsel'></select></td></tr>
+    <tr id="route"><td>Route</td><td><select name='route' id='routesel'></select></td></tr>
+    <tr><td>Send IGC file</td> <td><input name="userfile" type="file"></td></tr>
+    <tr><td>HGFA Number</td> <td><input name="hgfanum" type="text"></td> </tr>
+    <tr><td>Last Name</td> <td><input name="lastname" type="text"></td> </tr>
+    <tr><td>Glider</td><td><input name="glider" type="text"></td></tr>
+    <tr><td>Class</td><td><select name="dhv" id="dhv">
+        <option value="1">novice</option>
+        <option value="1/2">fun</option>
+        <option value="2">sports</option>
+        <option value="2/3" selected>serial</option>
+        <option value="competition">competition</option>
+    </select></td></tr>
+    <tr><td><select name="pilotsafety" id="pilotsafety">
+        <option value="none" selected>-- select conditions --</option>
+        <option value="safe">safe</option>
+        <option value="maybe">not safe for me</option>
+        <option value="unsafe">not safe for all</option>
+    </select></td>
+    <td><select name="pilotquality" id="pilotquality">
+    <option value="0" selected>-- select racing quality --</option>
+    <option value="1">completely unfair</option>
+    <option value="2">random racing</option>
+    <option value="3">passable racing</option>
+    <option value="4">good racing</option>
+    <option value="5">great racing</option>
+    </select></td></tr></table>
+    <br><center><input type="submit" name="foo" value="Send Tracklog"></center>
+    </div>
+    <div class="col-md-5" id="tools">
+    <br>
+    <h2>Tracklog Tools</h2>
+    <ul>
+    <li> <a href="http://www.gethome.no/stein.sorensen/body_gpsdump.htm">GPSDump</a> </li>
+    <li> <a href="http://flighttrack.sourceforge.net/">FlightTrack (MacOS X)</a> </li>
+    <li> <a href="http://www.gpsbabel.org/">GPS Babel</a> </li>
+    <li> <a href="http://www.xcsoar.org/">XCSoar</a> </li>
+    <li> <a href="http://xctrack.org/">XCTrack</a> </li>
+    <li> <b><a href="http://www.freethinker.com/iphone/livetrack24/index.html">Livetrack 24 (*iOS*)</a></b> </li>
+    </ul>
+    </div>
+    </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="submission.js"></script>
+
+  </body>
+</html>

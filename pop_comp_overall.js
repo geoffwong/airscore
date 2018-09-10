@@ -9,15 +9,15 @@ $(document).ready(function() {
         info: false,
         "columnDefs": [
             {
-                "targets": [ 4 ],
-                "visible": true
+                "targets": [ 1, 2 ],
+                "visible": false
             },
         ],
         "initComplete": function(settings, json) 
         {
             var table= $('#task_result');
             var rows = $("tr", table).length-1;
-            var numCols = $("th", table).length;
+            var numCols = $("th", table).length+1;
 
             // comp info
             //$('#comp_name').text(json.task.comp_name);

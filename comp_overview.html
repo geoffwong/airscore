@@ -13,8 +13,9 @@
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/1-col-portfolio.css" rel="stylesheet">
-    <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
+    <link href="navbar.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
     <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
 
@@ -26,9 +27,8 @@
   </head>
 
   <body>
-
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
+    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top" data-spy="affix">
       <div class="container">
         <a class="navbar-brand" href="#">airScore</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,55 +36,27 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
+            <li class="nav-item active"> <a class="nav-link" href="comp_overview.html">Competitions</a> 
+                <span class="sr-only">(current)</span>
+                </li>
             <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
-            <li class="nav-item">
-            <a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a>
-           </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="submit_track.html">Submit</a></li>
           </ul>
         </div>
       </div>
     </nav>
 
-    <div class="container-fluid">
-    <div class="row">
-        <div class="col comp_header">
-        <h2 id="comp_name"></h2>
-        <h3 id="task_date"></h3>
-        </div>
-        <div class="col" class="task_waypoints">
-        <table class="table table-sm" id="waypoints">
-        <thead class="thead-light" id="wpts_hd">
-            <tr><th>Point</th><th>Type</th><th>Size</th><th>Dist</th><th>Description</th></tr>
-        </thead>
-        <tbody class="small" id="wpts_bd"></tbody>
-        </table>
-        </div>
-    </div>
-    <table id="task_result" class="row-border compact" cellspacing="0" width="100%">
+    <div class="container" id="main">
+    <br>
+    <table id="competitions" class="row-border stripe compact" cellspacing="0" width="100%">
     <thead>
         <tr>
-            <th>#</th>
-            <th>Pilot</th>
-            <th>Nat</th>
-            <th>Glider</th>
-            <th>EN</th>
-            <th>SS</th>
-            <th>ES</th>
-            <th>Time</th>
-            <th id="altbonus">HBs</th>
-            <th>Kms</th>
-            <th id="leading">Lkm</th>
-            <th>Spd</th>
-            <th>Dst</th>
-            <th>Pen</th>
-            <th>Tot</th>
+            <th>Competition</th>
+            <th>Location</th>
+            <th>Class</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Tasks</th>
         </tr>
     </thead>
     </table>
@@ -94,7 +66,9 @@
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="pop_task.js"></script>
+    <!-- script src="https://rawgit.com/bassjobsen/affix/master/assets/js/affix.js"></script -->
+    <!-- script type="text/javascript" src="navbar.js"></script -->
+    <script type="text/javascript" src="pop_comps.js"></script>
 </body>
 </html>
 

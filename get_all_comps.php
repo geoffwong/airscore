@@ -1,6 +1,6 @@
 <?php
-header('Cache-Control: no-cache, must-revalidate');
-header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+header('Cache-Control: public, must-revalidate');
+header('Expires: ' . gmdate(DATE_RFC2822, time() + 86400));
 header('Content-type: application/json; charset=utf-8');
 
 require_once 'authorisation.php';
@@ -18,7 +18,7 @@ function get_all_comps($link)
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $id = $row['comPk'];
-        if ($row['comType'] == 'RACE')
+        if ($row['comType'] == 'RACE' || $row['comType'] == 'Route')
         {
             $row['comName'] = "<a href=\"task_overview.html?comPk=$id\">" . $row['comName'] . '</a>';
         }
