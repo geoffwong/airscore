@@ -1,7 +1,7 @@
 <?php
 require 'authorisation.php';
 require 'xcdb.php';
-require 'rjson.php';
+require 'RJson.php';
 header('Cache-Control: no-cache, must-revalidate');
 header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 header('Content-type: application/json');
@@ -9,6 +9,8 @@ header('Content-type: application/json');
 $link = db_connect();
 $tasPk = reqival('tasPk');
 $retarr = [];
+
+if (!$tasPk) return;
 
 $sql = "select CT.traPk, P.pilLastName from tblComTaskTrack CT, tblTrack T, tblPilot P where CT.tasPk=$tasPk and T.traPk=CT.traPk and P.pilPk=T.pilPk";
 $result = mysql_query($sql,$link) or die('Query failed: ' . mysql_error());
@@ -39,5 +41,5 @@ while($row = mysql_fetch_array($result, MYSQL_ASSOC))
 
 
 mysql_close($link);
-print rjson_pack($retarr);
+print RJson::pack($retarr, true);
 ?>

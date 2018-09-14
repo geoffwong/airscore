@@ -14,7 +14,7 @@ String.prototype.format = function()
 }
 function merge_tracks(tasPk, traPk, incPk)
 {
-    microAjax("merge_track.php?tasPk="+tasPk+"&traPk="+traPk+"&incPk="+incPk, function(data) 
+    new microAjax("merge_track.php?tasPk="+tasPk+"&traPk="+traPk+"&incPk="+incPk, function(data) 
         { 
             window.location.href="tracklog_map.html?trackid="+traPk;
         } );
@@ -33,11 +33,15 @@ function plot_track(jstr)
     var initials;
     var pngclass;
     var offset;
+    var resp;
+    var points;
     var lasLat, lasLon, lasAlt, lasTme;
 
     count = 1;
     offset = 0;
-    body = JSON.parse(jstr)
+    resp = JSON.parse(jstr)
+    body = resp.track;
+    points = resp.points;
     plot_track_header(body);
     track = body["track"];
     initials = body["initials"];
@@ -105,10 +109,26 @@ function plot_track(jstr)
     onscreen[trackid]["segments"] = segments;
     onscreen[trackid]["initials"] = initials;
     onscreen[trackid]["class"] = pngclass;
+    
+    if (!body.tasPk)
+    {
+        plot_track_wp(points);
+    }
+    animate_init();
 }
 function add_track(comPk, traPk, interval)
 {
     new microAjax("get_track.php?comPk="+comPk+"&trackid="+traPk+"&int="+interval, plot_track);
+}
+function do_add_track()
+{
+    var e = document.getElementById("tracks");
+    trackid = e.options[e.selectedIndex].value;
+    var comPk = url_parameter('comPk');
+    if (!onscreen[trackid])
+    {
+        add_track(comPk, trackid, 5);
+    }
 }
 function plot_track_bounds(jstr)
 {
@@ -251,12 +271,10 @@ function plot_track_header(body)
     ihtml = ihtml + "</div>";
     add_panel(map, "topright", ihtml, 'map_panel');
 }
-function plot_track_wp(jstr)
+function plot_track_wp(track)
 {
-    var track;
     var row;
     var line;
-    var trklog;
     var polyline;
     var gll;
     var count;
@@ -264,32 +282,23 @@ function plot_track_wp(jstr)
     var wpt;
 
     count = 1;
-    track = JSON.parse(jstr)
     line = Array();
     segments = Array();
-    trklog = Array();
     bounds = new L.LatLngBounds();
-    for (row in track)
+    for (var row = 0; row < track.length; row++)
     {
         lasLat = track[row][0];
         lasLon = track[row][1];
         cname = "" + count;
 
-        //if (count == 1)
-        //{
-        //    map.setCenter(new google.maps.LatLng(lasLat, lasLon), 13);
-        //}
-    
         gll = new L.LatLng(lasLat, lasLon);
         line.push(gll);
         bounds.extend(gll);
-        trklog.push(track[row]);
     
         if (count % 10 == 0)
         {
             polyline = new L.Polyline(line, {
-                color:"#ff0000", weight:2, opacity:1 });
-            polyline.setMap(map);
+                color:"#ff0000", weight:2, opacity:1 }).addTo(map);
             segments.push(polyline);
             line = Array();
             line.push(gll);
@@ -301,12 +310,9 @@ function plot_track_wp(jstr)
         wpt = add_label(map, pos, cname, "waypoint");
     }
 
-    polyline = new google.maps.Polyline({
-                path: line, color:"#ff0000", weight:2, opacity:1 });
-    polyline.addTop(map);
+    polyline = new L.Polyline(line, { color:"#ff0000", weight:2, opacity:1 }).addTo(map);
     segments.push(polyline);
     map.fitBounds(bounds);
-    //document.getElementById("foo").value = trackid;
 }
 function format_seconds(tm)
 {
@@ -325,42 +331,33 @@ function format_seconds(tm)
 function plot_glider(glider,lat,lon,alt)
 {
     // FIX: plot a point ...
-    //var para;
     var mark;
     var html;
     var off;
 
-    //para = new google.maps.Icon();
-    //para.image = "pger" + (onscreen[glider]["ic"]%6) + ".png";
-    //para.iconAnchor = new google.maps.Point(10,20)
+    //var para = L.icon({
+        //iconUrl: (onscreen[glider]["ic"]%6) + ".png",
+        //iconSize: [38, 95],
+        //iconAnchor: [10, 20],
+        //popupAnchor: [-3, -76],
+    //});
+    //L.marker([50.505, 30.57], {icon: myIcon}).addTo(map);
 
     // load image ...
-    html = "<center>" + onscreen[glider]["initials"] + "<br><img src=\"images/" + onscreen[glider]["class"] + (onscreen[glider]["ic"]%7) + ".png\"></img><br>"+Math.floor(alt/10)+"</center>";
-    if (alt > 999)
-    {
-        off = new google.maps.Size(-8,16);
-    }
-    else
-    {
-        off = new google.maps.Size(-12,16);
-    }
+    html = "<div id=\"" + 'gl' + glider + "\"><center>" + onscreen[glider]["initials"] + "<br><img src=\"images/" + onscreen[glider]["class"] + (onscreen[glider]["ic"]%7) + ".png\"></img><br>"+Math.floor(alt/10)+"</center></div>";
+
+    //if (alt > 999) { off = new google.maps.Size(-8,16); } else { off = new google.maps.Size(-12,16); }
 
     if (!onscreen[glider]["icon"])
     {
-        //mark = new google.maps.Marker(new GLatLng(lat,lon),{ icon: para });
-        //map.addOverlay(mark);
-        mark = new ELabel(map, new google.maps.LatLng(lat,lon), html, "animate", off, 100);
-//
-//    if (onscreen[glider]["icon"])
-//    {
-//        onscreen[glider]["icon"].setMap(null);
-//    }
+        var pos = new L.LatLng(lat,lon);
+        mark = add_label(map, pos, html, "animate", [26,48], [13,38]);   //off, 100
         onscreen[glider]["icon"] = mark;
     }
     else
     {
-        onscreen[glider]["icon"].setContents(html);
-        onscreen[glider]["icon"].setPosition(new google.maps.LatLng(lat,lon));
+        $("#gl" + glider).html(html);
+        onscreen[glider]["icon"].setLatLng(new L.LatLng(lat,lon));
     }
 }
 function animate_update()
@@ -368,24 +365,36 @@ function animate_update()
     var count;
     var lasLat, lasLon, lasAlt, lasTme;
     var flag;
+
+    if (interval < 0)
+    {
+        current = current + interval;
+    }
     for (glider in onscreen)
     {
         track = onscreen[glider]["track"];
         count = onscreen[glider]["pos"];
         lasLat = 0;
-        if (count < track.length)
+        if (count >=0 && count < track.length)
         {
             lasTme = track[count][0];
             flag = 1;
             //document.getElementById("foo").value = "l"+lasTme;
-            while (lasTme < current && count < track.length)
+            while ((lasTme*interval < current*interval) && count < track.length)
             {
                 lasTme = track[count][0];
                 lasLat = track[count][1];
                 lasLon = track[count][2];
                 lasAlt = track[count][3];
                 //lasAlt = (track[row][3]/10)%256;
-                count++;
+                if (interval < 0)
+                {
+                    count--;
+                }
+                else
+                {
+                    count++;
+                }
             }
             if (lasLat != 0)
             {
@@ -394,8 +403,11 @@ function animate_update()
             }
         }
     }
-    document.getElementById("foo").value = format_seconds(current * interval);
-    current = current + interval;
+    // document.getElementById("foo").value = format_seconds(current * interval);
+    if (interval > 0)
+    {
+        current = current + interval;
+    }
     //document.getElementById("foo").value = current;
     if (flag == 1 && pause == 0)
     {
@@ -406,9 +418,7 @@ function animate_init()
 {
     var mintime;
     var ic=0;
-    // need some small icons/markers for pgs
 
-    document.getElementById("foo").value = "an1";
     mintime = 999999;
     for (row in onscreen)
     {
@@ -424,81 +434,45 @@ function animate_init()
     current = mintime + interval;
     //document.getElementById("foo").value = current;
 }
-function reset_map()
+function restart()
 {
     clearTimeout(timer);
     pause = 1;
+    interval = 5;
 
     // clear current icons;
     for (glider in onscreen)
     {
         if (onscreen[glider]["icon"])
         {
-            onscreen[glider]["icon"].setMap(null);
+            onscreen[glider]["icon"].remove(null);
         }
     }
 
     animate_init();
-    document.getElementById("pause").value = ">>";
+    //document.getElementById("pause").value = ">>";
     current == -1;
-}
-function pause_map()
-{
-    if (pause == 0)
-    {
-        clearTimeout(timer);
-        pause = 1;
-        document.getElementById("pause").value = ">>";
-    }
-    else
-    {
-        if (current == -1)
-        {
-            animate_init();
-        }
-        timer=setTimeout("animate_update()",125);
-        pause = 0;
-        document.getElementById("pause").value = "=";
-    }
 }
 function forward()
 {
+    interval = 5;
+    pause = !pause;
+    //document.getElementById("pause").value = "=";
+    clearTimeout(timer);
     animate_update();
 }
-function back()
+function fast_forward()
 {
-    var count;
-    var lasLat, lasLon, lasTme, lasAlt;
-    var flag;
-    current = current - interval;
-    for (glider in onscreen)
-    {
-        track = onscreen[glider]["track"];
-        count = onscreen[glider]["pos"];
-        lasTme = track[count][0];
-        lasLat = 0;
-        if (count >= 0)
-        {
-            //document.getElementById("foo").value = "l"+lasTme;
-            while (lasTme > current && count >= 0)
-            {
-                lasTme = track[count][0];
-                lasLat = track[count][1];
-                lasLon = track[count][2];
-                lasAlt = track[count][3];
-                //lasAlt = (track[row][3]/10)%256;
-                flag = 1;
-                count--;
-            }
-            if (lasLat != 0)
-            {
-                onscreen[glider]["pos"] = count;
-                plot_glider(glider,lasLat,lasLon,lasAlt);
-            }
-        }
-    }
-    document.getElementById("foo").value = format_seconds(current * interval);
-    //document.getElementById("foo").value = current;
+    interval = interval * 2;
+    clearTimeout(timer);
+    animate_update();
+}
+function backward()
+{
+    pause = !pause;
+    interval = -5;
+    clearTimeout(timer);
+    animate_update();
 }
 function clear_map()
 {
@@ -521,4 +495,34 @@ function clear_map()
     // clear it ..
     onscreen = Array();
 }
+function download_track()
+{
+    var traPk = url_parameter('trackid');
+    post('download_tracks.php?traPk=' + traPk, { }, 'post');
+}
+function download_task_tracks()
+{
+    var traPk = url_parameter('tasPk');
+    if (tasPk > 0)
+    {
+        post('download_tracks.php?tasPk=' + tasPk, { }, 'post');
+    }
+}
+$(document).ready(function() {
+    new microAjax("get_local_tracks.php?" + window.location.search,
+        function(data) {
+        var traPk = url_parameter('trackid');
+        local_tracks = JSON.parse(data);
+
+        $.each(local_tracks, function (i, item) {
+            if (item != traPk)
+            {
+                $('#tracks').append($('<option>', { 
+                    value: item,
+                    text : i
+                }));
+            }
+            });
+        });
+});
 

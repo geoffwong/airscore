@@ -1,4 +1,8 @@
 <?php
+header('Cache-Control: public, must-revalidate');
+header('Expires: ' . gmdate(DATE_RFC2822, time() + 30*86400));
+header('Content-type: application/json; charset=utf-8');
+
 require_once 'authorisation.php';
 
 $usePk = check_auth('system');
@@ -108,26 +112,44 @@ function get_track_body($link, $trackid, $interval)
     
     // Get some track points
     $result = mysql_query($sql,$link);
-    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $bucTime = $offset + $row['bucTime'];
-        $lasLat = 0.0 + $row['trlLatDecimal'];
-        $lasLon = 0.0 + $row['trlLongDecimal'];
+        $lasLat = round(0.0 + $row['trlLatDecimal'], 6);
+        $lasLon = round(0.0 + $row['trlLongDecimal'], 6);
         $lasAlt = 0 + $row['trlAltitude'];
-        $ret[] = array( $bucTime, $lasLat, $lasLon, $lasAlt );
+        $ret[] = [ $bucTime, $lasLat, $lasLon, $lasAlt ];
     }
     $body['track'] = $ret;
 
     return $body;
 }
 
+function get_track_wp($link, $trackid)
+{
+    $sql = "SELECT * FROM tblWaypoint where traPk=$trackid order by wptTime";
+    $ret = [];
+    $result = mysql_query($sql,$link) or die('Track waypoint query failed: ' . mysql_error());
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+    
+        $lasLat = 0.0 + $row['wptLatDecimal'];
+        $lasLon = 0.0 + $row['wptLongDecimal'];
+        $ret[] = [ $lasLat, $lasLon ];
+    }
+
+    // task info ..
+    return $ret;
+}
+
+$result = [];
 $body = get_track_body($link, $trackid, $interval);
-$jret = json_encode($body);
-
-# nuke normal header ..
-header("Content-type: text/plain");
-header("Cache-Control: no-store, no-cache");
-
-print $jret;
+$result['track'] = $body;
+if ($body['tasPk'] == 0)
+{
+    $wps = get_track_wp($link, $trackid);
+    $result['points'] = $wps;
+}
+print json_encode($result);
 ?>
 

@@ -11,34 +11,22 @@
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/1-col-portfolio.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
+    <link href="sidebar/L.Control.Sidebar.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
 
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
     <script src="microajax.minified.js"></script>
-    <script src="url.js"></script>
-    <script src="sprintf.js"></script>
-    <script src="task_overview_leaf.js"></script>
-    <script src="plot_track_lf.js"></script>
-    <script src="uair_lf.js"></script>
-    <script>
-        // Initialise 
-        function initialize()
-        {
-            comPk = url_parameter("comPk");
-            tasPk = url_parameter("tasPk");
-            trackid = url_parameter('trackid');
-            plot_task(tasPk, false, trackid);
-            add_track(comPk, trackid, 5);
-        }
-    </script>
+    <script src="utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+    <script src="sidebar/L.Control.Sidebar.js"></script>
   </head>
 
-  <body onload="initialize()">
-
-    <!-- Navigation -->
+  <body>
+    <!-- Top Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
       <div class="container">
         <a class="navbar-brand" href="#">airScore</a>
@@ -47,26 +35,49 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="#">Tasks
-                <span class="sr-only">(current)</span>
-              </a>
-            </li>
-            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
             <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
-            <li class="nav-item"> <a class="nav-link" href="submit_track.html">Submit</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li><a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='jq_task_result.html'+window.location.search;">Results</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a> </li>
           </ul>
         </div>
       </div>
     </nav>
 
     <!-- Page Content -->
-      <div class="track_map" id="map"></div>
-      <form><input type="hidden" name="foo" id="foo" size="8"></form>
+    <form><input type="hidden" name="foo" id="foo" size="8"></form>
+    <div class="track_map" id="map">
+    <div id="sidebar">
+        <h3>Track Downloads</h3>
+        <button class="btn btn-primary btn-sm btn-block" onclick="download_track();">This Track</button>
+        <button class="btn btn-primary btn-sm btn-block" onclick="download_top_tracks();">Top Tracks</button>
+        <hr>
+        <h3>View Tracks</h3>
+        <select class="custom-select mb-3" name="tracks" id="tracks"></select>
+        <br>
+        <button class="btn btn-primary btn-sm btn-block" onclick="do_add_track();">Add Track</button>
+        <hr>
+        <div id="airdiv">
+        <h3>View Airspace</h3>
+        <select class="custom-select mb-3" name="airspace" id="airspace"></select>
+        <br>
+        <button class="btn btn-primary btn-sm btn-block" onclick="add_airspace();">Add Airspace</button>
+        <hr>
+        <div>
+    </div>
+    </div>
+
+    <!-- Dark overlay -->
+    <!-- div class="overlay"></div -->
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="plot_track_lf.js"></script>
+    <script src="task_overview_leaf.js"></script>
+    <script src="uair_lf.js"></script>
 
   </body>
 </html>

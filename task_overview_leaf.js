@@ -25,20 +25,52 @@ L.Control.Panel = L.Control.extend({
     onRemove: function(map) { 
         var elem = this._container;
         elem.style.display = 'none';
+        //L.DomEvent.off();
         // Nothing to do here 
     }
 });
+
+
+L.control.panel = function (options) {
+    return new L.Control.Panel(options);
+};
+
+L.Control.Play = L.Control.extend({
+    onAdd: function(map) {
+            var ele = L.DomUtil.create('div');
+            this._container = ele;
+            ele.innerHTML = "<div id='playblock'><table><b><tr><td><a href='#' id='clear' onclick='restart();'>&#8920;</a></td><td><a href='#' id='bwd' onclick='backward();'>&ll;</a></td><td><a href='#' id='fwd' onclick='forward();'>&gt;</a></td><td><a href='#' id='ffwd' onclick='fast_forward();'>&gg;</a></td></tr></b></table></div>";
+            ele.className = 'play';
+            return this._container;
+        },
+        
+    show: function() {
+        var elem = this._container;
+        elem.style.display = 'block';
+    },
+
+    onRemove: function(map) { 
+        var elem = this._container;
+        elem.style.display = 'none';
+        //L.DomEvent.off();
+        // Nothing to do here 
+    }
+});
+
+L.control.play = function (options) {
+    return new L.Control.Play(options);
+};
 
 L.Map.addInitHook(function () {
     if (this.options.panel) {
         this.panel = new L.Control.Panel();
         this.addControl(this.panel);
     }
+    if (this.options.play) {
+        this.play = new L.Control.Play();
+        this.addControl(this.play);
+    }
 });
-
-L.control.panel = function (options) {
-    return new L.Control.Panel(options);
-};
 
 function get_tileserver()
 {
@@ -76,7 +108,7 @@ function add_award_task(tasPk, trackid)
     var added = 0;
 
     var task = JSON.parse(data);
-    ovhtml = "<div class=\"htmlControl\"><b>Award Points</b><br><form name=\"trackdown\" method=\"post\">\n";
+    ovhtml = "<div class=\"htmlControl\" id=\"award\"><b>Award Points</b><br><form name=\"trackdown\" method=\"post\">\n";
     track = task["task"];
     tps = 0 + task["turnpoints"];
     incpk = task["merge"];
@@ -115,7 +147,7 @@ function add_award_task(tasPk, trackid)
 
     if (added)
     {
-        // check - and admin!
+        // check admin!
         add_panel(map, "bottomright", ovhtml, 'map_control');
     }
     //ovlay = new HtmlControl(ovhtml, { visible:false, selectable:true, printable:true } );
@@ -164,52 +196,53 @@ function plot_pilots_lo(tasPk)
 }
 function plot_task(tasPk, pplo, trackid)
 {
-    var mapdiv = document.getElementById("map");
-    mapdiv.setAttribute('style', 'top: 0px; left: 0px; width:100%; height:90vh; float: left');
-
-    map = add_map_server('map', 0);
     microAjax("get_short.php?tasPk="+tasPk, 
-    function (data) {
-      var task, track, row;
-      var line, sline, polyline;
-      var prevslat, prevslon, gll, count, color;
-      var pos, sz;
-      var ihtml, ovlay;
+      function (data) {
+        var task, track, row;
+        var line, sline, polyline;
+        var prevslat, prevslon, gll, count, color;
+        var pos, sz;
+        var ihtml, ovlay;
     
 
       // Got a good response, create the map objects
       //alert("complete: " + data);
 
-      var ssr = JSON.parse(data);
+        var ssr = JSON.parse(data);
 
-      //add_map_row(ssr, count);
-      plot_task_route(map, ssr);
-      count = 1;
-      ihtml = "<table>";
-      for (row in ssr)
-      {
-          ihtml = ihtml + "<tr><td><b>" + ssr[row]["rwpName"] + "<b></td><td>" + ssr[row]["tawType"] + "</td><td>" + ssr[row]["tawRadius"] + "m</td><td>" + ssr[row]["tawHow"] + "</td><td>" + sprintf("%0.2f", ssr[row]["ssrCumulativeDist"]/1000) + "km</td></tr>";
-      }
-      ihtml = ihtml + "</table>";
-      add_panel(map, "bottomleft", ihtml, 'map_panel' );
-      if (pplo)
-      {
-        plot_pilots_lo(tasPk);
-      }
-      if (trackid > 0)
-      {
-        add_award_task(tasPk, trackid);
-      }
+        plot_task_route(map, ssr);
+        count = 1;
+        ihtml = "<table>";
+        for (row in ssr)
+        {
+            ihtml = ihtml + "<tr><td><b>" + ssr[row]["rwpName"] + "<b></td><td>" + ssr[row]["tawType"] + "</td><td>" + ssr[row]["tawRadius"] + "m</td><td>" + ssr[row]["tawHow"] + "</td><td>" + sprintf("%0.2f", ssr[row]["ssrCumulativeDist"]/1000) + "km</td></tr>";
+        }
+        ihtml = ihtml + "</table>";
+        add_panel(map, "bottomleft", ihtml, 'map_panel' );
+        if (pplo)
+        {
+            plot_pilots_lo(tasPk);
+        }
+        if (trackid > 0)
+        {
+            add_award_task(tasPk, trackid);
+        }
     });
 }
-
-function add_label(map, pos, txt, classn)
+function add_label(map, pos, txt, classn, size, anchor)
 {
-    var size = (txt.length+2) * 7;
-    var wpticon = L.divIcon({className: classn, html:txt, iconSize:[size,19], iconAnchor:[-1,-1]});
+    if (!size)
+    {
+        var width = (txt.length+2) * 7;
+        size = [ width, 19 ];
+    }
+    if (!anchor)
+    {
+        anchor = [-1, -1];
+    }
+    var wpticon = L.divIcon({className: classn, html:txt, iconSize:size, iconAnchor:anchor});
     return L.marker(pos, {icon: wpticon}).addTo(map);
 }
-
 function plot_task_route(map, ssr)
 {
     line = Array();
@@ -361,7 +394,6 @@ function add_map_row(comPk,task, count)
     //ele.appendChild(hr);
 
 }
-
 function add_map_server(name, count)
 {
     map_array[count] = L.map(name).setView([-37.5, 145.8], 11);
@@ -372,9 +404,39 @@ function add_map_server(name, count)
         maxZoom: 18, id: 'satmap',
     }).addTo(map_array[count]);
 
+
     return map_array[count];
 }
+var sidebar;
+function add_map_extra(map)
+{
+    // add sidebar and a control to expand it
+    L.easyButton( '<span id="expandtab" style="font-size: 2.2em; line-height: 1;">&rAarr;</span>', function() {
+        if (sidebar.isVisible())
+        {
+            sidebar.hide();
+            $("#expandtab").html('&rAarr;');
+        }
+        else
+        {
+            sidebar.show();
+            $("#expandtab").html('&lAarr;');
+        }
+    }).addTo(map);
 
+    sidebar = L.control.sidebar('sidebar', {
+        position: 'left',
+        autoPan: false,
+        closeButton: true
+        });
+
+    map.addControl(sidebar);
+
+    // add a replay control panel
+    var pkey= L.control.play({ position: 'bottomright' }).addTo(map);
+    pkey.show();
+
+}
 function plot_all_tasks(comPk)
 {
     microAjax("get_all_tasks.php?comPk="+comPk, 
@@ -417,3 +479,21 @@ function plot_all_tasks(comPk)
     });
 
 }
+
+$(document).ready(function() {
+    var comPk = url_parameter("comPk");
+    var tasPk = url_parameter("tasPk");
+    var trackid = url_parameter('trackid');
+
+    var mapdiv = document.getElementById("map");
+    mapdiv.setAttribute('style', 'top: 0px; left: 0px; width:100%; height:90vh; float: left');
+    map = add_map_server('map', 0);
+    add_map_extra(map);
+
+    if (tasPk > 0)
+    {
+        plot_task(tasPk, false, trackid);
+    }
+    add_track(comPk, trackid, 5);
+});
+

@@ -3,7 +3,9 @@ header('Cache-Control: no-cache, must-revalidate');
 header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 header('Content-type: application/json');
 
-require 'authorisation.php';
+require_once 'authorisation.php';
+require_once 'xcdb.php';
+require_once 'get_olc.php';
 
 function taskcmp($a, $b)
 {
@@ -25,6 +27,29 @@ function comp_result($comPk, $cls)
     {
         $how = $row['comOverallScore'];
         $param = $row['comOverallParam'];
+    }
+
+    if ($how == 'all')
+    {
+        # total # of tasks
+        $param = $tasTotal;
+    }
+    else if ($how == 'round-perc')
+    {
+        $param = round($tasTotal * $comOverallParam / 100, 0);
+    }
+    else if ($how == 'ftv')
+    {
+        $sql = "select sum(tasQuality) as totValidity, count(*) as tasTotal from tblTask where comPk=$comPk";
+        $result = mysql_query($sql) or die('Task validity query failed: ' . mysql_error());
+        $totalvalidity = round(mysql_result($result, 0, 0) * $param * 10,0);
+        $tasktot = mysql_result($result, 0, 1);
+        $param = $totalvalidity;
+        if ($tasktot < 2)
+        {
+            $param = 1000;
+        }   
+
     }
 
     $sql = "select TK.*,TR.*,P.*,T.traGlider from tblTaskResult TR, tblTask TK, tblTrack T, tblPilot P, tblCompetition C where C.comPk=$comPk and TK.comPk=C.comPk and TK.tasPk=TR.tasPk and TR.traPk=T.traPk and T.traPk=TR.traPk and P.pilPk=T.pilPk $cls order by P.pilPk, TK.tasPk";
@@ -51,6 +76,7 @@ function comp_result($comPk, $cls)
             $results[$pilPk]['nation'] = $nation;
             $results[$pilPk]['glider'] = $glider;
             $results[$pilPk]['gender'] = $gender;
+            $results[$pilPk]['tasks'] = [];
         }
         //echo "pilPk=$pilPk tasname=$tasName, result=$score<br>\n";
         $perf = 0;
@@ -66,7 +92,7 @@ function comp_result($comPk, $cls)
         {
             $perf = round($score, 0);
         }
-        $results[$pilPk]["${perf}${tasName}"] = array('score' => $score, 'validity' => $validity, 'tname' => $tasName);
+        $results[$pilPk]['tasks']["${perf}${tasName}"] = [ 'score' => $score, 'validity' => $validity, 'tname' => $tasName ];
     }
 
     return filter_results($comPk, $how, $param, $results);
@@ -78,28 +104,23 @@ function filter_results($comPk, $how, $param, $results)
     $sorted = [];
     foreach ($results as $pil => $arr)
     {
-        krsort($arr, SORT_NUMERIC);
+        krsort($arr['tasks'], SORT_NUMERIC);
 
         $pilscore = 0;
         if ($how != 'ftv')
         {
             # Max rounds scoring
             $count = 0;
-            foreach ($arr as $perf => $taskresult)
+            foreach ($arr['tasks'] as $perf => $taskresult)
             {
-                //if ($perf == 'name') 
-                if (ctype_alpha($perf))
-                {
-                    continue;
-                }
                 if ($how == 'all' || $count < $param)
                 {
-                    $arr[$perf]['perc'] = 100;
+                    $arr['tasks'][$perf]['perc'] = 100;
                     $pilscore = $pilscore + $taskresult['score'];
                 }
                 else
                 {
-                    $arr[$perf]['perc'] = 0;
+                    $arr['tasks'][$perf]['perc'] = 0;
                 }
                 $count++;
                 
@@ -109,14 +130,8 @@ function filter_results($comPk, $how, $param, $results)
         {
             # FTV scoring
             $pilvalid = 0;
-            foreach ($arr as $perf => $taskresult)
+            foreach ($arr['tasks'] as $perf => $taskresult)
             {
-                //if ($perf == 'name') 
-                if (ctype_alpha($perf))
-                {
-                    continue;
-                }
-
                 //echo "pil=$pil perf=$perf valid=", $taskresult['validity'], " score=", $taskresult['score'], "<br>";
                 if ($pilvalid < $param)
                 {
@@ -132,21 +147,21 @@ function filter_results($comPk, $how, $param, $results)
                     }
                     $pilvalid = $pilvalid + $taskresult['validity'] * $perc;
                     $pilscore = $pilscore + $taskresult['score'] * $perc;
-                    $arr[$perf]['perc'] = $perc * 100;
+                    $arr['tasks'][$perf]['perc'] = $perc * 100;
                 }
             }   
         }
         // resort arr by task?
-        uasort($arr, "taskcmp");
+        uasort($arr['tasks'], "taskcmp");
         #echo "pil=$pil pilscore=$pilscore\n";
-        foreach ($arr as $key => $res)
+        foreach ($arr['tasks'] as $key => $res)
         {
             #echo "key=$key<br>";
             #if ($key != 'name')
             if (ctype_digit(substr($key,0,1)))
             {
-                $arr[$res['tname']] = $res;
-                unset($arr[$key]);
+                $arr['tasks'][$res['tname']] = $res;
+                unset($arr['tasks'][$key]);
             }
         }
         $pilscore = round($pilscore,0);
@@ -158,9 +173,10 @@ function filter_results($comPk, $how, $param, $results)
 }
 
 # <th>Name</th> <th>NAT</th> <th>Score</th> <th>Gender</th> <th>Birthdate</th> <th>FAI License</th> <th>Glider</th> <th>Sponsor</th> <th>CIVL ID</th>
-function civl_result($sorted)
+function civl_result($tasks, $sorted)
 {
     $count = 1;
+    $lastcount = 1;
     $lasttot = -1;
     $rtable = [];
     foreach ($sorted as $pil => $arr)
@@ -170,22 +186,61 @@ function civl_result($sorted)
         if ($tot != $lasttot)
         {
             $nxt[] = $count;
+            $nxt[] = $arr['hgfa'];
+            $nxt[] = $arr['civl'];
             $nxt[] = $arr['name'];
+            $lastcount = $count;
         }
         else
         {
-            $nxt[] = '';
+            $nxt[] = $lastcount; 
+            $nxt[] = $arr['hgfa'];
+            $nxt[] = $arr['civl'];
             $nxt[] = $arr['name'];
         }
         $nxt[] = $arr['nation'];
-        $nxt[] = $tot;
         $nxt[] = $arr['gender'];
-        $nxt[] = $arr['birthdate'];
-        $nxt[] = $arr['hgfa'];
-        $nxt[] = $arr['glider'];
         $nxt[] = $arr['sponsor'];
-        $nxt[] = $arr['civl'];
-        $lasttot = $tot;
+        $nxt[] = $arr['glider'];
+        $nxt[] = "<b>$tot</b>";
+        
+        $taskcount = 0;
+
+        foreach ($tasks as $num => $name)
+        { 
+            $score = 0;
+            $perc = 100;
+
+            if (array_key_exists($name, $arr['tasks']))
+            {
+                $score = $arr['tasks'][$name]['score'];
+                $perc = round($arr['tasks'][$name]['perc'], 0);
+            }
+            if (!$score)
+            {
+                $score = 0;
+            }
+
+            if ($perc == 100)
+            {
+                $nxt[] = $score;
+            }
+            else if ($perc > 0)
+            {
+                $nxt[] = "$score <small>$perc%</small>";
+            }
+            else
+            {
+                $nxt[] = "<del>$score</del>";
+            }
+
+            $taskcount++;
+        }
+
+        for (; $taskcount < 16; $taskcount++)
+        {
+            $nxt[] = '';
+        }
         $rtable[] = $nxt;
         $count++;
     }
@@ -198,10 +253,21 @@ $comPk = reqival('comPk');
 $class = reqival('class');
 $carr = [];
 
+// comp & formula info
+$compinfo = [];
+$row = get_comformula($link, $comPk);
+if ($row)
+{
+    $row['comDateFrom'] = substr($row['comDateFrom'],0,10);
+    $row['comDateTo'] = substr($row['comDateTo'],0,10);
+    $row['TotalValidity'] = round($row['TotalValidity']*1000,0);
+    $compinfo = $row;
+}
+
 $fdhv= '';
 if ($class > 0)
 {
-    if ($comClass == "HG")
+    if ($compinfo['comClass'] == "HG")
     {
         $carr = array ( "'floater'", "'kingpost'", "'open'", "'rigid'"       );
     }
@@ -233,8 +299,27 @@ if ($class > 0)
     }
 }
 
-$sorted = comp_result($comPk, $fdhv);
-$civilised = civl_result($sorted);
-$data = array( 'data' => $civilised );
+$comType=$compinfo['comType'];
+if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $comType == 'RACE-handicap')
+{
+    $query = "select T.* from tblTask T where T.comPk=$comPk order by T.tasDate";
+    $result = mysql_query($query, $link) or die('Task query failed: ' . mysql_error());
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+        $alltasks[] = $row['tasName'];
+    }
+
+    $sorted = comp_result($comPk, $fdhv);
+    $civilised = civl_result($alltasks, $sorted);
+}
+else
+{
+    $civilised = get_olc_result($link, $comPk, $compinfo['comOverallParam'], '');
+    $compinfo['forClass'] = 'OLC'; 
+    $compinfo['forVersion'] = ''; 
+}
+
+
+$data = [ 'compinfo' => $compinfo, 'data' => $civilised ];
 print json_encode($data);
 ?>

@@ -5,7 +5,6 @@ header('Content-type: application/json');
 
 require 'authorisation.php';
 require 'xcdb.php';
-require 'rjson.php';
 
 function get_airspace($airPk)
 {
@@ -41,8 +40,6 @@ function get_airspace($airPk)
 
 $airPk = reqival('airPk');
 $retarr = get_airspace($airPk);
-$jret = rjson_pack($retarr);
 
-#print rjson_pack($retarr);
-print $jret;
+print json_encode($retarr);
 ?>

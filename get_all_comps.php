@@ -24,7 +24,7 @@ function get_all_comps($link)
         }
         else
         {
-            $row['comName'] = "<a href=\"comp_result.php?comPk=$id\">" . $row['comName'] . '</a>';
+            $row['comName'] = "<a href=\"comp_overall.html?comPk=$id\">" . $row['comName'] . '</a>';
         }
         $row['comDateTo'] = substr($row['comDateTo'], 0, 11);
         $row['comDateFrom'] = substr($row['comDateFrom'], 0, 11); 
