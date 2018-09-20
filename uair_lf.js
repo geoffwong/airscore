@@ -26,7 +26,6 @@ function plot_air(airspace)
 
     count = 1;
     line = Array();
-    segments = Array();
     bounds = new L.LatLngBounds();
 
 
@@ -42,16 +41,16 @@ function plot_air(airspace)
 
         circle = new L.Circle(pos, {
                 radius:crad, 
-                color:"#0000ff", 
+                color:"#ff00ff", 
                 opacity:1.0,
                 weight:1.0,
-                fillColor:"#0000ff", 
-                fillOpacity:0.4,
+                fillColor:"#ff00ff", 
+                fillOpacity:0.2,
             }).addTo(map);
 
         if (onscreen.length == 0 && count == 1)
         {
-            map.setCenter(pos, 13);
+            map.setView(pos, 13);
         }
 
         //sz = GSizeFromMeters(map, pos, crad*2,crad*2);
@@ -87,7 +86,7 @@ function plot_air(airspace)
 
         if (onscreen.length == 0 && count == 1)
         {
-            map.setCenter(new L.LatLng(lasLat, lasLon), 9);
+            map.setView(new L.LatLng(lasLat, lasLon), 9);
         }
 
         if (connect == "arc+" || connect == "arc-")
@@ -95,7 +94,7 @@ function plot_air(airspace)
             // add an arc of polylines
             var radius = dist(track[row], track[row-1]);
 
-            wline = make_wedge(track[row], parseFloat(track[row][8]), parseFloat(track[row][9]), radius, connect);
+            wline = make_wedge(track[row], parseFloat(track[row][4]), parseFloat(track[row][5]), radius, connect);
             for (pt in wline)
             {
                 line.push(wline[pt]);
@@ -111,17 +110,6 @@ function plot_air(airspace)
             //trklog.push(track[row]);
         }
     
-        if (count % 10 == 0)
-        {
-            polyline = new L.Polyline(line, {
-                color: "#0000ff", 
-                weight: 2, 
-                opacity: 1,
-                } ).addTo(map);
-            segments.push(polyline);
-            line = Array();
-            line.push(gll);
-        }
         count = count + 1;    
 
         if (!(connect == "arc+" || connect == "arc-"))
@@ -129,18 +117,20 @@ function plot_air(airspace)
             //pos = new L.LatLng(lasLat,lasLon);
             //label  = new ELabel(map, pos, row, "waypoint", new L.Size(0,0), 60);
         }
-        //sz = GSizeFromMeters(map, pos, crad*2,crad*2);
-        //map.addOverlay(new EInsert(pos, "circle.png", sz, 13));
     }
 
     if (line.length > 0)
     {
-        polyline = new L.Polyline(line, {
-            color: "#0000ff", 
+        polyline = new L.polygon(line, {
+            color: "#ff00ff", 
+            fillColor:"#ff00ff", 
             weight: 2, 
             opacity: 1, 
+            fillOpacity:0.2,
             }).addTo(map);
-        segments.push(polyline);
+
+        var center = polyline.getCenter();
+        add_label(map, center, cname, "waypoint");
     }
 
     onscreen[airspaceid] = track;
@@ -148,17 +138,17 @@ function plot_air(airspace)
 }
 function add_airspace() 
 {
-    var e = document.getElementById("airspace");
-    var airspaceid = e.options[e.selectedIndex].value;
-    plot_air(all_airspace[airspaceid]);
+    $("#airspace :selected").map(function(i, el) {
+        plot_air(all_airspace[$(el).val()]);
+    });
 }
 function dist(p1, p2)
 {
     var earth = 6378137.0;
-    var p1lat = p1[1] * Math.PI / 180;
-    var p1lon = p1[2] * Math.PI / 180;
-    var p2lat = p2[1] * Math.PI / 180;
-    var p2lon = p2[2] * Math.PI / 180;
+    var p1lat = p1[2] * Math.PI / 180;
+    var p1lon = p1[3] * Math.PI / 180;
+    var p2lat = p2[2] * Math.PI / 180;
+    var p2lon = p2[3] * Math.PI / 180;
     var dlat = (p2lat - p1lat);
     var dlon = (p2lon - p1lon);
 
@@ -178,8 +168,8 @@ function make_wedge(center, alpha, beta, radius, dirn)
     var nbrg;
 
     // to radians
-    var Clat = center[1] * Math.PI / 180;
-    var Clng = center[2] * Math.PI / 180;
+    var Clat = center[2] * Math.PI / 180;
+    var Clng = center[3] * Math.PI / 180;
 
     if (dirn == "arc-")
     {
@@ -210,6 +200,7 @@ function make_wedge(center, alpha, beta, radius, dirn)
         nlat = Math.asin(Math.sin(Clat)*Math.cos(radius/earth) + 
                 Math.cos(Clat)*Math.sin(radius/earth)*Math.cos(nbrg) );
 
+
         nlon = Clng + Math.atan2(Math.sin(nbrg)*Math.sin(radius/earth)*Math.cos(Clat),
                 Math.cos(radius/earth)-Math.sin(Clat)*Math.sin(nlat));
 
@@ -229,7 +220,7 @@ $(document).ready(function() {
     var url = new URL('http://highcloud.net/xc/get_local_airspace.php'+ window.location.search);
     //var tasPk = url.searchParams.get("tasPk");
 
-    new microAjax("get_local_airspace.php?" + window.location.search,
+    new microAjax("get_local_airspace.php" + window.location.search,
         function(data) {
         all_airspace = JSON.parse(data);
 

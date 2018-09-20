@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-
-<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -8,24 +6,25 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Task Result</title>
+    <title></title>
 
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/1-col-portfolio.css" rel="stylesheet">
-    <link href="task.css" rel="stylesheet">
-    <link href="navbar.css" rel="stylesheet">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+
 
     <!-- JS -->
     <script src="microajax.minified.js"></script>
-    <script src="url.js"></script>
+    <script src="utils.js"></script>
   </head>
 
   <body>
+
     <!-- Navigation -->
-    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top" data-spy="affix">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
       <div class="container">
         <a class="navbar-brand" href="#">airScore</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,36 +33,54 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a></li>
-            <li class="nav-item active"> <a class="nav-link" href="#">Ladders</a> <span class="sr-only">(current)</span></li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#">Tasks </a></li>
             <li class="nav-item"> <a class="nav-link" href="pilot_overview.html">Pilots</a></li>
-            <li class="nav-item"><a class="nav-link" href="submit_track.html">Submit</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a></li>
           </ul>
         </div>
       </div>
     </nav>
 
+    <!-- Page Content -->
     <div class="container" id="main">
-    <br>
-    <table id="ladders" class="row-border stripe compact" cellspacing="0" width="100%">
+    <div class="row">
+        <div class="col comp_header">
+        <br>
+        <h2 id="pilot_name"></h2>
+        <h4 id="pilot_nation"></h4>
+        </div>
+        <div class="col" class="task_waypoints">
+        <br>
+        <table class="table table-sm" id="pilot_details">
+        <thead class="thead-light" id="pil_hd">
+        </thead>
+        <tbody class="small" id="pil_bd"></tbody>
+        </table>
+        </div>
+    </div>
+    <table id="pilot_tracks" class="row-border compact" cellspacing="0" width="100%">
     <thead>
         <tr>
-            <th>Ladder</th>
-            <th>Nation</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Method</th>
+            <th>Date</th>
+            <th>Launch</th>
+            <th>Glider</th>
+            <th>Class</th>
+            <th>EN</th>
+            <th>Duration</th>
+            <th>Dist</th>
+            <th>Safe</th>
         </tr>
     </thead>
     </table>
     </div>
 
-    <!-- Bootstrap core JavaScript -->
+    <!-- more JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <!-- script src="https://rawgit.com/bassjobsen/affix/master/assets/js/affix.js"></script -->
-    <!-- script type="text/javascript" src="navbar.js"></script -->
-    <script type="text/javascript" src="js/pop_all_ladders.js"></script>
-</body>
-</html>
+    <script src="js/pop_pilot_details.js"></script>
 
+  </body>
+</html>

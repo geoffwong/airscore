@@ -1,6 +1,6 @@
 
 $(document).ready(function() {
-    new microAjax("get_local_tracks.php?" + window.location.search,
+    new microAjax("get_local_tracks.php" + window.location.search,
         function(data) {
         all_airspace = JSON.parse(data);
 

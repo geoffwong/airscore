@@ -26,7 +26,12 @@ $(document).ready(function() {
 
             // comp info
             $('#comp_name').text(json.task.comp_name + " - " + json.task.task_name);
-            $('#task_date').text(json.task.date);
+            $('#task_date').text(json.task.date + ' ' + json.task.task_type);
+            $('#comp_header').append('<b>Start: ' + json.task.start + ' End: ' + json.task.end + '</b><br>');
+            if (json.task.stopped)
+            {
+                $('#comp_header').append('<b>Stopped: ' + json.task.stopped + '</b><br>');
+            }
         
             // waypoints
             for (var c=0; c < json.task.waypoints.length; c++)
@@ -40,6 +45,23 @@ $(document).ready(function() {
             }
 
             // task info 
+            var half = Object.keys(json.formula).length / 2;
+            var count = 0;
+            $.each( json.formula, function( key, value ) {
+                if (count < half)
+                {
+                    $('#formula1 tbody').append('<tr><td>' + key + '</td><td>' + value + '</td></tr>');
+                }
+                else
+                {
+                    $('#formula2 tbody').append('<tr><td>' + key + '</td><td>' + value + '</td></tr>');
+                }
+                count++;
+            });
+
+            $.each( json.metrics, function( key, value ) {
+                $('#taskinfo tbody').append('<tr><td>' + key + '</td><td>' + value + '</td></tr>');
+            });
 
             // remove empty cols
             for ( var i=1; i<=numCols; i++ ) {

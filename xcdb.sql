@@ -1,6 +1,9 @@
 
 DROP database IF EXISTS xcdb;
-CREATE database xcdb;
+CREATE database xcdb
+  CHARACTER SET utf8
+  COLLATE utf8_general_ci;
+
 use xcdb;
 
 grant all on xcdb.* to '%MYSQLUSER%'@'%MYSQLHOST%' identified by '%MYSQLPASSWORD%';

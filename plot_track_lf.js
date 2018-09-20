@@ -240,12 +240,6 @@ function plot_award_task(tasPk, trackid)
     }
     ovhtml = ovhtml + "</form></div>";
     add_panel(map, "bottomright", ovhtml, 'map_control');
-    //ovlay = new HtmlControl(ovhtml, { visible:false, selectable:true, printable:true } );
-    //ovlay = new HtmlControl('Hello World!', { visible:false, selectable:true, printable:true } );
-    //map.addControl(ovlay, new google.maps.ControlPosition(G_ANCHOR_BOTTOM_RIGHT, new GSize(128, 256)));
-    //map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(ovlay);
-    //map.addControl(ovlay, new google.maps.ControlPosition(G_ANCHOR_BOTTOM_RIGHT, new google.maps.Size(10, 10)));
-    //ovlay.setVisible(true);
     });
 }
 function plot_track_header(body)
@@ -281,6 +275,10 @@ function plot_track_wp(track)
     var pos;
     var wpt;
 
+    if (track.length < 1)
+    {
+        return;
+    }
     count = 1;
     line = Array();
     segments = Array();
@@ -313,20 +311,6 @@ function plot_track_wp(track)
     polyline = new L.Polyline(line, { color:"#ff0000", weight:2, opacity:1 }).addTo(map);
     segments.push(polyline);
     map.fitBounds(bounds);
-}
-function format_seconds(tm)
-{
-    var h, m, s;
-
-    if (tm < 0) 
-    { 
-        tm = tm + 86400; 
-    }
-    h = (tm / 3600) % 24;
-    m = (tm / 60) % 60;
-    s = tm % 60;
-
-    return sprintf("%02d:%02d:%02d", h, m, s);
 }
 function plot_glider(glider,lat,lon,alt)
 {
@@ -500,16 +484,35 @@ function download_track()
     var traPk = url_parameter('trackid');
     post('download_tracks.php?traPk=' + traPk, { }, 'post');
 }
-function download_task_tracks()
+function download_top_tracks()
 {
-    var traPk = url_parameter('tasPk');
+    var tasPk = url_parameter('tasPk');
     if (tasPk > 0)
     {
         post('download_tracks.php?tasPk=' + tasPk, { }, 'post');
     }
 }
+
 $(document).ready(function() {
-    new microAjax("get_local_tracks.php?" + window.location.search,
+    var comPk = url_parameter("comPk");
+    var tasPk = url_parameter("tasPk");
+    var trackid = url_parameter('trackid');
+
+    var mapdiv = document.getElementById("map");
+    mapdiv.setAttribute('style', 'top: 0px; left: 0px; width:100%; height:90vh; float: left');
+    map = add_map_server('map', 0);
+    add_map_extra(map);
+    add_play_controls(map);
+
+    if (tasPk > 0)
+    {
+        plot_task(tasPk, false, trackid);
+    }
+    add_track(comPk, trackid, 5);
+});
+
+$(document).ready(function() {
+    new microAjax("get_local_tracks.php" + window.location.search,
         function(data) {
         var traPk = url_parameter('trackid');
         local_tracks = JSON.parse(data);
@@ -525,4 +528,5 @@ $(document).ready(function() {
             });
         });
 });
+
 

@@ -20,24 +20,23 @@ $(document).ready(function() {
             var numCols = $("th", table).length+1;
 
             // comp info
-            //$('#comp_name').text(json.task.comp_name);
-            //$('#task_date').text(json.task.date);
+            $('#comp_name').text(json.compinfo.comName);
+            $('#comp_date').text(json.compinfo.comDateFrom + ' - ' + json.compinfo.comDateTo);
         
-            // waypoints
-            //for (var c=0; c < json.task.waypoints.length; c++)
-            //{
-            //    $('#waypoints tbody').append("<tr><td>" + json.task.waypoints[c].rwpName + 
-            //            "</td><td>" + json.task.waypoints[c].tawType + 
-            //            "</td><td>" + json.task.waypoints[c].tawRadius + 
-            //            "</td><td>" + Number((json.task.waypoints[c].ssrCumulativeDist/1000).toFixed(1)) +
-            //            "</td><td>" + json.task.waypoints[c].rwpDescription +
-            //            "</td></tr>");
-            //}
-
-            // task info 
+            // some GAP parameters
+            $('#formula tbody').append(
+                        "<tr><td>Director</td><td>" + json.compinfo.comMeetDirName + '</td></tr>' +
+                        "<tr><td>Formula</td><td>" + json.compinfo.forClass + ' ' + json.compinfo.forVersion + '</td></tr>' +
+                        "<tr><td>Overall Scoring</td><td>" + json.compinfo.comOverallScore + ' (' + json.compinfo.comOverallParam + ')</td></tr>');
+            if (json.compinfo.comOverallScore == 'ftv')
+            {
+                $('#formula tbody').append(
+                        "<tr><td>Total Validity</td><td>" + json.compinfo.TotalValidity+ '</td></tr>');
+            }
 
             // remove empty cols
-            for ( var i=1; i<=numCols; i++ ) {
+            for ( var i=1; i<=numCols; i++ ) 
+            {
                 var empty = true;
                 table.DataTable().column(i).data().each( function (e, i) {
                     if (e != "")

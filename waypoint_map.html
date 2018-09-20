@@ -37,9 +37,7 @@
           <ul class="navbar-nav ml-auto">
             <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
             <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
-            <li><a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a></li>
-            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a></li>
-            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='jq_task_result.html'+window.location.search;">Results</a></li>
+             <li class="nav-item"> <a class="nav-link" href="pilot_overview.html">Pilots</a> </li>
             <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a> </li>
           </ul>
         </div>
@@ -50,20 +48,42 @@
     <form><input type="hidden" name="foo" id="foo" size="8"></form>
     <div class="track_map" id="map">
     <div id="sidebar">
-        <h3>Track Downloads</h3>
-        <button class="btn btn-primary btn-sm btn-block" onclick="download_track();">This Track</button>
-        <button class="btn btn-primary btn-sm btn-block" onclick="download_top_tracks();">Top 20 Tracks</button>
-        <hr>
-        <h3>View Tracks</h3>
-        <select class="custom-select mb-3" name="tracks" id="tracks"></select>
-        <br>
-        <button class="btn btn-primary btn-sm btn-block" onclick="do_add_track();">Add Track</button>
+        <h3>Waypoint Download</h3>
+        <div class="form-row align-items-center">
+        <div class="col my-1">
+        <button class="btn btn-primary btn-primary btn-block" onclick="download_waypoints();">This Region</button>
+        </div>
+        <div class="col my-1">
+        <select class="custom-select" id="wptformat">
+        <option selected value="1">Ozi Explorer</option>
+        <option value="2">CompeGPS</option>
+        </select>
+        </div>
+        </div>
         <hr>
         <div id="airdiv">
-        <h3>View Airspace</h3>
-        <select class="custom-select mb-3" name="airspace" id="airspace" multiple></select>
-        <br>
-        <button class="btn btn-primary btn-sm btn-block" onclick="add_airspace();">Add Airspace</button>
+        <h3>Add Waypoint</h3>
+        <button class="btn btn-primary btn-sm btn-block mb-3" onclick="create_waypoint_marker();">Create Waypoint Marker</button>
+        <div class="form-row align-items-center">
+        <div class="col-sm-4">
+        <input type="text" class="form-control mb-2" id="wptid" placeholder="Waypoint ID">
+        </div>
+        <div class="col">
+        <input type="text" class="form-control mb-2" id="wptdesc" placeholder="Description">
+        </div>
+        </div>
+        <div class="form-row align-items-center">
+        <div class="col">
+        <input type="text" class="form-control mb-2" id="lat" placeholder="Latitude">
+        </div>
+        <div class="col">
+        <input type="text" class="form-control mb-2" id="lon" placeholder="Longitude">
+        </div>
+        <div class="col">
+        <input type="text" class="form-control mb-2" id="alt" placeholder="Altitude">
+        </div>
+        </div>
+        <button class="btn btn-primary btn-sm btn-block" onclick="add_waypoint();">Add Waypoint</button>
         <hr>
         <div>
     </div>
@@ -75,9 +95,10 @@
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/jquery.ajax-cross-origin.min.js"></script>
     <script src="map_services.js"></script>
-    <script src="plot_track_lf.js"></script>
-    <script src="uair_lf.js"></script>
+    <script src="srtm.js"></script>
+    <script src="js/pop_waypoints.js"></script>
 
   </body>
 </html>

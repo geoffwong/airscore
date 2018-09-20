@@ -6,7 +6,7 @@ $(document).ready(function() {
         ajax: 'get_ladder.php?ladPk='+ladPk,
         paging: true,
         order: [[ 3, 'desc' ]],
-        lengthMenu: [ 15, 30, 60, 1000 ],
+        lengthMenu: [ 20, 50, 100, 1000 ],
         searching: true,
         info: false,
 
@@ -15,10 +15,16 @@ $(document).ready(function() {
             var table= $('#ladders');
             var rows = $("tr", table).length-1;
             var numCols = $("th", table).length+1;
+            
+            //
+            $('#ladder_name').text(json.ladder.ladName);
+            $('#ladder_header').append('<h3>' + json.ladder.ladNationCode + '</h3>');
+            $('#ladder_header').append('<h3>' + json.ladder.ladStart + ' - ' + json.ladder.ladEnd + '</h3>');
 
             // ladder info
-            //$('#comp_name').text(json.task.comp_name);
-            //$('#task_date').text(json.task.date);
+            $.each( json.inc, function( key, value ) {
+                $('#compsinc tbody').append('<tr><td><a href=comp_overall.html?comPk=' + value.comPk + '>' + value.comName + '</a></td><td>' + value.lcValue + '</td></tr>');
+            });
         
             // remove empty cols
             for ( var i=1; i<=numCols; i++ ) {

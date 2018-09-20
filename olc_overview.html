@@ -14,14 +14,19 @@
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
 
-    <!-- JS -->
-    <link rel="stylesheet" href="leaflet.css"/>
-    <script src="leaflet.js"></script> 
     <script src="microajax.minified.js"></script>
-    <script src="utils.js"></script>
+    <script src="url.js"></script>
+    <script>
+        // Initialise 
+        function initialize()
+        {
+            comPk = url_parameter("comPk");
+            plot_all_tasks(comPk);
+        }
+    </script>
   </head>
 
-  <body>
+  <body onload="initialize()">
 
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
@@ -46,8 +51,9 @@
                 <span class="sr-only">(current)</span>
               </a>
             </li>
-            <li class="nav-item"><a class="nav-link" href="#" onClick="document.location.href='pilot_overview.html'+window.location.search;">Pilots</a></li>
-            <li class="nav-item"><a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -72,11 +78,10 @@
       <div class="row" id="row1"></div>
     </div>
 
-    <!-- more JavaScript -->
+    <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="map_services.js"></script>
-    <script src="task_overview_leaf.js"></script>
 
   </body>
 </html>

@@ -7,7 +7,8 @@ $(document).ready(function() {
         order: [[ 3, 'desc' ]],
         lengthMenu: [ 15, 30, 60, 1000 ],
         searching: true,
-        info: false
+        info: false,
+         "dom": '<"#search"f>rt<"bottom"lip><"clear">'
     });
 });
 

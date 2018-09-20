@@ -171,4 +171,47 @@ function post(path, params, method) {
     document.body.appendChild(form);
     form.submit();
 }
+function format_seconds(tm)
+{
+    var h, m, s;
 
+    if (tm < 0)
+    {
+        tm = tm + 86400;
+    }
+    h = (tm / 3600) % 24;
+    m = (tm / 60) % 60;
+    s = tm % 60;
+
+    return sprintf("%02d:%02d:%02d", h, m, s);
+}
+function today()
+{
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+    var yyyy = today.getFullYear();
+    if (dd<10) {
+        dd = '0'+dd
+    } 
+    if (mm<10) {
+        mm = '0'+mm
+    } 
+    today = yyyy + '-' + mm + '-' + dd;
+    return today;
+}
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}

@@ -34,8 +34,10 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a></li>
-            <li class="nav-item active"> <a class="nav-link" href="#">Ladders</a> <span class="sr-only">(current)</span></li>
-            <li class="nav-item"> <a class="nav-link" href="pilot_overview.html">Pilots</a></li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li class="nav-item active"> <a class="nav-link" href="ladder_overview.html">Pilots</a> 
+                <span class="sr-only">(current)</span>
+            </li>
             <li class="nav-item"><a class="nav-link" href="submit_track.html">Submit</a></li>
           </ul>
         </div>
@@ -44,14 +46,15 @@
 
     <div class="container" id="main">
     <br>
-    <table id="ladders" class="row-border stripe compact" cellspacing="0" width="100%">
+    <table id="pilots" class="row-border stripe compact" cellspacing="0" width="100%">
     <thead>
         <tr>
-            <th>Ladder</th>
+            <th>Pilot</th>
             <th>Nation</th>
+            <th>Gender</th>
             <th>From</th>
             <th>To</th>
-            <th>Method</th>
+            <th>Tracks</th>
         </tr>
     </thead>
     </table>
@@ -63,7 +66,7 @@
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <!-- script src="https://rawgit.com/bassjobsen/affix/master/assets/js/affix.js"></script -->
     <!-- script type="text/javascript" src="navbar.js"></script -->
-    <script type="text/javascript" src="js/pop_all_ladders.js"></script>
+    <script type="text/javascript" src="js/pop_pilots.js"></script>
 </body>
 </html>
 
