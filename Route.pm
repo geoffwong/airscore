@@ -73,10 +73,11 @@ my $pi = atan2(1,1) * 4;
 
 my $dbh;
 my $sth;
+my $debug = 0;
 
 #
 # Input: Line segment P1 -> P2 -> P3
-# Return: optimised P2 
+# Returns: optimised P2 (to minimise distance)
 #
 sub find_closest
 {
@@ -93,12 +94,14 @@ sub find_closest
 
     if ($P2->{'shape'} eq 'line')
     {
+        if ($debug) { print "Route: line\n"; }
         return $P2;
     }
 
     if (!defined($P3))
     {
         # End of line case ..
+        if ($debug) { print "Route: EOL case\n"; }
         $O = $C1 - $C2;
         $vl = $O->length();
         if ($vl != 0)
@@ -133,20 +136,25 @@ sub find_closest
     # What if they have the same centre?
     if ($C1 == $C3)
     {
-        $O = $C1 - $C2;
+        #$O = $C1 - $C2;
+        $O = $C2 - $C1;
         $vl = $O->length();
+        if ($debug) { print "Route: same centre 1,3 case vl=$vl\n"; }
         if ($vl < 0.01)
         {
+            if ($debug) { print "Route: all same centre 1,2,3\n"; }
             # They're all the same point .. not much we can do until next iteration
             return $P2;
         }
 
         $O = ($P2->{'radius'} / $vl) * $O;
-        $CL = $O + $C2;
+        $vl = $O->length();
+        if ($debug) { print "New vl=$vl\n"; }
+        $CL = $C2 - $O;
 
         my $result = cartesian2polar($CL);
-        # Keep radius for next iteration
-        $result->{'radius'} = $P2->{'radius'};
+        # Fix? Should keep radius and centre for next iteration
+        #$result->{'radius'} = $P2->{'radius'};
         return $result;
     }
 
@@ -155,13 +163,14 @@ sub find_closest
     $T = $C1 - $C2;
     if ($T->length() < 0.01)
     {
+        if ($debug) { print "Route: same centre 1,2 case\n"; }
         $O = $C3 - $C2;
         $vl = $O->length();
         if ($vl > 0)
         {
             $O = ($P2->{'radius'} / $vl) * $O;
         }
-        $CL = $O + $C2;
+        $CL = $C2 + $O; 
 
         my $result = cartesian2polar($CL);
         return $result;
@@ -186,8 +195,8 @@ sub find_closest
         my $vn;
 
         # Ok - we have a 180deg? connect
-        print "180 deg connect: u=$u radius=", $P2->{'radius'}, "\n";
-        return $P2;
+        if ($debug) { print "180 deg connect: u=$u radius=", $P2->{'radius'}, "\n"; }
+#        return $P2;
     
 #        if ($P2->{'how'} eq 'exit' && $u == 0)
 #        {
@@ -203,31 +212,31 @@ sub find_closest
 #        }
 
         # find the intersection points (maybe in cylinder)
-        #$v = plane_normal($C1, $C2);
-        #$w = plane_normal($C3, $C2);
+        $v = plane_normal($C1, $C2);
+        $w = plane_normal($C3, $C2);
 
         #print "dot_prod=",dot_product($a,$b), "\n";
         #print "theta=$theta\n";
-        #$a = vvminus($C1, $C2);
-        #$vl = vector_length($a);
-        #if ($vl > 0)
-        #{
-        #    $a = vcdiv($a, $vl);
-        #}
-        #$b = vvminus($C3, $C2);
-        #$vl = vector_length($b);
-        #if ($vl > 0)
-        #{
-        #    $b = vcdiv($b, $vl);
-        #}
-        #$theta = acos(dot_product($a,$b));
+        $a = $C1 - $C2;
+        $vl = $a->length();
+        if ($vl > 0)
+        {
+            $a = $a/$vl;
+        }
+        $b = $C3 - $C2;
+        $vl = $b->length();
+        if ($vl > 0)
+        {
+            $b = $b/$vl;
+        }
+        $theta = acos($a . $b);
 
-        #$vn = vvplus($a,$b);
-        #$vl = vector_length($vn);
-        #$vn = vcdiv($vn,$vl);
-        #$O = cvmult($P2->{'radius'},$vn);
-        #print "vec_len=", vector_length($O), "\n";
-        #$CL = vvplus($O,$C2);
+        $vn = $a + $b;
+        $vl = $vn->length();
+        $vn = $vn/$vl;
+        $O = $vn * $P2->{'radius'};
+        print "vec_len=", $O->length(), "\n";
+        $CL = $O + $C2;
     }
     else
     {
@@ -239,7 +248,8 @@ sub find_closest
         $w = plane_normal($C3, $C2);
         $phi = acos($v . $w);
         $phideg = $phi * 180 / $pi;
-        #print "    angle between in/out=$phideg\n";
+
+        if ($debug) { print "Route: angle between in/out=$phideg\n"; }
         
         # div angle / 2 add to one of them to create new
         # vector and scale to cylinder radius for new point 
@@ -273,8 +283,12 @@ sub find_closest
         $CL = $O + $C2;
     }
 
-    #print "Centre=", Dumper($C2), "\n";
-    #print "Closest=", Dumper($CL), "\n";
+    if ($debug)
+    {
+        # print "Route: Centre=", Dumper($C2), "\n";
+        # print "Route: Closest=", Dumper($CL), "\n";
+    }
+     # Fix? Should keep radius and centre for next iteration
     my $result = cartesian2polar($CL);
     return $result;
 }
@@ -300,7 +314,7 @@ sub find_shortest_route
 
 
     # Ok work out non-optimal distance for now
-    print "task $tasPk with $num waypoints\n";
+    print "Task $tasPk with $num waypoints\n";
     #print Dumper($wpts);
 
     if ($num < 1)
@@ -321,20 +335,22 @@ sub find_shortest_route
     $newcl = $wpts->[0];
     for ($i = 0; $i < $num-2; $i++)
     {
-        #print "From it1: $i: ", $wpts->[$i]->{'name'}, "\n";
+        if ($debug) { print "From pass-1: $i: ", $wpts->[$i]->{'name'}, "\n"; }
         if (ddequal($wpts->[$i+1], $wpts->[$i+2]))
         {
+            if ($debug) { print "    FC1\n"; }
             $newcl = find_closest($newcl, $wpts->[$i+1], undef);
         }
         else
         {
+            if ($debug) { print "    FC2\n"; }
             $newcl = find_closest($newcl, $wpts->[$i+1], $wpts->[$i+2]);
         }
         push @it1, $newcl;
     }
     # FIX: special case for end point ..
     #print "newcl=", Dumper($newcl);
-    #print "From it1: $i: ", $wpts->[$i]->{'name'}, "\n";
+    if ($debug) { print "From (ep) it1: $i: ", $wpts->[$i]->{'name'}, "\n"; }
     $newcl = find_closest($newcl, $wpts->[$num-1], undef);
     push @it1, $newcl;
     #print "IT1=", Dumper(\@it1);
@@ -344,8 +360,9 @@ sub find_shortest_route
     $newcl = $it1[0];
     for ($i = 0; $i < $num-2; $i++)
     {
-        #print "From it2: $i: ", $wpts->[$i]->{'name'}, "\n";
-        $newcl = find_closest($newcl, $it1[$i+1], $it1[$i+2]);
+        if ($debug) { print "From pass-2: $i: ", $wpts->[$i]->{'name'}, "\n"; }
+        #$newcl = find_closest($newcl, $it1[$i+1], $it1[$i+2]);
+        $newcl = find_closest($newcl, $wpts->[$i+1], $it1[$i+2]);
         push @it2, $newcl;
     }
     push @it2, $it1[$num-1];
@@ -356,8 +373,9 @@ sub find_shortest_route
     $newcl = $it2[0];
     for ($i = 0; $i < $num-2; $i++)
     {
-        #print "From it3: $i: ", $wpts->[$i]->{'name'}, "\n";
-        $newcl = find_closest($newcl, $it2[$i+1], $it2[$i+2]);
+        if ($debug) { print "From pass-3: $i: ", $wpts->[$i]->{'name'}, "\n"; }
+        #$newcl = find_closest($newcl, $it2[$i+1], $it2[$i+2]);
+        $newcl = find_closest($newcl, $wpts->[$i+1], $it2[$i+2]);
         push @closearr, $newcl;
     }
     push @closearr, $it2[$num-1];

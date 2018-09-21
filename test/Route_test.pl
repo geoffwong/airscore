@@ -10,15 +10,32 @@ use strict;
 #is(round(1.3), 1.0, "Rounding 1");
 #is(round(1.5), 2.0, "Rounding 2");
 #is(round(1.8), 2.0, "Rounding 3");
+sub fix_task
+{
+    my ($task) = @_;
+    my $wpts = $task->{'waypoints'};
+
+    for my $wpt (@$wpts)
+    {
+        if (!(exists $wpt->{'dlat'}))
+        {
+            $wpt->{'dlat'} = $wpt->{'lat'} * 180 / PI();
+        }
+        if (!(exists $wpt->{'dlon'}))
+        {
+            $wpt->{'dlong'} = $wpt->{'long'} * 180 / PI();
+        }
+    }
+}
 
 my $task1 = 
     { 
         'tasPk' => 1,
         'waypoints' =>
         [
-            { 'key'=> 1, 'number' => 1, 'type' => 'start',    'how' => 'exit',  'shape' => 'circle', radius => 1000, name => 'test1', 'lat' => -36.5 * PI() / 180, 'long' => 110.0 * PI() / 180 },
+            { 'key'=> 1, 'number' => 1, 'type' => 'start', 'how' => 'exit',  'shape' => 'circle', radius => 1000, name => 'test1', 'lat' => -36.5 * PI() / 180, 'long' => 110.0 * PI() / 180 },
             { 'key'=> 3, 'number' => 3, 'type' => 'waypoint', 'how' => 'entry', 'shape' => 'circle', radius => 1000, name => 'test3', 'lat' => -37.0 * PI() / 180, 'long' => 110.0 * PI() / 180 },
-            { 'key'=> 5, 'number' => 5, 'type' => 'goal',     'how' => 'entry', 'shape' => 'circle', radius => 1000, name => 'test5', 'lat' => -36.5 * PI() / 180, 'long' => 110.5 * PI() / 180 },
+            { 'key'=> 5, 'number' => 5, 'type' => 'goal', 'how' => 'entry', 'shape' => 'circle', radius => 1000, name => 'test5', 'lat' => -36.5 * PI() / 180, 'long' => 110.5 * PI() / 180 },
         ]
     };
 
@@ -74,7 +91,29 @@ my $task5 =
 ]
 };
 
+
+my $task6 =
+{
+    'tasPk' => 6,
+    'waypoints' =>
+[
+{ 'key' => 12219, 'number' => '10', 'radius' => 100, 'lat' => -33.643726 * PI() / 180, 'long' => 150.244876 * PI() / 180, 'how' => 'exit', 'shape' => 'circle', type => 'start', 'name' => 'lblack' },
+{ 'key' => 12199, 'number' => '20', 'radius' => 2500, 'lat' => -33.647819 * PI() / 180,'long' => 150.288735 * PI() / 180, 'how' => 'entry', 'shape' => 'circle', type => 'speed', 'name' => 'bkgolf' },
+{ 'key' => 12219, 'number' => '30', 'radius' => 200, 'lat' =>  -33.643726 * PI() / 180,'long' => 150.244876 * PI() / 180, 'how' => 'entry', 'shape' => 'circle', type => 'waypoint'|  1032.002438281, 'name' => 'lblack' },
+{ 'key' => 12203, 'number' => '40', 'radius' => 7000, 'lat' => -33.47665 * PI() / 180,'long' => 150.223125 * PI() / 180, 'how' => 'entry', 'shape' => 'circle', type => 'waypoint', 'name' => 'clarnc' },
+{ 'key' => 12212, 'number' => '50', 'radius' => 7000, 'lat' => -33.646 * PI() / 180,'long' => 150.048227 * PI() / 180, 'how' => 'entry', 'shape' => 'circle', type => 'waypoint', 'name' => 'hamptn' }, 
+{ 'key' => 12223, 'number' => '60', 'radius' => 1000, 'lat' => -33.632263 * PI() / 180,'long' => 150.255737 * PI() / 180, 'how' => 'entry', 'shape' => 'circle', type => 'endspeed', 'name' => 'lzblac' },
+{ 'key' => 12223, 'number' => '70', 'radius' => 100, 'lat' => -33.632263 * PI() / 180,'long' => 150.255737 * PI() / 180, 'how' => 'entry', 'shape' => 'line', 'type' => 'goal', 'name' => 'lzblac' }
+]
+};
+
 my ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist);
+
+
+
+#####
+
+fix_task($task1);
 my $sr1 = find_shortest_route($task1);
 for (my $i = 0; $i < scalar @$sr1; $i++)
 {
@@ -87,11 +126,14 @@ for (my $i = 0; $i < scalar @$sr1; $i++)
 is($spt, 0, "start speed point");
 is($ept, 2, "end speed point");
 is($gpt, 2, "goal point");
-is(sprintf("%.1f", $ssdist), "122930.3", "speed section distance");
+is(sprintf("%.1f", $ssdist), "122820.2", "speed section distance");
 is($startssdist, 1000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "123930.3", "end speed section distance");
-is(sprintf("%.1f", $totdist), "123930.3", "total distance");
+is(sprintf("%.1f", $endssdist), "123820.2", "end speed section distance");
+is(sprintf("%.1f", $totdist), "123820.2", "total distance");
 
+#####
+
+fix_task($task2);
 my $sr2 = find_shortest_route($task2);
 for (my $i = 0; $i < scalar @$sr2; $i++)
 {
@@ -104,12 +146,15 @@ for (my $i = 0; $i < scalar @$sr2; $i++)
 is($spt, 1, "start speed point");
 is($ept, 3, "end speed point");
 is($gpt, 4, "goal point");
-is(sprintf("%.1f", $ssdist), "117947.8", "speed section distance");
+is(sprintf("%.1f", $ssdist), "117834.9", "speed section distance");
 is($startssdist, 5000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "122947.8", "end speed section distance");
-is(sprintf("%.1f", $totdist), "123941.7", "total distance");
+is(sprintf("%.1f", $endssdist), "122834.9", "end speed section distance");
+is(sprintf("%.1f", $totdist), "123831.9", "total distance");
 
 $task2->{'waypoints'}->[4]->{'shape'} = 'line';
+
+#####
+
 my $sr3 = find_shortest_route($task2);
 for (my $i = 0; $i < scalar @$sr3; $i++)
 {
@@ -122,13 +167,16 @@ for (my $i = 0; $i < scalar @$sr3; $i++)
 is($spt, 1, "start speed point");
 is($ept, 3, "end speed point");
 is($gpt, 4, "goal point");
-is(sprintf("%.1f", $ssdist), "117947.8", "speed section distance");
+is(sprintf("%.1f", $ssdist), "117838.0", "speed section distance");
 is($startssdist, 5000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "122947.8", "end speed section distance");
-is(sprintf("%.1f", $totdist), "124941.6", "total distance");
+is(sprintf("%.1f", $endssdist), "122838.0", "end speed section distance");
+is(sprintf("%.1f", $totdist), "124831.8", "total distance");
 
+#####
 
+fix_task($task3);
 my $sr4 = find_shortest_route($task3);
+
 for (my $i = 0; $i < scalar @$sr4; $i++)
 {
     $task3->{'waypoints'}->[$i]->{'short_lat'} = $sr4->[$i]->{'lat'};
@@ -140,14 +188,15 @@ for (my $i = 0; $i < scalar @$sr4; $i++)
 is($spt, 1, "start speed point");
 is($ept, 5, "end speed point");
 is($gpt, 5, "goal point");
-is(sprintf("%.1f", $ssdist), "60179.6", "speed section distance");
+is(sprintf("%.1f", $ssdist), "60095.3", "speed section distance");
 is($startssdist, 1000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "61179.6", "end speed section distance");
-is(sprintf("%.1f", $totdist), "61179.6", "total distance");
+is(sprintf("%.1f", $endssdist), "61095.3", "end speed section distance");
+is(sprintf("%.1f", $totdist), "61095.3", "total distance");
 
 # add a test for in_semicircle
-
 # super simple 2 point task
+
+fix_task($task4);
 my $sr5 = find_shortest_route($task4);
 for (my $i = 0; $i < scalar @$sr5; $i++)
 {
@@ -165,6 +214,9 @@ is($startssdist, 5000, "start speed distance");
 is(sprintf("%.1f", $endssdist), "11437.2", "end speed section distance");
 is(sprintf("%.1f", $totdist), "11437.2", "total distance");
 
+#####
+
+fix_task($task5);
 my $sr6 = find_shortest_route($task5);
 for (my $i = 0; $i < scalar @$sr6; $i++)
 {
@@ -174,5 +226,26 @@ for (my $i = 0; $i < scalar @$sr6; $i++)
 
 ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task5);
 print "($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist)\n";
+
+#####
+
+fix_task($task6);
+my $sr7 = find_shortest_route($task6);
+for (my $i = 0; $i < scalar @$sr7; $i++)
+{
+    $task6->{'waypoints'}->[$i]->{'short_lat'} = $sr7->[$i]->{'lat'};
+    $task6->{'waypoints'}->[$i]->{'short_long'} = $sr7->[$i]->{'long'};
+}
+
+($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task6);
+print "($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist)\n";
+
+is($spt, 1, "start speed point");
+is($ept, 5, "end speed point");
+is($gpt, 6, "goal point");
+#is(sprintf("%.1f", $ssdist), "6437.2", "speed section distance");
+#is($startssdist, 5000, "start speed distance");
+#is(sprintf("%.1f", $endssdist), "11437.2", "end speed section distance");
+#is(sprintf("%.1f", $totdist), "11437.2", "total distance");
 
 done_testing
