@@ -49,6 +49,7 @@ $formula->{'mindist'} = 5000;
 $formula->{'nomdist'} = 30000;
 $formula->{'nomgoal'} = 0.5;
 $formula->{'nomtime'} = 90 * 60;
+$formula->{'nomlaunch'} = 1.0;
 $formula->{'diffcalc'} = 'lo';
 $formula->{'weightstart'} = 0.125;
 $formula->{'weightarrival'} = 0.175;

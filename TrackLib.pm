@@ -348,6 +348,8 @@ sub cartesian2polar
     return \%pol;
 }
 
+
+# Check if two waypoints are at the same location
 sub ddequal
 {
     my ($wp1, $wp2) = @_;
@@ -448,14 +450,14 @@ sub acos
 #
 #
 
-sub distance
+sub C_distance
 {
     my ($p1, $p2) = @_;
 
     return haversine_distance($p1->{'lat'}, $p1->{'long'}, $p2->{'lat'}, $p2->{'long'});
 }
 
-sub perl_distance
+sub distance
 {
     my ($p1, $p2) = @_;
 

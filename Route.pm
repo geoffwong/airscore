@@ -78,11 +78,12 @@ my $debug = 0;
 #
 # Input: Line segment P1 -> P2 -> P3
 # Returns: optimised P2 (to minimise distance)
+# O2 - original 'P2' point (needed for position / radius in some cases)
 #
 sub find_closest
 {
-    my ($P1, $P2, $P3) = @_;
-    my ($C1, $C2, $C3, $PR);
+    my ($P1, $P2, $P3, $O2, $dirn) = @_;
+    my ($C1, $C2, $C3, $PR, $D1);
     my ($N, $CL);
     my ($v, $w, $phi, $phideg);
     my ($T, $O, $vl, $wl);
@@ -92,10 +93,50 @@ sub find_closest
     $C1 = polar2cartesian($P1);
     $C2 = polar2cartesian($P2);
 
+    if (!defined($P2)) 
+    {
+        if ($debug) { print "Route: P2 & P3 have same centre - straight through case\n"; }
+        $C3 = polar2cartesian($P3);
+        $O = $C1 - $C3;
+        $vl = $O->length();
+        if ($vl < 0.01)
+        {
+            if ($debug) { print "Route: all same centre 1,2,3\n"; }
+            # They're all the same point .. not much we can do until next iteration
+            # pick an arbitrary point on the radius
+            if (defined($dirn))
+            {
+                $D1 = polar2cartesian($dirn);
+                $O = $D1 - $C1;
+            }
+            else
+            {
+                # Pick a random direction .. it all starts and ends at the same place
+                $O = Vector->new(1000,1000,1000);
+            }
+            $vl = $O->length();
+            $O = ($O2->{'radius'} / $vl) * $O;
+        }
+        else
+        {
+            $O = ($O2->{'radius'} / $vl) * $O;
+        }
+        $CL = $O + $C3;
+
+        my $result = cartesian2polar($CL);
+        #$result->{'radius'} = $P2->{'radius'};
+        return $result;
+    }
+
     if ($P2->{'shape'} eq 'line')
     {
         if ($debug) { print "Route: line\n"; }
         return $P2;
+    }
+    
+    if (!defined($O2))
+    {
+        $O2 = $P2;
     }
 
     if (!defined($P3))
@@ -104,14 +145,27 @@ sub find_closest
         if ($debug) { print "Route: EOL case\n"; }
         $O = $C1 - $C2;
         $vl = $O->length();
-        if ($vl != 0)
+        if ($vl > 0.01)
         {
             $O = ($P2->{'radius'} / $vl) * $O;
             $CL = $O + $C2;
         }
         else
         {
-            return $P2;
+            if (defined($dirn))
+            {
+                if ($debug) { print "    Using suggested dirn\n"; }
+                $D1 = polar2cartesian($dirn);
+                $O = $D1 - $C1;
+                $vl = $O->length();
+                $O = ($O2->{'radius'} / $vl) * $O;
+                $CL = $O + $C2;
+                # fall out of this else
+            }
+            else
+            {
+                return $P2;
+            }
         }
 
         my $result = cartesian2polar($CL);
@@ -188,7 +242,7 @@ sub find_closest
     $CL = $N;
     $PR = cartesian2polar($CL);
     if (($u >= 0 && $u <= 1)
-        && (distance($PR, $P2) < $P2->{'radius'}))
+        && (distance($PR, $P2) <= $P2->{'radius'}))
     {
         my $theta;
         my $db;
@@ -271,12 +325,12 @@ sub find_closest
 
         if ($phideg < 180)
         {
-            #print "    p2->radius=", $P2->{'radius'}, "\n";
+            if ($debug) { print "    p2->radius=", $P2->{'radius'}, "\n"; }
             $O = ($P2->{'radius'} / $vl) * $O;
         }
         else
         {
-            #print "    -p2->radius=", $P2->{'radius'}, "\n";
+            if ($debug) { print "    -p2->radius=", $P2->{'radius'}, "\n"; }
             $O = (-$P2->{'radius'} / $vl) * $O;
         }
 
@@ -293,6 +347,68 @@ sub find_closest
     return $result;
 }
 
+sub qckdist3
+{
+    my ($P1, $P2, $P3) = @_;
+
+    my $tot = qckdist2($P1, $P2);
+    $tot += qckdist2($P2, $P3);
+
+    return $tot;
+}
+
+sub iterate_short_route
+{
+    my ($orig, $wpts) = @_; 
+    my @result;
+    my $num = scalar @$wpts;
+
+    push @result, $wpts->[0];
+    my $newcl = $wpts->[0];
+    for (my $i = 0; $i < $num-2; $i++)
+    {
+        if ($debug) { print "iterate_short_route: $i: ", $orig->[$i]->{'name'}, "\n"; }
+        if (ddequal($orig->[$i+1], $orig->[$i+2]) && ($i < $num-3))
+        {
+            my $dirn;
+            # should find the intersection of the circle/radius of $i+1 & $i+2
+            my $j = $i+2;
+            while (ddequal($newcl, $orig->[$j]) && $j < $num-1)
+            {
+                # Target task .. hopefully there's a way out.
+                $j++;
+            }
+            $dirn = $orig->[$j];
+            $newcl = find_closest($newcl, undef, $wpts->[$i+2], $orig->[$i+1], $dirn);
+            #push @result, $newcl;
+            if (qckdist3($wpts->[$i], $newcl, $wpts->[$i+2]) < qckdist3($wpts->[$i], $wpts->[$i+1], $wpts->[$i+2]))
+            { 
+                push @result, $newcl; 
+            } 
+            else 
+            {
+                push @result, $wpts->[$i+1]; 
+            }
+        }
+        else
+        {
+            $newcl = find_closest($newcl, $orig->[$i+1], $wpts->[$i+2], undef, undef);
+            if (qckdist3($wpts->[$i], $newcl, $wpts->[$i+2]) < qckdist3($wpts->[$i], $wpts->[$i+1], $wpts->[$i+2]))
+            { 
+                push @result, $newcl; 
+            } 
+            else 
+            {
+                push @result, $wpts->[$i+1]; 
+            }
+        }
+
+    }
+    push @result, $wpts->[$num-1];
+
+    return \@result;
+}
+
 #
 # Find the task totals and update ..
 #   tasTotalDistanceFlown, tasPilotsLaunched, tasPilotsTotal
@@ -304,8 +420,6 @@ sub find_shortest_route
     my $dist;
     my $i = 0;
     my @it1;
-    my @it2;
-    my @closearr;
     my $newcl;
 
     my $tasPk = $task->{'tasPk'};
@@ -324,13 +438,13 @@ sub find_shortest_route
 
     if ($num == 1)
     {
+        my @closearr;
         my $first = cartesian2polar(polar2cartesian($wpts->[0]));
         push @closearr, $first;
         return \@closearr;
     }
 
     # Work out shortest route!
-    # End points don't vary?
     push @it1, $wpts->[0];
     $newcl = $wpts->[0];
     for ($i = 0; $i < $num-2; $i++)
@@ -339,57 +453,38 @@ sub find_shortest_route
         if (ddequal($wpts->[$i+1], $wpts->[$i+2]))
         {
             if ($debug) { print "    FC1\n"; }
-            $newcl = find_closest($newcl, $wpts->[$i+1], undef);
+            my $dirn;
+            # should find the intersection of the circle/radius of $i+1 & $i+2
+            my $j = $i+2;
+            while (ddequal($newcl, $wpts->[$j]) && $j < $num-1)
+            {
+                # Target task .. hopefully there's a way out.
+                $j++;
+            }
+            $dirn = $wpts->[$j];
+            $newcl = find_closest($newcl, $wpts->[$i+1], undef, undef, $dirn);
         }
         else
         {
             if ($debug) { print "    FC2\n"; }
-            $newcl = find_closest($newcl, $wpts->[$i+1], $wpts->[$i+2]);
+            $newcl = find_closest($newcl, $wpts->[$i+1], $wpts->[$i+2], undef, undef);
         }
         push @it1, $newcl;
     }
     # FIX: special case for end point ..
     #print "newcl=", Dumper($newcl);
     if ($debug) { print "From (ep) it1: $i: ", $wpts->[$i]->{'name'}, "\n"; }
-    $newcl = find_closest($newcl, $wpts->[$num-1], undef);
+    $newcl = find_closest($newcl, $wpts->[$num-1], undef, undef, undef);
     push @it1, $newcl;
     #print "IT1=", Dumper(\@it1);
+    #return \@it1;
 
-    $num = scalar @it1;
-    push @it2, $it1[0];
-    $newcl = $it1[0];
-    for ($i = 0; $i < $num-2; $i++)
-    {
-        if ($debug) { print "From pass-2: $i: ", $wpts->[$i]->{'name'}, "\n"; }
-        #$newcl = find_closest($newcl, $it1[$i+1], $it1[$i+2]);
-        $newcl = find_closest($newcl, $wpts->[$i+1], $it1[$i+2]);
-        push @it2, $newcl;
-    }
-    push @it2, $it1[$num-1];
-    #print "IT2=", Dumper(\@it2);
+    # Iterate until it doesn't get shorter?
+    my $it2 = iterate_short_route($wpts, \@it1);
+    my $closearr = iterate_short_route($wpts, $it2);
 
-    $num = scalar @it2;
-    push @closearr, $it2[0];
-    $newcl = $it2[0];
-    for ($i = 0; $i < $num-2; $i++)
-    {
-        if ($debug) { print "From pass-3: $i: ", $wpts->[$i]->{'name'}, "\n"; }
-        #$newcl = find_closest($newcl, $it2[$i+1], $it2[$i+2]);
-        $newcl = find_closest($newcl, $wpts->[$i+1], $it2[$i+2]);
-        push @closearr, $newcl;
-    }
-    push @closearr, $it2[$num-1];
-    #print "closearr=", Dumper(\@closearr);
-
-    #for (my $i = 0; $i < scalar @closearr-1; $i++)
-    #{
-    #    my $dist = distance($wpts->[$i], $wpts->[$i+1]);
-    #    my $cdist = distance($closearr[$i], $closearr[$i+1]);
-    #    my $radius = 0 + $closearr[$i]->{'radius'};
-    #    print "Dist wpt:$i ($radius) to wpt:", $i+1, "=$dist srdist=$cdist\n";
-    #}
-
-    return \@closearr;
+    #print "closearr=", Dumper($closearr);
+    return $closearr;
 }
 
 sub store_short_route

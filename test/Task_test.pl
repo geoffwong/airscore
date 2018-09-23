@@ -1,15 +1,23 @@
 #!/usr/bin/perl -I..
 
+require Task;
+require Route;
 use Test::More;
 use Data::Dumper;
-use Route qw(:all);
 use strict;
 
-# Helper function tests
+# Setup some tasks ..
 
-#is(round(1.3), 1.0, "Rounding 1");
-#is(round(1.5), 2.0, "Rounding 2");
-#is(round(1.8), 2.0, "Rounding 3");
+sub fix_sr
+{
+    my ($task, $sr) = @_;
+    for (my $i = 0; $i < scalar @$sr; $i++)
+    {
+        $task->{'waypoints'}->[$i]->{'short_lat'} = $sr->[$i]->{'lat'};
+        $task->{'waypoints'}->[$i]->{'short_long'} = $sr->[$i]->{'long'};
+    }
+}
+
 sub fix_task
 {
     my ($task) = @_;
@@ -26,15 +34,33 @@ sub fix_task
             $wpt->{'dlong'} = $wpt->{'long'} * 180 / PI();
         }
     }
+    $wpts = find_shortest_route($task);
+    fix_sr($task, $wpts);
+}
 
-    my $sr1 = find_shortest_route($task);
-    for (my $i = 0; $i < scalar @$sr1; $i++)
+sub fix_sr
+{
+    my ($task, $sr) = @_;
+    for (my $i = 0; $i < scalar @$sr; $i++)
     {
-        $task->{'waypoints'}->[$i]->{'short_lat'} = $sr1->[$i]->{'lat'};
-        $task->{'waypoints'}->[$i]->{'short_long'} = $sr1->[$i]->{'long'};
+        $task->{'waypoints'}->[$i]->{'short_lat'} = $sr->[$i]->{'lat'};
+        $task->{'waypoints'}->[$i]->{'short_long'} = $sr->[$i]->{'long'};
     }
 }
 
+sub make_coord
+{
+    my ($dlat, $dlong) = @_;
+    my %coord;
+
+    $coord{'time'} = time();
+    $coord{'dlat'} = $dlat;
+    $coord{'dlong'} = $dlong;
+    $coord{'lat'} = $dlat * PI() / 180;
+    $coord{'long'} = $dlong * PI() / 180; 
+
+    return \%coord;
+}
 my $task1 = 
     { 
         'tasPk' => 1,
@@ -60,8 +86,6 @@ my $task2 =
         ]
     };
 
-
-# tasPk=1097 HC
 my $task3 = 
     { 
         'tasPk' => 3,
@@ -101,7 +125,6 @@ my $task5 =
 };
 
 
-# tasPk=1093 HC
 my $task6 =
 {
     'tasPk' => 6,
@@ -117,108 +140,79 @@ my $task6 =
 ]
 };
 
-my ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist);
 
+my $dist;
+my $sr;
+my $wpts;
+my $coord;
 
+# Test computed waypoint distance (various scenarios)
+fix_task($task6);
+$wpts = $task6->{'waypoints'};
 
-#####
+# without cache
+$dist = compute_waypoint_dist($wpts, 2);
+is(sprintf("%.1f", $dist), "3086.8", "task 6 - wpt 2");
+$dist = compute_waypoint_dist($wpts, 3);
+is(sprintf("%.1f", $dist), "15181.0", "task 6 - wpt 3");
+$dist = compute_waypoint_dist($wpts, 4);
+is(sprintf("%.1f", $dist), "27636.9", "task 6 - wpt 4");
+$dist = compute_waypoint_dist($wpts, 5);
+is(sprintf("%.1f", $dist), "39447.0", "task 6 - wpt 5");
 
-fix_task($task1);
+# with cache
+precompute_waypoint_dist($wpts);
 
-($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task1);
+$dist = compute_waypoint_dist($wpts, 2);
+is(sprintf("%.1f", $dist), "3086.8", "task 6 - wpt 2");
+$dist = compute_waypoint_dist($wpts, 3);
+is(sprintf("%.1f", $dist), "15181.0", "task 6 - wpt 3");
+$dist = compute_waypoint_dist($wpts, 4);
+is(sprintf("%.1f", $dist), "27636.9", "task 6 - wpt 4");
+$dist = compute_waypoint_dist($wpts, 5);
+is(sprintf("%.1f", $dist), "39447.0", "task 6 - wpt 5");
 
-is($spt, 0, "start speed point");
-is($ept, 2, "end speed point");
-is($gpt, 2, "goal point");
-is(sprintf("%.1f", $ssdist), "122820.1", "speed section distance");
-is($startssdist, 1000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "123820.1", "end speed section distance");
-is(sprintf("%.1f", $totdist), "123820.1", "total distance");
+# Test remaining task distance
+$coord = make_coord(-33.64532, 150.25388);
+$dist = remaining_task_dist($wpts, 2, $coord);
+is(sprintf("%.1f", $dist), "38012.4", "task 6 remaining c1 - 2 made");
+$dist = remaining_task_dist($wpts, 3, $coord);
+is(sprintf("%.1f", $dist), "37928.6", "task 6 remaining c1 - 3 made");
 
-#####
-
-fix_task($task2);
-
-($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task2);
-
-is($spt, 1, "start speed point");
-is($ept, 3, "end speed point");
-is($gpt, 4, "goal point");
-is(sprintf("%.1f", $ssdist), "117834.7", "speed section distance");
-is($startssdist, 5000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "122834.7", "end speed section distance");
-is(sprintf("%.1f", $totdist), "123831.7", "total distance");
-
-$task2->{'waypoints'}->[4]->{'shape'} = 'line';
-
-#####
-
-my $sr3 = find_shortest_route($task2);
-for (my $i = 0; $i < scalar @$sr3; $i++)
-{
-    $task2->{'waypoints'}->[$i]->{'short_lat'} = $sr3->[$i]->{'lat'};
-    $task2->{'waypoints'}->[$i]->{'short_long'} = $sr3->[$i]->{'long'};
-}
-
-($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task2);
-
-is($spt, 1, "start speed point");
-is($ept, 3, "end speed point");
-is($gpt, 4, "goal point");
-is(sprintf("%.1f", $ssdist), "117837.9", "speed section distance");
-is($startssdist, 5000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "122837.9", "end speed section distance");
-is(sprintf("%.1f", $totdist), "124831.7", "total distance");
-
-#####
-
-fix_task($task3);
-
-($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task3);
-
-is($spt, 1, "start speed point");
-is($ept, 5, "end speed point");
-is($gpt, 5, "goal point");
-is(sprintf("%.1f", $ssdist), "60095.3", "speed section distance");
-is($startssdist, 1000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "61095.3", "end speed section distance");
-is(sprintf("%.1f", $totdist), "61095.3", "total distance");
-
-# add a test for in_semicircle
-# super simple 2 point task
-
-fix_task($task4);
-
-($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task4);
-
-is($spt, 0, "start speed point");
-is($ept, 1, "end speed point");
-is($gpt, 1, "goal point");
-is(sprintf("%.1f", $ssdist), "6437.2", "speed section distance");
-is($startssdist, 5000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "11437.2", "end speed section distance");
-is(sprintf("%.1f", $totdist), "11437.2", "total distance");
-
-#####
+$coord = make_coord(-33.64896, 150.27239);
+$dist = remaining_task_dist($wpts, 3, $coord);
+is(sprintf("%.1f", $dist), "38973.9", "task 6 remaining c2 - 2 made");
+$coord = make_coord(-33.64896, 150.27439);
+$dist = remaining_task_dist($wpts, 3, $coord);
+is(sprintf("%.1f", $dist), "39056.6", "task 6 remaining c2 - 3 made");
 
 fix_task($task5);
+$wpts = $task5->{'waypoints'};
+precompute_waypoint_dist($wpts);
 
-($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task5);
-print "($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist)\n";
+$dist = compute_waypoint_dist($wpts, 2);
+is(sprintf("%.1f", $dist), "5372.6", "task 5 - wpt 2");
+$dist = compute_waypoint_dist($wpts, 3);
+is(sprintf("%.1f", $dist), "41027.7", "task 5 - wpt 3");
+$dist = compute_waypoint_dist($wpts, 4);
+is(sprintf("%.1f", $dist), "66100.4", "task 5 - wpt 4");
+$dist = compute_waypoint_dist($wpts, 5);
+is(sprintf("%.1f", $dist), "68586.9", "task 5 - wpt 5");
 
-#####
+fix_task($task2);
+$wpts = $task2->{'waypoints'};
+precompute_waypoint_dist($wpts);
 
-fix_task($task6);
+$dist = compute_waypoint_dist($wpts, 1);
+is(sprintf("%.1f", $dist), "4985.5", "task 2 - wpt 1");
+$dist = compute_waypoint_dist($wpts, 2);
+is(sprintf("%.1f", $dist), "54541.2", "task 2 - wpt 2");
+$dist = compute_waypoint_dist($wpts, 3);
+is(sprintf("%.1f", $dist), "122820.4", "task 2 - wpt 3");
+$dist = compute_waypoint_dist($wpts, 4);
+is(sprintf("%.1f", $dist), "123817.4", "task 2 - wpt 4");
 
-($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task6);
-print "($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist)\n";
+# Test distance flown
 
-is($spt, 1, "start speed point");
-is($ept, 5, "end speed point");
-is($gpt, 6, "goal point");
-#is(sprintf("%.1f", $ssdist), "6437.2", "speed section distance");
-#is($startssdist, 5000, "start speed distance");
-#is(sprintf("%.1f", $endssdist), "11437.2", "end speed section distance");
-#is(sprintf("%.1f", $totdist), "11437.2", "total distance");
+done_testing;
 
-done_testing

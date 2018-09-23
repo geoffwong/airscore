@@ -27,6 +27,7 @@ $taskno = $ARGV[0];
 
 # Work out the shortest route through task
 my $task = read_task($taskno);
+#print Dumper($task);
 $short_route = find_shortest_route($task);
 if (defined($short_route))
 {
@@ -36,7 +37,7 @@ if (defined($short_route))
 # Work out some distances
 $task = read_task($taskno);
 my ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task);
-print "spt=$spt ept=$ept gpt=$gpt ssdist=$ssdist startssdist=$startssdist endssdist=$endssdist total=$totdist\n";
+#print "spt=$spt ept=$ept gpt=$gpt ssdist=$ssdist startssdist=$startssdist endssdist=$endssdist total=$totdist\n";
 print "update tblTask set tasSSDistance=$ssdist, tasEndSSDistance=$endssdist, tasStartSSDistance=$startssdist where tasPk=$taskno\n";
 my $sth = $dbh->prepare("update tblTask set tasSSDistance=$ssdist, tasEndSSDistance=$endssdist, tasStartSSDistance=$startssdist where tasPk=$taskno");
 $sth->execute();
