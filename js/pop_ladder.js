@@ -6,9 +6,10 @@ $(document).ready(function() {
         ajax: 'get_ladder.php?ladPk='+ladPk,
         paging: true,
         order: [[ 3, 'desc' ]],
-        lengthMenu: [ 20, 50, 100, 1000 ],
+        lengthMenu: [ 10, 20, 50, 100, 1000 ],
         searching: true,
         info: false,
+         "dom": '<"#search"f>rt<"bottom"lip><"clear">',
 
         "initComplete": function(settings, json) 
         {

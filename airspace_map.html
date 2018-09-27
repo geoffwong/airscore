@@ -48,19 +48,14 @@
 
     <!-- Page Content -->
     <form><input type="hidden" name="foo" id="foo" size="8"></form>
-    <div class="track_map" id="map">
+    <div class="airspace_map" id="map">
     <div id="sidebar">
-        <h3>Track Downloads</h3>
+        <h3>Airspace Downloads</h3>
         <button class="btn btn-primary btn-sm btn-block" onclick="download_track();">This Track</button>
         <button class="btn btn-primary btn-sm btn-block" onclick="download_top_tracks();">Top 20 Tracks</button>
         <hr>
-        <h3>View Tracks</h3>
-        <select class="custom-select mb-3" name="tracks" id="tracks"></select>
-        <br>
-        <button class="btn btn-primary btn-sm btn-block" onclick="do_add_track();">Add Track</button>
-        <hr>
         <div id="airdiv">
-        <h3>View Airspace</h3>
+        <h3>Select Airspace</h3>
         <select class="custom-select mb-3" name="airspace" id="airspace" multiple></select>
         <br>
         <button class="btn btn-primary btn-sm btn-block" onclick="add_airspace();">Add Airspace</button>
@@ -78,7 +73,6 @@
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="map_services.js"></script>
-    <script src="plot_track_lf.js"></script>
     <script src="js/uair_lf.js"></script>
 
   </body>

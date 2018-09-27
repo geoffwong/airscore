@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-
-<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -8,17 +6,19 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Ladder</title>
+    <title></title>
 
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/1-col-portfolio.css" rel="stylesheet">
-    <link href="task.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+
 
     <!-- JS -->
     <script src="microajax.minified.js"></script>
-    <script src="url.js"></script>
+    <script src="utils.js"></script>
   </head>
 
   <body>
@@ -32,47 +32,41 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a>
-            </li>
-            <li class="nav-item"><a class="nav-link" href="ladder.html">Ladders</a> </li>
-            <li class="nav-item"><a class="nav-link" href="comp_overview.html">Competitions</a> </li>
-            <li class="nav-item"><a class="nav-link" href="pilot_overview.html">Pilots</a></li>
-            <li class="nav-item"><a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a></li>
+            <li class="nav-item"> <a class="nav-link" href="comp_admin.html">Competitions</a></li>
+            <li class="nav-item"> <a class="nav-link" href="track_admin.html">Tracks</a> <span class="sr-only">(current)</span> </li>
+            <li class="nav-item"> <a class="nav-link" href="pilot_admin.html">Pilots</a> </li>
+            <li class="nav-item active"> <a class="nav-link" href="region_admin.html">Waypoints</a> <span class="sr-only">(current)</span> </li>
+            <li class="nav-item"> <a class="nav-link" href="airspace_admin.html">Airspace</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_admin.html">Ladders</a> </li>
           </ul>
         </div>
       </div>
     </nav>
 
-    <h1 id="comp_header">National Ladder Year XXXX</h1>
-    <!--- details & included competitions -->
-    <table id="task_result" class="row-border compact" cellspacing="0" width="100%">
+    <!-- Page Content -->
+    <div class="container" id="main">
+    <div class="row">
+        <div class="col comp_header mt-2">
+        </div>
+        <div class="col">
+        </div>
+    </div>
+    <table id="regions" class="row-border compact mb-1" cellspacing="0" width="100%">
     <thead>
         <tr>
-            <th>Rank</th>
-            <th>HGFA</th>
-            <th>Total</th>
-            <th>T1</th>
-            <th>T2</th>
-            <th>T3</th>
-            <th>T4</th>
-            <th>T5</th>
-            <th>T6</th>
-            <th>T7</th>
-            <th>T8</th>
-            <th>T9</th>
-            <th>T10</th>
-            <th>T11</th>
-            <th>T12</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Number</th>
         </tr>
     </thead>
     </table>
+    </div>
 
-    <!-- Bootstrap core JavaScript -->
+    <!-- more JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" src="js/pop_ladder.js"></script>
-</body>
-</html>
+    <script src="js/pop_regions.js"></script>
 
+  </body>
+</html>

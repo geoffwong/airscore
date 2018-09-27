@@ -58,57 +58,88 @@
     <br>
     <h2>Tracklog Submission</h2>
     <form enctype="multipart/form-data" action="submit_track.php" method="post">
+    <div class="form-group">
     <input type="hidden" name="MAX_FILE_SIZE" value="1000000000">
-    <input type="hidden" name="comid" value="245">
-    <table>
-    <tr><td>Competition</td><td><select name='comid' id='compsel'></select></td></tr>
-    <tr id="route"><td>Route</td><td><select name='route' id='routesel'></select></td></tr>
-    <tr><td>Send IGC file</td> <td><input name="userfile" type="file"></td></tr>
-    <tr><td>HGFA Number</td> <td><input name="hgfanum" type="text"></td> </tr>
-    <tr><td>Last Name</td> <td><input name="lastname" type="text"></td> </tr>
-    <tr><td>Glider</td><td><input name="glider" type="text"></td></tr>
-    <tr><td>Class</td><td><select name="dhv" id="dhv">
-        <option value="1">novice</option>
-        <option value="1/2">fun</option>
-        <option value="2">sports</option>
-        <option value="2/3" selected>serial</option>
-        <option value="competition">competition</option>
-    </select></td></tr>
-    <tr><td><select name="pilotsafety" id="pilotsafety">
-        <option value="none" selected>-- select conditions --</option>
+    <div class="form-row">
+        <div class="col mb-1"><select name='comid' id='compsel' class="form-control"></select></div>
+    </div>
+    <div class="form-row" id="route">
+        <div class="col-auto mb-1"><select name='route' id='routesel' class="form-control"></select></div>
+    </div>
+    <div class="form-row">
+    <div class="col">
+    <div class="custom-file mb-1">
+        <input name="userfile" type="file" class="custom-file-input" id="customFile">
+        <label class="custom-file-label" for="customFile" id="selected_igc">Select IGC File</label>
+    </div>
+    </div>
+    </div>
+    <div class="form-row">
+        <div class="col mb-1"><input name="hgfanum" type="text" class="form-control" placeholder="HGFA Number"></div>
+    </div>
+    <div class="form-row">
+        <div class="col mb-1"><input name="lastname" type="text" class="form-control" placeholder="Last Name"></div>
+    </div>
+    <div class="form-row">
+        <div class="col mb-1"><input name="glider" type="text" class="form-control" placeholder="Glider"></div>
+        <div class="col">
+            <select name="dhv" id="dhv" class="form-control" placeholder="Class">
+            <option value="1">novice</option>
+            <option value="1/2">fun</option>
+            <option value="2">sports</option>
+            <option value="2/3" selected>serial</option>
+            <option value="competition">competition</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-row">
+    <div class="col mb-1">
+    <select name="pilotsafety" id="pilotsafety" class="form-control">
+        <option value="none" selected>-- select safety conditions --</option>
         <option value="safe">safe</option>
         <option value="maybe">not safe for me</option>
         <option value="unsafe">not safe for all</option>
-    </select></td>
-    <td><select name="pilotquality" id="pilotquality">
+    </select>
+    </div>
+    <div class="col mb-1">
+    <select name="pilotquality" id="pilotquality" class="form-control">
     <option value="0" selected>-- select racing quality --</option>
     <option value="1">completely unfair</option>
     <option value="2">random racing</option>
     <option value="3">passable racing</option>
     <option value="4">good racing</option>
     <option value="5">great racing</option>
-    </select></td></tr></table>
-    <br><center><input type="submit" name="foo" value="Send Tracklog"></center>
+    </select>
     </div>
+    </div>
+    <div class="form-row">
+      <div class="col"></div>
+      <div class="col">
+        <button type="submit" name="foo" class="btn btn-primary btn-block mt-4">Send Tracklog</button>
+      </div>
+      <div class="col"></div>
+      </div>
+      </div>
+    </div>
+    </form>
     <div class="col-md-5" id="tools">
     <br>
     <h2>Tracklog Tools</h2>
-    <ul>
-    <li> <a href="http://www.gethome.no/stein.sorensen/body_gpsdump.htm">GPSDump</a> </li>
-    <li> <a href="http://flighttrack.sourceforge.net/">FlightTrack (MacOS X)</a> </li>
-    <li> <a href="http://www.gpsbabel.org/">GPS Babel</a> </li>
-    <li> <a href="http://www.xcsoar.org/">XCSoar</a> </li>
-    <li> <a href="http://xctrack.org/">XCTrack</a> </li>
-    <li> <b><a href="http://www.freethinker.com/iphone/livetrack24/index.html">Livetrack 24 (*iOS*)</a></b> </li>
+    <ul class="list-group list-group-flush">
+    <li class="list-group-item"> <a href="http://www.gethome.no/stein.sorensen/body_gpsdump.htm">GPSDump</a> </li>
+    <li class="list-group-item"> <a href="http://flighttrack.sourceforge.net/">FlightTrack (MacOS X)</a> </li>
+    <li class="list-group-item"> <a href="http://www.gpsbabel.org/">GPS Babel</a> </li>
+    <li class="list-group-item"> <a href="http://www.xcsoar.org/">XCSoar</a> </li>
+    <li class="list-group-item"> <a href="http://xctrack.org/">XCTrack</a> </li>
+    <li class="list-group-item"> <b><a href="http://www.freethinker.com/iphone/livetrack24/index.html">Livetrack 24 (*iOS*)</a></b> </li>
     </ul>
-    </div>
     </div>
     </div>
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="submission.js"></script>
+    <script src="js/submission.js"></script>
 
   </body>
 </html>

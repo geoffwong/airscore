@@ -58,7 +58,7 @@ function plot_region_wp(regPk)
 function download_waypoints()
 {
     var regPk = url_parameter('regPk');
-    var wptformat = $('#wptformat').value;
+    var wptformat = $('#wptformat option:selected').val();
     post('download_waypoints.php?download=' + regPk, { 'format' : wptformat }, 'post');
 }
 $(document).ready(function() {
