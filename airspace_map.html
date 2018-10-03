@@ -50,15 +50,14 @@
     <form><input type="hidden" name="foo" id="foo" size="8"></form>
     <div class="airspace_map" id="map">
     <div id="sidebar">
-        <h3>Airspace Downloads</h3>
-        <button class="btn btn-primary btn-sm btn-block" onclick="download_track();">This Track</button>
-        <button class="btn btn-primary btn-sm btn-block" onclick="download_top_tracks();">Top 20 Tracks</button>
+        <button class="btn btn-primary btn-sm btn-block mt-4" onclick="download_track();">Download Airspace</button>
         <hr>
         <div id="airdiv">
         <h3>Select Airspace</h3>
-        <select class="custom-select mb-3" name="airspace" id="airspace" multiple></select>
+        <select class="custom-select mb-3" name="airspace" id="airspace" size="10" multiple></select>
         <br>
         <button class="btn btn-primary btn-sm btn-block" onclick="add_airspace();">Add Airspace</button>
+        <button class="btn btn-primary btn-sm btn-block" onclick="clear_airspace();">Clear Airspace</button>
         <hr>
         </div>
         <div id="award" type="hidden">
@@ -72,8 +71,8 @@
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="map_services.js"></script>
-    <script src="js/uair_lf.js"></script>
-
+    <script src="js/map_services.js"></script>
+    <script src="js/airspace_services.js"></script>
+    <script src="js/plot_airspace.js"></script>
   </body>
 </html>
