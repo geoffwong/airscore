@@ -2,6 +2,8 @@
 /**
  * backwards compatibility old php functions - from info@itxplain.nl
  */
+define('MYSQL_ASSOC', 0);
+define('MYSQL_NUM', 1);
 
 if (!function_exists("mysql_connect"))
 {
@@ -88,9 +90,9 @@ function mysql_fetch_assoc($result)
     return $row;
 }
 
-function mysql_fetch_array($result) 
+function mysql_fetch_array($result, $how) 
 {
-    $row = $result->fetch_array();
+    $row = $result->fetch_assoc();
 
     return $row;
 }
