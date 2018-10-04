@@ -18,9 +18,9 @@ $(document).ready(function() {
             var numCols = $("th", table).length+1;
             
             //
-            $('#ladder_name').text(json.ladder.ladName);
-            $('#ladder_header').append('<h3>' + json.ladder.ladNationCode + '</h3>');
-            $('#ladder_header').append('<h3>' + json.ladder.ladStart + ' - ' + json.ladder.ladEnd + '</h3>');
+            $('#ladder_name').text(json.ladder.ladNationCode + ' ' + json.ladder.ladName);
+            $('#ladder_header').append('<h5>' + json.ladder.ladStart + ' - ' + json.ladder.ladEnd + '</h5>');
+            $('#ladder_header').append('<h5>Validity: ' + json.ladder.totValidity + '</h5>');
 
             // ladder info
             $.each( json.inc, function( key, value ) {

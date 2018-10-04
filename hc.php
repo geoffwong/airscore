@@ -92,7 +92,7 @@ function hcimage($link,$comPk)
     {
         $sql = "select comClass from tblCompetition where comPk=$comPk";
         $result = mysql_query($sql,$link);
-        if ($row = mysql_fetch_array($result))
+        if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
         {
             $comClass = $row['comClass'];
             if ($comClass != 'PG')
@@ -113,7 +113,7 @@ echo "
 $count = 1;
 $sql = "SELECT T.*, P.* FROM tblTrack T, tblPilot P, tblComTaskTrack CTT where T.pilPk=P.pilPk and CTT.traPk=T.traPk order by T.traLength desc limit 10";
 $result = mysql_query($sql,$link);
-while($row = mysql_fetch_array($result))
+while($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $id = $row['traPk'];
     $dist = round($row['traLength']/1000,2);
@@ -130,7 +130,7 @@ echo "
 $count = 1;
 $sql = "SELECT T.*, P.* FROM tblTrack T, tblPilot P, tblComTaskTrack CTT where T.pilPk=P.pilPk and CTT.traPk=T.traPk order by T.traDate desc limit 10";
 $result = mysql_query($sql,$link);
-while($row = mysql_fetch_array($result))
+while($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $id = $row['traPk'];
     $dist = round($row['traLength']/1000,2);
@@ -151,7 +151,7 @@ function hcregion($link)
     $sql = "select R.*, RW.* from tblCompetition C, tblTask T, tblRegion R, tblRegionWaypoint RW where T.comPk=C.comPk and T.regPk=R.regPk and C.comDateTo > date_sub(now(), interval 1 year) and R.regCentre=RW.rwpPk and R.regDescription not like '%test%' and R.regDescription not like '' group by R.regPk order by R.regDescription";
     $result = mysql_query($sql,$link);
     $regions = [];
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $regPk=$row['regPk'];
         #$regions[] = "<a href=\"regional.php?${piln}regPk=$regPk\">" . $row['regDescription'] . "</a>";
@@ -166,7 +166,7 @@ function hcopencomps($link)
     $sql = "select * from tblCompetition where comName not like '%test%' and comDateTo > date_sub(now(), interval 1 day) order by comDateTo";
     $result = mysql_query($sql,$link);
     $comps = [];
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         // FIX: if not finished & no tracks then submit_track page ..
         // FIX: if finished no tracks don't list!
@@ -191,7 +191,7 @@ function hcclosedcomps($link, $like = '')
     }
     $result = mysql_query($sql,$link);
     $comps = [];
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         // FIX: if not finished & no tracks then submit_track page ..
         // FIX: if finished no tracks don't list!
