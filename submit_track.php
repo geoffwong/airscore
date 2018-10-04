@@ -24,7 +24,7 @@ $result = mysql_query($query) or die('Query failed: ' . mysql_error());
 $title = 'highcloud.net';
 $comContact = '';
 $comEntryRestrict = 'open';
-if ($row=mysql_fetch_array($result))
+if ($row=mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $title = $row['comName'];
     $comType = $row['comType'];
@@ -58,7 +58,7 @@ if (array_key_exists('foo', $_REQUEST))
 
     echo "<title>Track Accepted</title>\n";
     $id = accept_track($comUnixTo, $comContact, $comEntryRestrict);
-    redirect("tracklog_map.php?trackid=$id&comPk=$comPk&ok=1");
+    redirect("tracklog_map.html?trackid=$id&comPk=$comPk&ok=1");
     exit(0);
 }
 if ($embed == '')
@@ -146,7 +146,7 @@ function accept_track($until, $contact, $restrict)
     $result = mysql_query($query) or die('Query failed: ' . mysql_error());
 
     $member = 0;
-    while ($row=mysql_fetch_array($result))
+    while ($row=mysql_fetch_array($result, MYSQL_ASSOC))
     {
         if ($hgfa == $row['pilHGFA'])
         {
@@ -222,7 +222,7 @@ if ($offerall)
     $comps['-- select an option --'] = '';
     $query = "select * from tblCompetition where curdate() < date_add(comDateTo, interval 3 day) and comName not like '%test%' order by comName";
     $result = mysql_query($query) or die('Query failed: ' . mysql_error());
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $comName = $row['comName'];
         $compid = $row['comPk'];
