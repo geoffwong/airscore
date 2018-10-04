@@ -8,15 +8,15 @@ require_once 'format.php';
 require_once 'dbextra.php';
 require 'hc.php';
 
-function hcincludedcomps($link,$ladPk)
+function included_comps($link,$ladPk)
 {
     if ($ladPk > 0)
     {
-        $sql = "select C.* from tblLadderComp LC, tblCompetition C where LC.comPk=C.comPk and ladPk=$ladPk order by LC.lcValue desc, comDateTo";
+        $sql = "select C.comPk, C.comName, LC.lcValue from tblLadderComp LC, tblCompetition C where LC.comPk=C.comPk and ladPk=$ladPk order by LC.lcValue desc, comDateTo";
     }
     else
     {
-        $sql = "select distinct C.* from tblLadderComp LC, tblCompetition C where LC.comPk=C.comPk and LC.lcValue > 0 order by comDateTo desc";
+        $sql = "select distinct C.comPk, C.comName, LC.lcValue from tblLadderComp LC, tblCompetition C where LC.comPk=C.comPk and LC.lcValue > 0 order by comDateTo desc";
     }
     $result = mysql_query($sql,$link);
     $comps = [];
@@ -24,7 +24,7 @@ function hcincludedcomps($link,$ladPk)
     {
         // FIX: if not finished & no tracks then submit_track page ..
         // FIX: if finished no tracks don't list!
-        $comps = $row;
+        $comps[] = $row;
     }
     return $comps;
 }
@@ -316,7 +316,7 @@ function datatable_clean($sorted)
         $newrow[] = $pos;
         $newrow[] = $row['name'];
         $newrow[] = $row['hgfa'];
-        $newrow[] = $row['total'];
+        $newrow[] = '<b>' . $row['total'] . '</b>';
 
         $count = 0;
         foreach ($row['scores'] as $sarr)
@@ -337,11 +337,11 @@ function datatable_clean($sorted)
             {
                 if ($tpk > 0)
                 {
-                    $newrow[] = "<a href=\"task_result.php?tasPk=$tpk\">$tname $score</a>";
+                    $newrow[] = "<a href=\"task_result.html?tasPk=$tpk\">$tname</a> $score";
                 }
                 else
                 {
-                    $newrow[] = "<a href=\"$tpk\">$tname $score</a>";
+                    $newrow[] = "<a href=\"$tpk\">$tname</a> $score";
                 }
                 $count++;
             }
@@ -349,11 +349,11 @@ function datatable_clean($sorted)
             {
                 if ($tpk > 0)
                 {
-                    $newrow[] = "<a href=\"task_result.php?tasPk=$tpk\">$tname $score $perc%</a>";
+                    $newrow[] = "<a href=\"task_result.html?tasPk=$tpk\">$tname</a> $score <small>$perc%</small>";
                 }
                 else
                 {
-                    $newrow[] = "<a href=\"$tpk\">$tname $score $perc%</a>";
+                    $newrow[] = "<a href=\"$tpk\">$tname</a> $score <small>$perc%</small></a>";
                 }
                 $count++;
             }
@@ -477,11 +477,12 @@ if ($ladPk > 0)
 {
     //output_ladder($ladPk, $ladder, $fdhv, $class);
     $sorted = ladder_result($ladPk, $ladder, $fdhv);
+    $included = included_comps($link, $ladPk);
     $clean = datatable_clean($sorted);
 }
 
 
-$data = [ 'ladder' => $ladder, 'data' => $clean ];
+$data = [ 'ladder' => $ladder, 'inc' => $included, 'data' => $clean ];
 
 $msg = json_encode($data, JSON_UNESCAPED_UNICODE);
 if ($msg)

@@ -69,8 +69,13 @@
     float: left;
 }
 .task_waypoints {
-{
     float: right;
+}
+.form_param {
+    line-heifght: 1;
+    margin: 0px;
+    padding: 0px;
+    font-size: 11px;
 }
 #expandtab {
     margin: 0px;
