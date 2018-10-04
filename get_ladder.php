@@ -20,7 +20,7 @@ function included_comps($link,$ladPk)
     }
     $result = mysql_query($sql,$link);
     $comps = [];
-    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    while($row = mysql_fetch_array($result))
     {
         // FIX: if not finished & no tracks then submit_track page ..
         // FIX: if finished no tracks don't list!
@@ -42,8 +42,6 @@ function taskcmp($a, $b)
 
 function add_result(&$results, $row, $topnat, $how)
 {
-    if ($topnat == 0) return;
-
     $score = round($row['ladScore'] / $topnat);
     $validity = $row['tasQuality'] * 1000;
     $pilPk = $row['pilPk'];
@@ -54,7 +52,7 @@ function add_result(&$results, $row, $topnat, $how)
     if (!array_key_exists($pilPk,$results) || !$results[$pilPk])
     {
         $results[$pilPk] = [];
-        $results[$pilPk]['name'] = "<a href=\"pilot.html?pilPk=$pilPk\">" . utf8_encode($row['pilFirstName'] . ' ' . $row['pilLastName']) . '</a>';
+        $results[$pilPk]['name'] = utf8_decode($row['pilFirstName'] . ' ' . $row['pilLastName']);
         $results[$pilPk]['hgfa'] = $row['pilHGFA'];
         $results[$pilPk]['scores'] = [];
         //$results[$pilPk]['civl'] = $civlnum;
@@ -119,7 +117,7 @@ from    tblLadderComp LC
         join tblTrack TT on TT.traPk=TR.traPk
         join tblPilot TP on TP.pilPk=TT.pilPk
 WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
-    and TP.pilNationCode=L.ladNationCode $restrict
+    and TP.pilNationCode=L.ladNationCode 
     order by TP.pilPk, C.comPk, (TR.tarScore * LC.lcValue * TK.tasQuality) desc";
 
     $result = mysql_query($sql) or die('Ladder query failed: ' . mysql_error());
@@ -163,18 +161,10 @@ WHERE TK.comDateTo > '$start' and TK.comDateTo < '$end'
             $res = add_result($results, $row, $row['tasTopScore'], $how);
         }
 
-        $filtered = filter_results($ladPk, $how, $param, $param * 0.33, $results);
-    }
-    else
-    {
-        $filtered = filter_results($ladPk, $how, $param, 0, $results);
+        return filter_results($ladPk, $how, $param, $param * 0.33, $results);
     }
 
-    $result = [];
-    $result['filtered'] = $filtered;
-    $result['validity'] = $param;
-
-    return $result;
+    return filter_results($ladPk, $how, $param, 0, $results);
 }
 
 function filter_results($ladPk, $how, $param, $extpar, $results)
@@ -437,13 +427,13 @@ if (reqexists('class'))
     $cval = reqival('class');
     if ($comClass == "HG")
     {
-        $carr = [ "'floater'", "'kingpost'", "'open'", "'rigid'" ];
-        $cstr = [ "Floater", "Kingpost", "Open", "Rigid", "Women", "Seniors", "Juniors" ];
+        $carr = array ( "'floater'", "'kingpost'", "'open'", "'rigid'"       );
+        $cstr = array ( "Floater", "Kingpost", "Open", "Rigid", "Women", "Seniors", "Juniors" );
     }
     else
     {
-        $carr = [ "'1/2'", "'2'", "'2/3'", "'competition'" ];
-        $cstr = [ "Fun", "Sport", "Serial", "Open", "Women", "Seniors", "Juniors" ];
+        $carr = array ( "'1/2'", "'2'", "'2/3'", "'competition'"       );
+        $cstr = array ( "Fun", "Sport", "Serial", "Open", "Women", "Seniors", "Juniors" );
     }
     $classstr = "<b>" . $cstr[reqival('class')] . "</b> - ";
     if ($cval == 4)
@@ -488,9 +478,7 @@ if ($ladPk > 0)
     //output_ladder($ladPk, $ladder, $fdhv, $class);
     $sorted = ladder_result($ladPk, $ladder, $fdhv);
     $included = included_comps($link, $ladPk);
-    $clean = datatable_clean($sorted['filtered']);
-
-    $ladder['totValidity'] = round($sorted['validity'],0);
+    $clean = datatable_clean($sorted);
 }
 
 
