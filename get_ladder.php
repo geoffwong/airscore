@@ -161,10 +161,18 @@ WHERE TK.comDateTo > '$start' and TK.comDateTo < '$end'
             $res = add_result($results, $row, $row['tasTopScore'], $how);
         }
 
-        return filter_results($ladPk, $how, $param, $param * 0.33, $results);
+        $filtered = filter_results($ladPk, $how, $param, $param * 0.33, $results);
+    }
+    else
+    {
+        $filtered = filter_results($ladPk, $how, $param, 0, $results);
     }
 
-    return filter_results($ladPk, $how, $param, 0, $results);
+    $res = [];
+    $res['filtered'] = $filtered;
+    $res['validity'] = $param;
+
+    return $res;
 }
 
 function filter_results($ladPk, $how, $param, $extpar, $results)
@@ -477,8 +485,9 @@ if ($ladPk > 0)
 {
     //output_ladder($ladPk, $ladder, $fdhv, $class);
     $sorted = ladder_result($ladPk, $ladder, $fdhv);
+    $ladder['totValidity'] = round($sorted['validity'],0);
     $included = included_comps($link, $ladPk);
-    $clean = datatable_clean($sorted);
+    $clean = datatable_clean($sorted['filtered']);
 }
 
 
