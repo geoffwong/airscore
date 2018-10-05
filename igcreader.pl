@@ -14,7 +14,6 @@ require DBD::mysql;
 
 use Time::Local;
 use Data::Dumper;
-use Simple;
 use IGC qw(:all);
 use strict;
 
