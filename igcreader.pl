@@ -30,14 +30,14 @@ my $pilPk;
 my $earlyexit;
 my $flightstart;
 my $ftype;
-my $ignore_breaks = 0;
+my $notrim = 0;
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
 
 # Options ..
 
 if (scalar @ARGV < 1)
 {
-    print "igcreader.pl [-d|-x|-j|-i] <file> [pilPk]\n";
+    print "igcreader.pl [-d|-x|-j|-t] <file> [pilPk]\n";
     exit 0;
 }
 
@@ -59,9 +59,9 @@ if ($ARGV[0] eq '-x')
     shift @ARGV;
 }
 
-if ($ARGV[0] eq '-i')
+if ($ARGV[0] eq '-t')
 {
-    $ignore_breaks = 1;
+    $notrim = 1;
     shift @ARGV;
 }
 
@@ -81,10 +81,7 @@ elsif ($ftype eq "live")
 }
 elsif ($ftype eq "kml")
 {
-    #print "KML not currently supported, but should be soon.\n";
-    #print "Please submit an IGC file\n";
     $flight = read_kml($ARGV[0]);
-    #exit 1;
 }
 else
 {
@@ -95,6 +92,7 @@ else
 
 if (!defined($flight))
 {
+    print "No flight defined.\n";
     exit 1;
 }
 
@@ -103,7 +101,10 @@ $numc = scalar @$coords;
 if ($IGC::debug) { print "num coords=$numc\n"; }
 
 # Trim off silly points ...
-$flight = trim_flight($flight, $pilPk, $ignore_breaks);
+if ($notrim == 0)
+{
+    $flight = trim_flight($flight, $pilPk);
+}
 
 # Is it a duplicate (and other checks)?
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($flight->{'header'}->{'start'});

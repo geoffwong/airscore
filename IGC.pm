@@ -12,6 +12,7 @@ our @ISA    = qw(Exporter);
 our @EXPORT = qw{:ALL};
 
 use TrackLib qw(:ALL);
+use XML::Simple qw(:strict);
 
 use strict;
 
@@ -23,7 +24,7 @@ my $allowjumps = 0;
 my $max_errors = 5;
 my $DEGREESTOINT = 46603;
 
-my $max_time_break = 300;
+my $max_time_break = 600;
 
 # this probably should be dynamic based on total # points
 my $goodchunk = 500;        
@@ -355,32 +356,46 @@ sub read_kml
     my ($yy,$mm,$dd);
     my $tmo;
 
-    my $kml = XMLin($ARGV[0]);
+    my $kml = XMLin($ARGV[0], KeyAttr => ['name', 'key', 'id'], ForceArray => 1);
 
-    $tracklog = $kml->{'Folder'}->{'Placemark'}->{'Tracklog'};
-    #print Dumper($tracklog);
+    print Dumper($kml);
 
-    $tracklog->{'Metadata'}->{'FsInfo'}->{'time_of_first_point'};
-
-    @coordarr = split(/ /,$tracklog->{'LineString'}->{'coordinates'});
-    @timearr = split(/ /,$tracklog->{'Metadata'}->{'FsInfo'}->{'SecondsFromTimeOfFirstPoint'});
-    @pressurearr = split(/ /,$tracklog->{'Metadata'}->{'FsInfo'}->{'PressureAltitude'});
-    $offset = $tracklog->{'Metadata'}->{'FsInfo'}->{'time_of_first_point'};
-    $h = 0+substr($offset, 11, 2);
-    $m = 0+substr($offset,14,2);
-    $s = 0+substr($offset,17,2);
-    $tmo = $h * 3600 + $m * 60 + $s;
-    $yy = substr($offset, 2, 2);
-    $mm = substr($offset, 5, 2);
-    $dd = substr($offset, 8, 2);
-    $header{'date'} = $yy . $mm . $dd;
-    $header{'start'} = timegm(0, 0, 0, $dd, (0+$mm)-1,0+$yy);
-
-    for (my $c = 0; $c < scalar(@coordarr); $c++)
+    if (defined($kml->{'Folder'}->{'Placemark'}->{'Tracklog'}))
     {
-        #print "coord=", $coordarr[$c], "\n";
-        push @coords, kml_make_coord($coordarr[$c], $tmo + $timearr[$c], $pressurearr[$c]);
-        #print Dumper($coords[$c]);
+        $tracklog = $kml->{'Folder'}->{'Placemark'}->{'Tracklog'};
+        @timearr = split(/ /,$tracklog->{'Metadata'}->{'FsInfo'}->{'SecondsFromTimeOfFirstPoint'});
+        @pressurearr = split(/ /,$tracklog->{'Metadata'}->{'FsInfo'}->{'PressureAltitude'});
+        $offset = $tracklog->{'Metadata'}->{'FsInfo'}->{'time_of_first_point'};
+        $h = 0+substr($offset, 11, 2);
+        $m = 0+substr($offset,14,2);
+        $s = 0+substr($offset,17,2);
+        $tmo = $h * 3600 + $m * 60 + $s;
+        $yy = substr($offset, 2, 2);
+        $mm = substr($offset, 5, 2);
+        $dd = substr($offset, 8, 2);
+        $header{'date'} = $yy . $mm . $dd;
+        $header{'start'} = timegm(0, 0, 0, $dd, (0+$mm)-1,0+$yy);
+        @coordarr = split(/ /,$tracklog->{'LineString'}->{'coordinates'});
+        for (my $c = 0; $c < scalar(@coordarr); $c++)
+        {
+            #print "coord=", $coordarr[$c], "\n";
+            push @coords, kml_make_coord($coordarr[$c], $tmo + $timearr[$c], $pressurearr[$c]);
+            #print Dumper($coords[$c]);
+        }
+    }
+    elsif (defined($kml->{'Document'}->{'Placemark'}[0]->{'name'} eq 'Takeoff'))
+    {
+        my $ts = $kml->{'Document'}->{'Placemark'}[0]->{'TimeStamp'};
+        #$header{'date'} = $yy . $mm . $dd;
+        #$header{'start'} = timegm(0, 0, 0, $dd, (0+$mm)-1,0+$yy);
+        my $endts = $kml->{'Document'}->{'Placemark'}[2]->{'TimeStamp'};
+        @coordarr = split(/ /,$kml->{'Placemark'}[1]->{'LineString'}->{'coordinates'});
+        for (my $c = 0; $c < scalar(@coordarr); $c++)
+        {
+            #print "coord=", $coordarr[$c], "\n";
+            push @coords, kml_make_coord($coordarr[$c], $tmo + $timearr[$c], $pressurearr[$c]);
+            #print Dumper($coords[$c]);
+        }
     }
 
     $flight{'coords'} = \@coords;
