@@ -390,6 +390,7 @@ create table tblPilot
     pilDietary      varchar(128),
     pilEmergencyContact varchar(128),
     pilEmergencyPhone varchar(24),
+    pilPhoto        varchar(128),
     pilGlider       varchar(32),
     gliGliderClass  enum('1','1/2','2','2/3','competition','floater','kingpost','open','rigid') default 'competition'
 );
