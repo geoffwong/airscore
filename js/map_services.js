@@ -148,16 +148,16 @@ function add_map_server(name, count)
 
     satellite = L.tileLayer(get_tileserver(esri_sat, []), {
         //attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, SRTM | Style &copy; OpenTopoMap <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-        attribution: '&copy; Esri, et al',
+        attribution: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer">Esri, DigitalGlobe, GeoEye, et al</a>',
         maxZoom: 18, id: 'satellite',
     }).addTo(map_array[count]);
 
     streets  = L.tileLayer(get_tileserver(esri_ts, []), {id: 'streets',
-        attribution: '&copy; Esri, et al'
+        attribution: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer">Ersi, OSM, et al</a>',
         });
 
     topo = L.tileLayer(get_tileserver(esri_topo_ts, []), {id: 'topo',
-        attribution: '&copy; Esri, et al'
+        attribution: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">Ersi, OSM, et al</a>',
         });
 
     //satoverlay = L.tileLayer(get_tileserver(esri_semi_ts, []), {id: 'satover', attribution: 'esri overlay'});
