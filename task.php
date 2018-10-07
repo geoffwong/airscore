@@ -327,7 +327,7 @@ if (reqexists('add'))
         $row = mysql_fetch_array($result);
         $waynum = 1 + $row['maxNum'];
     }
-    $query = "insert into tblTaskWaypoint (tasPk, rwpPk, tawNumber, tawType, tawHow, tawShape, tawTime, tawRadius) values ($tasPk, $rwppk, $waynum, '$waytype', '$how', '$shape', '$waytime', $radius)";
+    $query = "insert into tblTaskWaypoint (tasPk, rwpPk, tawNumber, tawType, tawHow, tawShape, tawTime, tawRadius) values ($tasPk, $rwppk, $waynum, '$waytype', '$how', '$shape', 0, $radius)";
     //echo "$query <br>";
 
     $result = mysql_query($query) or die('Add Task waypoint failed: ' . mysql_error());
@@ -459,8 +459,9 @@ while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 
 $sql = "select tasDistance, tasShortRouteDistance from tblTask where tasPk=$tasPk";
 $result = mysql_query($sql,$link) or die('Can\'t determine task distance: ' . mysql_error());
-$dist = round(floatval(mysql_result($result, 0, 0))/1000,2);
-$shortdist = round(floatval(mysql_result($result, 0, 1))/1000,2);
+$drow = mysql_fetch_array($result, MYSQL_ASSOC);
+$dist = round(floatval($drow['tasDistance'])/1000,2);
+$shortdist = round(floatval($drow['tasShortRouteDistance'])/1000,2);
 echo "<p><b>Total distance: $dist ($shortdist) kms</b><br>";
 
 if ($goal == 0 && $count > 0 && ($tasTaskType == 'race' || $tasTaskType == 'speedrun' || $tasTaskType == 'speedrun-interval'))

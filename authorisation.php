@@ -56,7 +56,7 @@ function check_auth($region)
     $usePk = 0;
     if (mysql_num_rows($result) > 0)
     {
-        $usePk = mysql_result($result,0);
+        $usePk = mysql_result($result,0,0);
     }
     mysql_close($link);
 
@@ -97,8 +97,9 @@ function menubar($comPk)
         $result = mysql_query($query) or die('Query failed: ' . mysql_error());
         if (mysql_num_rows($result) > 0)
         {
-            $comName = mysql_result($result,0,0);
-            $comType =  mysql_result($result,0,1);
+            $row = mysql_fetch_array($result, MYSQL_ASSOC);
+            $comName = $row['comName'];
+            $comType =  $row['comType'];
         }
         else
         {
@@ -165,9 +166,10 @@ function adminbar($comPk)
         $result = mysql_query($query) or die('Query failed: ' . mysql_error());
         if (mysql_num_rows($result) > 0)
         {
-            $comName = mysql_result($result,0,0);
-            $comType =  mysql_result($result,0,1);
-            $comEntryRestrict =  mysql_result($result,0,2);
+            $row = mysql_fetch_array($result, MYSQL_ASSOC);
+            $comName = $row['comName'];
+            $comType =  $row['comType'];
+            $comEntryRestrict = $row['comEntryRestrict'];
         }
         else
         {
@@ -285,5 +287,13 @@ function reqsval($key)
     {
         return '';
     }
+}
+function hhmmss($seconds)
+{
+    $hh = floor(($seconds) / 3600);
+    $mm = floor((($seconds) % 3600) / 60);
+    $ss = ($seconds) % 60;
+    $timeinair = sprintf("%01d:%02d:%02d", $hh,$mm,$ss);
+    return $timeinair;
 }
 ?>

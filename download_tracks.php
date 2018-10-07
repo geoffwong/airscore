@@ -18,7 +18,7 @@ function gen_track($link, $traPk, $date, $pilot, $altmax)
 
     // B0442223707362S14524802EA0000000650
     $cross = 0;
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $time = 0 + $row['trlTime'];
         $h = floor($time / 3600);
@@ -107,7 +107,7 @@ if ($tasPk > 0)
     $sql = "select traPk from tblComTaskTrack where $tasPk $limit";
     $sql = "select TR.*, P.* from tblTaskResult TR, tblTrack T, tblPilot P where TR.tasPk=$tasPk and T.traPk=TR.traPk and P.pilPk=T.pilPk order by TR.tarScore desc $limit";
     $result = mysql_query($sql, $link) or die("can't get associated tracks");
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $tracks[] = $row;
     }
@@ -118,11 +118,12 @@ else if ($traPk > 0)
     $result = mysql_query($sql, $link) or die("can't get associated comp");
     $comPk = mysql_result($result,0,0);
 
-    $sql = "SELECT date_format(T.traStart,'%d%m%y'), P.pilFirstName, P.pilLastName, T.traDate from tblTrack T, tblPilot P where T.traPk=$traPk and T.pilPk=P.pilPk";
+    $sql = "SELECT date_format(T.traStart,'%d%m%y') as Start, P.pilFirstName, P.pilLastName, T.traDate from tblTrack T, tblPilot P where T.traPk=$traPk and T.pilPk=P.pilPk";
     $result = mysql_query($sql, $link) or die("can't track information");
-    $date = mysql_result($result,0,0);
-    $ndate = mysql_result($result, 0, 3);
-    $pilot = mysql_result($result, 0, 1) . ' ' . mysql_result($result, 0, 2);
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    $date = $row['Start'];
+    $ndate = $row['traDate'];
+    $pilot = $row['pilFirstName'] . ' ' . $row['pilLastName'];
 
     $trackstr = gen_track($link, $traPk, $date, $pilot, 2590);
     header("Content-type: text/igc");
@@ -138,8 +139,11 @@ foreach ($tracks as $row)
     $pilot = $row['pilFirstName'] . ' ' . $row['pilLastName']; 
     $filename = preg_replace('/[\s+\/]/', '_', strtolower( $row['pilLastName'] . '_' . $row['pilHGFA'] . '.igc'));
     $fname = '/tmp/' . $filename;
-    $trackstr = gen_track($link, $row['traPk'], $date, $pilot, 2590);
-    file_put_contents($fname, $trackstr);
+    if (!file_exists($fname))
+    {
+        $trackstr = gen_track($link, $row['traPk'], $date, $pilot, 2590);
+        file_put_contents($fname, $trackstr);
+    }
     $ziplist[] = $filename;
 }
 
@@ -149,12 +153,23 @@ $bname = strtolower(preg_replace('/[\s+\/]/', '_', $cominfo['comName'] . '_' . $
 $filename = '/tmp/' . $bname;
 #echo ("zip \"$filename\" $allfiles 2>&1 > /dev/null");
 chdir('/tmp');
-system("zip \"$filename\" $allfiles 2>&1 > /dev/null");
+$line = system("zip \"$filename\" $allfiles 2>&1 > /dev/null", $retval);
 
-header("Content-Type: application/zip");
-header("Content-Disposition: attachment; filename=\"$bname\"");
-header("Content-Length: " . filesize($filename));
-readfile($filename);
+if ($retval == 0)
+{
+    header("Content-Type: application/zip");
+    header("Content-Disposition: attachment; filename=\"$bname\"");
+    header("Content-Length: " . filesize($filename));
+    readfile($filename);
+}
+else
+{
+    header("Content-type: text/plain");
+    header("Cache-Control: no-store, no-cache");
+    
+    print "retval=$retval\n";
+    print $line;
+}
 
 
 foreach ($ziplist as $filen)

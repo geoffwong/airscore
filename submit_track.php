@@ -5,7 +5,13 @@ require_once 'hc.php';
 header('Cache-Control: no-cache, must-revalidate');
 header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 
-$comPk = reqival('comPk');
+
+$comPk = reqival('comid');
+if ($comPk == 0)
+{
+    $comPk = reqival('comPk');
+}
+
 $embed = reqsval('embed');
 $link = db_connect();
 $offerall = 0;

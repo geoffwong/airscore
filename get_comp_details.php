@@ -31,11 +31,12 @@ function get_compinfo($link, $comPk)
 
 function get_taskinfo($link, $comPk)
 {
-    $query = "select T.* from tblTask T where T.comPk=$comPk order by T.tasDate";
+    $query = "select T.tasPk, T.tasDate, T.tasName, T.tasDistance, T.tasStartTime, T.tasFinishTime from tblTask T where T.comPk=$comPk order by T.tasDate";
     $result = mysql_query($query, $link) or die('Task query failed: ' . mysql_error());
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
-        $alltasks[] = $row['tasName'];
+        $row['tasDistance'] = round($row['tasDistance'] / 1000,1);
+        $alltasks[] = $row;
     }
     return $alltasks;
 }
@@ -43,13 +44,26 @@ function get_taskinfo($link, $comPk)
 $compinfo = get_compinfo($link, $comPk);
 
 $taskinfo = [];
-$comType=$compinfo['comType'];
+$comType = $compinfo['comType'];
 if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $comType == 'RACE-handicap')
 {
     $taskinfo = get_taskinfo($link, $comPk);
 }
 
+$formula = [];
+foreach ($compinfo as $key => $value)
+{
+    if (substr($key,0,3) == "for" && $key != 'forPk')
+    {
+        $formula[$key] = $value;
+        unset($compinfo[$key]);
+    }
+}
+unset($formula['forOLCBase']);
+unset($formula['forOLCPoints']);
+unset($formula['forHBESS']);
 
-$data = [ 'compinfo' => $compinfo, 'taskinfo' => $alltasks ];
+
+$data = [ 'compinfo' => $compinfo, 'taskinfo' => $taskinfo, 'formula' => $formula ];
 print json_encode($data);
 ?>
