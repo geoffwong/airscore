@@ -117,12 +117,14 @@ if (array_key_exists('tarup', $_REQUEST))
 
 if (array_key_exists('addflight', $_REQUEST))
 {
-    $fai = intval($_REQUEST['fai']);
+    $fai = reqival('fai');
     if ($fai > 0)
     {
         $query = "select pilPk from tblPilot where pilHGFA=$fai";
         $result = mysql_query($query) or die('Query pilot (fai) failed: ' . mysql_error());
     }
+
+    // @todo - check if pilot already has a flight in the task
 
     if (mysql_num_rows($result) == 0)
     {
@@ -139,11 +141,11 @@ if (array_key_exists('addflight', $_REQUEST))
     {
         $pilPk = mysql_result($result,0,0);
         $flown = floatval($_REQUEST["flown"]) * 1000;
-        $penalty = intval($_REQUEST["penalty"]);
+        $penalty = reqival("penalty");
         $glider = addslashes($_REQUEST["glider"]);
         $dhv = addslashes($_REQUEST["dhv"]);
         $resulttype = addslashes($_REQUEST["resulttype"]);
-        $tasPk = intval($_REQUEST["tasPk"]);
+        $tasPk = reqival("tasPk");
         if ($resulttype == 'dnf' || $resulttype == 'abs')
         {
             $flown = 0.0;
@@ -365,7 +367,7 @@ $lastscore = 0;
 $hh = 0;
 $mm = 0;
 $ss = 0;
-while ($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $name = $row['pilFirstName'] . ' ' . $row['pilLastName'];
     $nation = $row['pilNationCode'];

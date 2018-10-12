@@ -114,7 +114,7 @@ sub re_entered_start
     if ($rpt->{'how'} eq 'entry')
     {
         #print "Repeat check ", $rpt->{'type'}, " (reflag=$reflag lastin=$lastin): dist=$rdist\n";
-        if (($rdist < ($rpt->{'radius'}+5)) and ($reflag == $lastin))
+        if (($rdist < ($rpt->{'radius'}+5))) # and ($reflag == $lastin))
         {
             # last point inside ..
             #$starttime = 0 + $coord->{'time'};
@@ -144,7 +144,7 @@ sub re_entered_start
 
     if ($rpt->{'how'} eq 'exit') 
     {
-        if (($rdist < ($rpt->{'radius'}+5)) and ($reflag == $lastin))
+        if (($rdist < ($rpt->{'radius'}+5))) # and ($reflag == $lastin))
         {
             #print "re-entered (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
             $wcount = $lastin;
@@ -176,7 +176,7 @@ sub re_entered_start
 # interpolate end times and making end sector
 # Assumptions: 
 #   there is never a waypoint after goal
-#   once you take the waypoint after start/speed you can't restart
+#   once you take the waypoint (after start time) after start/speed you can't restart
 #       
 # FIX: Function is too big and should be broken down ...
 
@@ -287,16 +287,16 @@ sub validate_task
 
         # Might re-enter start/speed section for elapsed time tasks 
         # Check if we did re-enter and set the task "back"
-        if (($lastin == $spt)
-                and ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'})) or ($task->{'type'} ne 'race')))
+        if (($lastin >= $spt) and 
+            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'})) or ($task->{'type'} ne 'race')))
         {
-            $rpt = $waypoints->[$lastin];
+            $rpt = $waypoints->[$spt];
             # Re-entered start cyclinder?
             $rdist = distance($coord, $rpt);
             if ($rpt->{'how'} eq 'entry')
             {
                 print "Repeat check @", $coord->{'time'}, " ",  $rpt->{'type'}, " (reflag=$reflag lastin=$lastin): dist=$rdist\n";
-                if (($rdist < ($rpt->{'radius'}+5)) and ($reflag == $lastin))
+                if (($rdist < ($rpt->{'radius'}+5)) and ($reflag == $lastin)) # - only if past start time
                 {
                     # last point inside ..
                     $starttime = 0 + $coord->{'time'};
@@ -328,9 +328,9 @@ sub validate_task
 
             if ($rpt->{'how'} eq 'exit') 
             {
-                if (($rdist < ($rpt->{'radius'}+5)) and ($reflag == $lastin))
+                if ($rdist < ($rpt->{'radius'}+7.5)) # and ($reflag == $lastin))
                 {
-                    #print "re-entered (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
+                    print "re-entered (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
                     $wcount = $lastin;
                     #$wmade = $lastin;
                     #printf "dec wmade=$wmade\n";
@@ -535,7 +535,8 @@ sub validate_task
         else 
         {
             # Handle exit cylinder
-            if ((($dist >= $wpt->{'radius'}) || $awarded == 1) and ($lastin == $wcount))
+            #print "exit waypoint dist=$dist for ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " @ ", $coord->{'time'}, "\n";
+            if ((($dist >= $wpt->{'radius'}-5) || $awarded == 1) and ($lastin == $wcount))
             {
                 #print "exited waypoint ($wasinstart,$wasinSS) ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, "\n";
                 if ((defined($wasinstart) and $wpt->{'type'} eq 'start')
@@ -614,7 +615,7 @@ sub validate_task
                     $closest = 9999999999;
                     $closestcoord = $waypoints->[$wcount-1];
                     $closestwpt = $wcount;
-                    #print "closestwpt $closestwpt:$closest\n";
+                    #print "closestwpt $closestwpt:$losest\n";
                 }
             }
             else
@@ -644,7 +645,7 @@ sub validate_task
                         $closestwpt = $wcount;
                         if ($debug)
                         {
-                            print "Exit(edist): new closest closestwpt=$closestwpt:closest=$closest\n";
+                            print "Exit(edist=$edist): new closest closestwpt=$closestwpt:closest=$closest\n";
                         }
                     }
                 }

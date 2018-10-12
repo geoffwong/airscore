@@ -32,6 +32,7 @@ sub day_quality
     my $launch = 0;
     my $distance = 0;
     my $time = 0;
+    my $stopped = 0;
     my $topspeed;
     my $x;
 
@@ -108,7 +109,22 @@ sub day_quality
         $time = 0.1;
     }
 
-    return ($distance,$time,$launch,1);
+    if ($taskt->{'stopped'} > 0)
+    {
+        $stopped = sqrt(($taskt->{'maxdist'} - $taskt->{'median'}) / ($taskt->{'endssdistance'} - $taskt->{'maxdist'} + 1) * sqrt($taskt->{'stddev'} / 5)) + ($taskt->{'landed'}/$taskt->{'launched'})**3;
+
+        print "stopped quality (stddev=", $taskt->{'stddev'}, " endssdist=", $taskt->{'endssdistance'}," landed=", $taskt->{'landed'}, " median=", $taskt->{'median'}, ")=$stopped\n";
+        if ($stopped > 1)
+        {
+            $stopped = 1;
+        }
+    }
+    else
+    {
+        $stopped = 1;
+    }
+
+    return ($distance,$time,$launch,$stopped);
 }
 
 sub pilot_speed
@@ -346,14 +362,14 @@ sub points_allocation
     }
 
     # Stop stopped speed penalty
-    my $stopped_reduction = 0;
-    if ($task->{'sstopped'} > 0)
-    {
-        print "sstopped=", $task->{'sstopped'}, "\n";
-        print "startSS=", $task->{'sstart'}, "\n";
-        $stopped_reduction = $Aspeed * (1-((($task->{'sstopped'}-$task->{'sstart'})-$Tmin)/3600/sqrt($Tmin/3600))**(2/3));
-        print "stopped_reduction=$stopped_reduction\n";
-    }
+#    my $stopped_reduction = 0;
+#    if ($task->{'sstopped'} > 0)
+#    {
+#        print "sstopped=", $task->{'sstopped'}, "\n";
+#        print "startSS=", $task->{'sstart'}, "\n";
+#        $stopped_reduction = $Aspeed * (1-((($task->{'sstopped'}-$task->{'sstart'})-$Tmin)/3600/sqrt($Tmin/3600))**(2/3));
+#        print "stopped_reduction=$stopped_reduction\n";
+#    }
 
     # Score each pilot now 
     my $kmarr;

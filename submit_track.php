@@ -64,7 +64,16 @@ if (array_key_exists('foo', $_REQUEST))
 
     echo "<title>Track Accepted</title>\n";
     $id = accept_track($comUnixTo, $comContact, $comEntryRestrict);
-    redirect("tracklog_map.html?trackid=$id&comPk=$comPk&ok=1");
+
+    $task = '';
+    $query = "select tasPk from tblComTaskTrack where traPk=$id";
+    $result = mysql_query($query);
+    if (mysql_num_rows($result) > 0)
+    {
+        $row=mysql_fetch_array($result, MYSQL_ASSOC);
+        $task = "&tasPk=" . $row['tasPk'];
+    }
+    redirect("tracklog_map.html?trackid=$id&comPk=$comPk$task&ok=1");
     exit(0);
 }
 if ($embed == '')
@@ -142,7 +151,7 @@ function task_score($traPk)
 function accept_track($until, $contact, $restrict)
 {
     //$file = addslashes($_REQUEST['userfile']);
-    $hgfa = addslashes($_REQUEST['hgfanum']);
+    $hgfa = reqsval('hgfanum');
     $name = addslashes(strtolower(trim($_REQUEST['lastname'])));
     $route = reqival('route');
     $comid = reqival('comid');
@@ -210,7 +219,14 @@ function accept_track($until, $contact, $restrict)
     $dhv = reqsval('dhv');
     $safety = reqsval('pilotsafety');
     $quality = reqival('pilotquality');
-    $query = "update tblTrack set traGlider='$glider', traDHV='$dhv', traSafety='$safety', traConditions='$quality' where traPk=$maxPk";
+    if ($safety == "none")
+    {
+        $query = "update tblTrack set traGlider='$glider', traDHV='$dhv', traConditions='$quality' where traPk=$maxPk";
+    }
+    else
+    {
+        $query = "update tblTrack set traGlider='$glider', traDHV='$dhv', traSafety='$safety', traConditions='$quality' where traPk=$maxPk";
+    }
     $result = mysql_query($query) or die('Update tblTrack failed: ' . mysql_error());
 
     return $maxPk;

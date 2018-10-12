@@ -8,111 +8,26 @@ require 'hc.php';
 require 'format.php';
 require 'xcdb.php';
 
-$usePk = check_auth('system');
-$link = db_connect();
-$tasPk = reqival('tasPk');
-$comPk = reqival('comPk');
-
-$rnd = 0;
-if (reqexists('rnd'))
+function task_result($link, $comPk, &$tsinfo, $tasPk, $fdhv)
 {
-    $rnd = reqival('rnd');
-}
+    $safety = 0;
+    $sc = 0;
+    $conditions = 0;
+    $cc = 0;
 
-$fdhv= '';
-$classfilter = '';
-
-$depcol = 'Dpt';
-$row = get_comtask($link,$tasPk);
-if ($row)
-{
-    $comName = $row['comName'];
-    $comClass = $row['comClass'];
-    $comPk = $row['comPk'];
-    //$_REQUEST['comPk'] = $comPk;
-    $comTOffset = $row['comTimeOffset'] * 3600;
-    $tasName = $row['tasName'];
-    $tasDate = $row['tasDate'];
-    $tasTaskType = $row['tasTaskType'];
-    $tasStartTime = substr($row['tasStartTime'],11);
-    $tasFinishTime = substr($row['tasFinishTime'],11);
-    $tasDistance = round($row['tasDistance']/1000,2);
-    $tasShortest = round($row['tasShortRouteDistance']/1000,2);
-    $tasQuality = round($row['tasQuality'],2);
-    $tasComment = $row['tasComment'];
-    $tasDistQuality = round($row['tasDistQuality'],2);
-    $tasTimeQuality = round($row['tasTimeQuality'],2);
-    $tasLaunchQuality = round($row['tasLaunchQuality'],2);
-    $tasArrival = $row['tasArrival'];
-    $tasHeightBonus = $row['tasHeightBonus'];
-    $tasStoppedTime = substr($row['tasStoppedTime'],11);
-
-    if ($row['tasDeparture'] == 'leadout')
-    {
-        $depcol = 'Ldo';
-    }
-    elseif ($row['tasDeparture'] == 'kmbonus')
-    {
-        $depcol = 'Lkm';
-    }
-    elseif ($row['tasDeparture'] == 'on')
-    {
-        $depcol = 'Dpt';
-    }
-    else
-    {
-        $depcol = 'off';
-    }
-}
-
-$waypoints = get_taskwaypoints($link,$tasPk);
-$goalalt = 0;
-$tsinfo = [];
-$tsinfo["comp_name"] = $comName;
-$tsinfo["task_name"] = $tasName;
-$tsinfo["date"] = $tasDate;
-$tsinfo["task_type"] = $tasTaskType;
-$tsinfo["class"] = $classfilter;
-$tsinfo["start"] = $tasStartTime;
-$tsinfo["end"] = $tasFinishTime;
-$tsinfo["stopped"] = $tasStoppedTime;
-$tsinfo["quality"] = number_format($tasQuality,3);
-$tsinfo["wp_dist"] = $tasDistance;
-$tsinfo["task_dist"] = $tasShortest;
-$tsinfo["dist_quality"] = number_format($tasDistQuality,3);
-$tsinfo["time_quality"] = number_format($tasTimeQuality,3);
-$tsinfo["launch_quality"] = number_format($tasLaunchQuality,3);
-$tsinfo["comment"] = $tasComment;
-$tsinfo["offset"] = $comTOffset;
-$tsinfo["hbess"] = $tasHeightBonus;
-$tsinfo["waypoints"] = $waypoints;
-
-# Pilot Info
-$pinfo = [];
-# total, launched, absent, goal, es?
-
-# Formula / Quality Info
-$finfo = [];
-# gap, min dist, nom dist, nom time, nom goal ?
-
-// FIX: Print out task quality information.
-// add in country from tblCompPilot if we have entries ...
-
-
-function task_result($link, $comPk, $tsinfo, $tasPk, $fdhv)
-{
     $count = 1;
     $sql = "select TR.*, T.*, P.* from tblTaskResult TR, tblTrack T, tblPilot P where TR.tasPk=$tasPk $fdhv and T.traPk=TR.traPk and P.pilPk=T.pilPk order by TR.tarScore desc, P.pilFirstName";
     $result = mysql_query($sql,$link) or die('Task Result selection failed: ' . mysql_error());
     $lastscore = 0;
+    $lastplace = 0;
     $hh = 0;
     $mm = 0;
     $ss = 0;
     $rnd = 1;
     $offset=$tsinfo['offset'];
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
-        $name = $row['pilFirstName'] . ' ' . $row['pilLastName'];
+        $name = utf8_encode($row['pilFirstName'] . ' ' . $row['pilLastName']);
         $nation = $row['pilNationCode'];
         $tarPk = $row['tarPk'];
         $traPk = $row['traPk'];
@@ -128,6 +43,30 @@ function task_result($link, $comPk, $tsinfo, $tasPk, $fdhv)
         $endf = "";
         $startf = "";
         $timeinair = "";
+        if ($row['traConditions'] > 0)
+        {
+            $conditions += $row['traConditions'];
+            $cc++;
+        }
+        if ($row['traSafety'] == 'safe')
+        {
+            $safety++;
+            $sc++;
+        }
+        else if ($row['traSafety'] == 'maybe')
+        {
+            $safety+=2;
+            $sc++;
+        }
+        else if ($row['traSafety'] == 'unsafe')
+        {
+            $safety+=3;
+            $sc++;
+        }
+        else if ($row['traSafety'] == 'unsafe')
+        {
+        }
+
         if ($end)
         {
             $hh = floor(($end - $start) / 3600);
@@ -260,12 +199,143 @@ function task_result($link, $comPk, $tsinfo, $tasPk, $fdhv)
         $count++;
     }
 
+    if ($sc > 0)
+    {
+        $tsinfo['safety'] = $safety / $sc;
+    }
+
+    if ($cc > 0)
+    {
+        $tsinfo['conditions'] = 2 * $conditions / $cc;
+    }
+
     return $trtab;
 }
 
 
+// main mess - should be mostly in a function
+$usePk = check_auth('system');
+$link = db_connect();
+$tasPk = reqival('tasPk');
+$comPk = reqival('comPk');
+
+$rnd = 0;
+if (reqexists('rnd'))
+{
+    $rnd = reqival('rnd');
+}
+
+$fdhv= '';
+$classfilter = '';
+
+$depcol = 'Dpt';
+$row = get_comtask($link,$tasPk);
+if ($row)
+{
+    $comName = $row['comName'];
+    $comClass = $row['comClass'];
+    $comPk = $row['comPk'];
+    //$_REQUEST['comPk'] = $comPk;
+    $comTOffset = $row['comTimeOffset'] * 3600;
+    $tasName = $row['tasName'];
+    $tasDate = $row['tasDate'];
+    $tasTaskType = $row['tasTaskType'];
+    $tasStartTime = substr($row['tasStartTime'],11);
+    $tasFinishTime = substr($row['tasFinishTime'],11);
+    $tasDistance = round($row['tasDistance']/1000,2);
+    $tasShortest = round($row['tasShortRouteDistance']/1000,2);
+    $tasQuality = round($row['tasQuality'],2);
+    $tasComment = $row['tasComment'];
+    $tasDistQuality = round($row['tasDistQuality'],2);
+    $tasTimeQuality = round($row['tasTimeQuality'],2);
+    $tasLaunchQuality = round($row['tasLaunchQuality'],2);
+    $tasArrival = $row['tasArrival'];
+    $tasHeightBonus = $row['tasHeightBonus'];
+    $tasStoppedTime = substr($row['tasStoppedTime'],11);
+
+    if ($row['tasDeparture'] == 'leadout')
+    {
+        $depcol = 'Ldo';
+    }
+    elseif ($row['tasDeparture'] == 'kmbonus')
+    {
+        $depcol = 'Lkm';
+    }
+    elseif ($row['tasDeparture'] == 'on')
+    {
+        $depcol = 'Dpt';
+    }
+    else
+    {
+        $depcol = 'off';
+    }
+}
+
+$waypoints = get_taskwaypoints($link,$tasPk);
+$goalalt = 0;
+$tsinfo = [];
+$tsinfo["comp_name"] = $comName;
+$tsinfo["task_name"] = $tasName;
+$tsinfo["date"] = $tasDate;
+$tsinfo["task_type"] = strtoupper($tasTaskType);
+$tsinfo["class"] = $classfilter;
+$tsinfo["start"] = $tasStartTime;
+$tsinfo["end"] = $tasFinishTime;
+$tsinfo["stopped"] = $tasStoppedTime;
+$tsinfo["wp_dist"] = $tasDistance;
+$tsinfo["task_dist"] = $tasShortest;
+$tsinfo["quality"] = number_format($tasQuality,3);
+$tsinfo["dist_quality"] = number_format($tasDistQuality,3);
+$tsinfo["time_quality"] = number_format($tasTimeQuality,3);
+$tsinfo["launch_quality"] = number_format($tasLaunchQuality,3);
+$tsinfo["comment"] = $tasComment;
+$tsinfo["offset"] = $comTOffset;
+$tsinfo["hbess"] = $tasHeightBonus;
+$tsinfo["waypoints"] = $waypoints;
+
+# Pilot Info
+$pinfo = [];
+# total, launched, absent, goal, es?
+
+# Formula / Quality Info
+$finfo = [];
+# gap, min dist, nom dist, nom time, nom goal ?
+
+// FIX: Print out task quality information.
+// add in country from tblCompPilot if we have entries ...
+
+$comf = get_comformula($link, $comPk);
+$formula = [];
+$formula['formula'] = $comf['forClass'] . '-' . $comf['forVersion'];
+$formula['goal_penalty'] = $comf['forGoalSSpenalty'];
+$formula['nominal_goal'] = $comf['forNomGoal'] . '%';
+$formula['minimum_distance'] = $comf['forMinDistance'] . ' km';
+$formula['nominal_distance'] = $comf['forNomDistance'] . ' km';
+$formula['nominal_time'] = $comf['forNomTime'] . ' mins';
+$formula['arrival_scoring'] = $comf['forArrival'];
+$formula['departure'] = $comf['forDeparture'];
+//$formula['linear_distance'] = $comf['forLinearDist'];
+$formula['stop_glide_bonus'] = $comf['forStoppedGlideBonus'];
+$formula['start_weight'] = $comf['forWeightStart'];
+$formula['arrival_weight'] = $comf['forWeightArrival'];
+$formula['speed_weight'] = $comf['forWeightSpeed'];
+$formula['scale_to_validity'] = $comf['forScaleToValidity'];
+$formula['error_margin'] = 0.0005; //0 + $comf['forErrorMargin'];
+$formula['arrival'] = $tasArrival;
+$formula['height_bonus'] = $tasArrival;
+$formula['departure'] = $depcol;
+
 $sorted = task_result($link, $comPk, $tsinfo, $tasPk, $fdhv);
-$data = [ 'task' => $tsinfo, 'data' => $sorted ];
+
+$metric = [];
+$metric["day quality"] = number_format($tasQuality,3);
+$metric["dist_quality"] = number_format($tasDistQuality,3);
+$metric["time_quality"] = number_format($tasTimeQuality,3);
+$metric["launch_quality"] = number_format($tasLaunchQuality,3);
+$metric["pilot_safety"] = round($tsinfo['safety'], 1);
+$metric["pilot_quality"] = round($tsinfo['conditions']/10, 2);
+
+$data = [ 'task' => $tsinfo, 'formula' => $formula, 'metrics' => $metric, 'data' => $sorted ];
 //$data = [ 'data' => $sorted, 'extra' => [ 'foo' ] ];
 print json_encode($data);
 

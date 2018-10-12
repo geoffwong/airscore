@@ -42,8 +42,9 @@ function comp_result($comPk, $cls)
     {
         $sql = "select sum(tasQuality) as totValidity, count(*) as tasTotal from tblTask where comPk=$comPk";
         $result = mysql_query($sql) or die('Task validity query failed: ' . mysql_error());
-        $totalvalidity = round(mysql_result($result, 0, 0) * $param * 10,0);
-        $tasktot = mysql_result($result, 0, 1);
+        $row = mysql_fetch_array($result, MYSQL_ASSOC);
+        $totalvalidity = round($row['totValidity'] * $param * 10,0);
+        $tasktot = $row['tasTotal'];
         $param = $totalvalidity;
         if ($tasktot < 2)
         {
@@ -52,7 +53,7 @@ function comp_result($comPk, $cls)
 
     }
 
-    $sql = "select TK.*,TR.*,P.*,T.traGlider from tblTaskResult TR, tblTask TK, tblTrack T, tblPilot P, tblCompetition C where C.comPk=$comPk and TK.comPk=C.comPk and TK.tasPk=TR.tasPk and TR.traPk=T.traPk and T.traPk=TR.traPk and P.pilPk=T.pilPk $cls order by P.pilPk, TK.tasPk";
+    $sql = "select TK.*,TR.*,P.*,T.traGlider,T.traDHV from tblTaskResult TR, tblTask TK, tblTrack T, tblPilot P, tblCompetition C where C.comPk=$comPk and TK.comPk=C.comPk and TK.tasPk=TR.tasPk and TR.traPk=T.traPk and T.traPk=TR.traPk and P.pilPk=T.pilPk $cls order by P.pilPk, TK.tasPk";
     $result = mysql_query($sql) or die('Task result query failed: ' . mysql_error());
     $results = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
@@ -65,6 +66,7 @@ function comp_result($comPk, $cls)
         $pilnum = $row['pilHGFA'];
         $civlnum = $row['pilCIVL'];
         $glider = $row['traGlider'];
+        $dhv = $row['traDHV'];
         $gender = $row['pilSex'];
     
         if (!array_key_exists($pilPk,$results) || !$results[$pilPk])
@@ -75,6 +77,27 @@ function comp_result($comPk, $cls)
             $results[$pilPk]['civl'] = $civlnum;
             $results[$pilPk]['nation'] = $nation;
             $results[$pilPk]['glider'] = $glider;
+            if ($dhv == 'competition')
+            {
+                $dhv = 'CCC';
+            }
+            elseif ($dhv == '2/3')
+            {
+                $dhv = 'D';
+            }
+            elseif ($dhv == '2')
+            {
+                $dhv = 'C';
+            }
+            elseif ($dhv == '1/2')
+            {
+                $dhv = 'B';
+            }
+            else
+            {
+                $dhv = 'A';
+            }
+            $results[$pilPk]['dhv'] = $dhv;
             $results[$pilPk]['gender'] = $gender;
             $results[$pilPk]['tasks'] = [];
         }
@@ -190,6 +213,7 @@ function civl_result($tasks, $sorted)
             $nxt[] = $arr['civl'];
             $nxt[] = $arr['name'];
             $lastcount = $count;
+            $lasttot = $tot;
         }
         else
         {
@@ -202,6 +226,7 @@ function civl_result($tasks, $sorted)
         $nxt[] = $arr['gender'];
         $nxt[] = $arr['sponsor'];
         $nxt[] = $arr['glider'];
+        $nxt[] = $arr['dhv'];
         $nxt[] = "<b>$tot</b>";
         
         $taskcount = 0;

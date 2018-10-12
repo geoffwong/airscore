@@ -6,8 +6,9 @@ $(document).ready(function() {
     $('#task_result').dataTable({
         ajax: 'get_task_result.php?comPk='+comPk+'&tasPk='+tasPk,
         paging: false,
-        searching: false,
+        searching: true,
         info: false,
+        "dom": 'lrtip',
         "columnDefs": [
             {
                 "targets": [ 4 ],
