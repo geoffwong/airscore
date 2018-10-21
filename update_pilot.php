@@ -4,7 +4,6 @@ header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 header('Content-type: application/json; charset=utf-8');
 
 require_once 'authorisation.php';
-require_once 'format.php';
 require_once 'dbextra.php';
 
 $usePk = auth('system');

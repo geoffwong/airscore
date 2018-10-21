@@ -35,7 +35,7 @@ function task_result($link, $comPk, &$tsinfo, $tasPk, $fdhv)
         $dep = round($row['tarDeparture'], $rnd);
         $arr = round($row['tarArrival'], $rnd);
         $speed = round($row['tarSpeedScore'], $rnd);
-        $score = round($row['tarScore'], $rnd);
+        $score = round($row['tarScore'], 0);
         $lastalt = round($row['tarLastAltitude']);
         $resulttype = $row['tarResultType'];
         $start = $row['tarSS'];
@@ -182,7 +182,7 @@ function task_result($link, $comPk, &$tsinfo, $tasPk, $fdhv)
         }
         $trrow[] = $tardist;
         $trrow[] = $dep;
-        //$trrow[] = $arr;
+        $trrow[] = $arr;
         $trrow[] = $speed;
         $trrow[] = $dist;
         if ($penalty == 0)

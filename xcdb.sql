@@ -258,7 +258,7 @@ create table tblHandicapResult
 drop table if exists tblTrackLog;
 create table tblTrackLog
 (
-    traPk           integer not null,
+    traPk           integer not null primary key,
     trlLatDecimal   double not null,
     trlLongDecimal  double not null,
     trlAltitude     integer not null,

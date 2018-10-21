@@ -1,4 +1,11 @@
-
+create_comp()
+{
+    var options = { };
+    options.name = $('#compname').val();
+    options.dateto = $('#dateto').val();
+    options.datefrom = $('#datefrom').val();
+    console.log(options);
+}
 $(document).ready(function() {
     var url = new URL('http://highcloud.net/xc/get_admin_comps.php');
     $('#competitions').dataTable({
@@ -12,7 +19,7 @@ $(document).ready(function() {
         "dom": '<"#search"f>rt<"bottom"lip><"clear">',
         "createdRow": function( row, data, index, cells )
         {
-            cells[1].innerHTML = '<a href=\"competition.php?comPk=' + data[0] + '\">' + data[1] + '</a>';
+            cells[1].innerHTML = '<a href=\"competition.html?comPk=' + data[0] + '\">' + data[1] + '</a>';
             if (today() < data[3])
             {       
                 $(row).addClass('text-warning');

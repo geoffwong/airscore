@@ -1,5 +1,19 @@
+.pagination {
+	margin-bottom: 15px;
+	}
 .waypoint {
     background: #ffffff;
+    opacity:0.6;
+    color:#000000;
+    font-size:11px;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+    width:100%;
+    border:1px #000000 solid;
+    }
+.pilot {
+    background: #ffff00;
     opacity:0.6;
     color:#000000;
     font-size:11px;
@@ -81,7 +95,15 @@
     margin: 0px;
     font-size: 10em;
 }
-@media (max-width: 576px){.modal-dialog.modal-dialog-slideout {width: 80%}}
+@media (max-width: 576px) { .modal-dialog.modal-dialog-slideout {width: 80%}}
+body {
+  padding-top: 54px;
+}
+@media (min-width: 992px) {
+  body {
+    padding-top: 56px;
+  }
+}
 .modal-dialog-slideout {min-height: 100%; margin: 0 auto 0 0 ;background: #fff;}
 .modal.fade .modal-dialog.modal-dialog-slideout {-webkit-transform: translate(-100%,0);transform: translate(-100%,0);}
 .modal.fade.show .modal-dialog.modal-dialog-slideout {-webkit-transform: translate(0,0);transform: translate(0,0);flex-flow: column;}

@@ -10,7 +10,6 @@
 
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/1-col-portfolio.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
     <link href="navbar.css" rel="stylesheet">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
@@ -18,7 +17,7 @@
 
     <!-- JS -->
     <script src="microajax.minified.js"></script>
-    <script src="js/utils.js"></script>
+    <script src="utils.js"></script>
   </head>
 
   <body>
@@ -44,9 +43,55 @@
       </div>
     </nav>
 
+ <!-- The Modal -->
+	<div class="modal fade" id="compmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Create Competition</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createcomp" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row" id="route">
+			  	<label for="date-from" class="col-2 col-form-label">Name</label>
+			    <div class="col-10">
+			 		<input class="form-control" type="text" value="" id="compname">
+			    </div>
+		    </div>
+			<div class="form-group row">
+			  <label for="date-from" class="col-2 1ol-form-label">From</label>
+			  <div class="col-10">
+			    <input class="form-control" type="date" value="2018-08-19" id="datefrom">
+			  </div>
+			  <label for="date-to" class="col-2 col-form-label">To</label>
+			  <div class="col-10">
+			    <input class="form-control" type="date" value="2018-08-20" id="dateto">
+			  </div>
+			</div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="create_comp();">Create</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+        
+      </div>
+
+    </div>
+	</div>
+
     <div class="container" id="main">
-    <br>
-    <table id="competitions" class="row-border stripe compact mb-1" cellspacing="0" width="100%">
+	<div class="row">
+	<button type="button" class="btn btn-primary mt-3" data-toggle="modal" data-target="#compmodal">Create</button>
+	</div> 
+	<div class="row">
+    <table id="competitions" class="row-border stripe compact mb-1 mt-2" cellspacing="0" width="100%">
     <thead>
         <tr>
             <th>ID</th>
@@ -59,9 +104,11 @@
     </thead>
     </table>
     </div>
+    </div>
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="js/pop_admin_comps.js"></script>

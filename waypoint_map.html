@@ -6,11 +6,11 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title></title>
+    <title>Waypoint Map</title>
 
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/1-col-portfolio.css" rel="stylesheet">
+    <link href="vendor/css/leaflet-ruler.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
@@ -20,7 +20,7 @@
 
     <script src="leaflet.js"></script>
     <script src="microajax.minified.js"></script>
-    <script src="js/utils.js"></script>
+    <script src="utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
     <script src="sidebar/L.Control.Sidebar.js"></script>
   </head>
@@ -68,6 +68,7 @@
         <button class="btn btn-primary btn-sm btn-block mb-3" onclick="create_waypoint_marker();">Create Waypoint Marker</button>
         <div class="form-row align-items-center">
         <div class="col-sm-4">
+        <input type="hidden" id="rwpPk">
         <input type="text" class="form-control mb-2" id="wptid" placeholder="Waypoint ID">
         </div>
         <div class="col">
@@ -85,7 +86,8 @@
         <input type="text" class="form-control mb-2" id="alt" placeholder="Altitude">
         </div>
         </div>
-        <button class="btn btn-primary btn-sm btn-block" onclick="add_waypoint();">Add Waypoint</button>
+        <button class="btn btn-primary btn-sm btn-block" onclick="add_waypoint();" id="addwpt">Add Waypoint</button>
+        <button class="btn btn-primary btn-sm btn-block" onclick="delete_waypoint();" id="delwpt">Delete Waypoint</button>
         <hr>
         <div>
     </div>
@@ -96,7 +98,9 @@
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/js/leaflet-ruler.js"></script>
     <script src="js/jquery.ajax-cross-origin.min.js"></script>
     <script src="js/map_services.js"></script>
     <script src="js/srtm.js"></script>

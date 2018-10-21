@@ -56,7 +56,7 @@ sub points_weight
         $Astart = 1000 * $quality * (1-$distweight) * 1/4;
         $Aarrival = 1000 * $quality * (1-$distweight) * 1/4;
     }
-    elsif ($formula->{'version'} eq 'hg2013')
+    elsif (substr($formula->{'version'},0,2) eq 'hg')
     {
         $Adistance = 1000 * (0.9-1.665*$x+1.713*$x*$x-0.587*$x*$x*$x) * $quality;
         $Astart = 1000 * $quality * (1-$distweight) * 1.4/8;
@@ -87,7 +87,7 @@ sub points_weight
     }
     elsif ($task->{'arrival'} eq 'off')
     {
-        if ($formula->{'version'} eq 'hg2013')
+        if (substr($formula->{'version'},0,2) eq 'hg')
         {
             $Aarrival = 0;
             $Aspeed = 1000 - $Adistance - $Astart - $Aarrival;

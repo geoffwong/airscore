@@ -5,11 +5,10 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>AirScore Tracklog Submission</title>
+    <title>AirScore Submission</title>
 
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/1-col-portfolio.css" rel="stylesheet">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
 
@@ -39,7 +38,7 @@
             <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
             <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
             <li class="nav-item" id="comp_tab">
-              <a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a>
+              <a class="nav-link" id="overall" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a>
             </li>
             <li class="nav-item"> <a class="nav-link" href="pilot_overview.html">Pilots</a> </li>
             <li class="nav-item active">
@@ -57,7 +56,7 @@
     <div class="col-md-7" id="submission">
     <br>
     <h2>Tracklog Submission</h2>
-    <form enctype="multipart/form-data" action="submit_track.php" method="post">
+    <form enctype="multipart/form-data" id="subform" action="javascript:void(0);" method="post">
     <div class="form-group">
     <input type="hidden" name="MAX_FILE_SIZE" value="1000000000">
     <div class="form-row">
@@ -69,16 +68,16 @@
     <div class="form-row">
     <div class="col">
     <div class="custom-file mb-1">
-        <input name="userfile" type="file" class="custom-file-input" id="customFile">
+        <input name="userfile" type="file" class="custom-file-input" id="customFile" required>
         <label class="custom-file-label" for="customFile" id="selected_igc">Select IGC File</label>
     </div>
     </div>
     </div>
     <div class="form-row">
-        <div class="col mb-1"><input name="hgfanum" type="text" class="form-control" placeholder="HGFA Number"></div>
+        <div class="col mb-1"><input name="hgfanum" type="text" class="form-control" placeholder="HGFA Number" required></div>
     </div>
     <div class="form-row">
-        <div class="col mb-1"><input name="lastname" type="text" class="form-control" placeholder="Last Name"></div>
+        <div class="col mb-1"><input name="lastname" type="text" class="form-control" placeholder="Last Name" required></div>
     </div>
     <div class="form-row">
         <div class="col mb-1"><input name="glider" type="text" class="form-control" placeholder="Glider"></div>
@@ -115,7 +114,7 @@
     <div class="form-row">
       <div class="col"></div>
       <div class="col">
-        <button type="submit" name="foo" class="btn btn-primary btn-block mt-4">Send Tracklog</button>
+        <button name="foo" id="send" class="btn btn-primary btn-block mt-4" onClick="submit_track();">Send Tracklog</button>
       </div>
       <div class="col"></div>
       </div>
@@ -138,6 +137,7 @@
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="js/submission.js"></script>
 

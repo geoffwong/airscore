@@ -1,29 +1,30 @@
 <?php
-
 function get_all_tasks($link,$comPk)
 {
-    $sql = "select C.*,T.*,SR.*,TW.*, W.* from tblCompetition C, tblTask T, tblTaskWaypoint TW, tblShortestRoute SR, tblRegionWaypoint W  where C.comPk=$comPk and TW.tasPk=T.tasPk and T.comPk=C.comPk and SR.tawPk=TW.tawPk and W.rwpPk=TW.rwpPk order by C.comPk, T.tasPk, TW.tawNumber";
+    $ret = [];
+    $task = [];
+
+    $sql = "select C.* from tblCompetition C where C.comPk=$comPk";
+    $result = mysql_query($sql,$link) or die('get_all_tasks (comp) failed: ' . mysql_error());
+
+    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+        $row['comDateFrom'] = substr($row['comDateFrom'],0,10);
+        $row['comDateTo'] = substr($row['comDateTo'],0,10);
+        $ret['comp'] = $row;
+    }
+
+
+    $sql = "select T.*,SR.*,TW.*, W.* from tblTask T, tblTaskWaypoint TW, tblShortestRoute SR, tblRegionWaypoint W  where T.comPk=$comPk and TW.tasPk=T.tasPk and SR.tawPk=TW.tawPk and W.rwpPk=TW.rwpPk order by T.comPk, T.tasPk, TW.tawNumber";
 
     $result = mysql_query($sql,$link) or die('get_all_tasks failed: ' . mysql_error());
 
-    $ret = [];
-    $task = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $tasPk = $row['tasPk'];
         if (!$row['tasComment'])
         {
             $row['tasComment'] = '';
-        }
-        if (sizeof($ret) == 0)
-        {
-            $ret['comp'] = [
-                'comPk' => $row['comPk'],
-                'comName' => $row['comName'],
-                'comClass' => $row['comClass'],
-                'comLocation' => $row['comLocation'],
-                'comTimeOffset' => $row['comTimeOffset']
-                ];
         }
         if (!array_key_exists($tasPk, $task))
         {
@@ -39,7 +40,7 @@ function get_all_tasks($link,$comPk)
                     'tasSSDistance' => round($row['tasSSDistance']/1000,2),
                     'tasShortest' => round($row['tasShortRouteDistance']/1000,2),
                     'tasQuality' => round($row['tasQuality'],2),
-                    'tasComment' => $row['tasComment'],
+                    'tasComment' => utf8_encode($row['tasComment']),
                     'tasDistQuality' => round($row['tasDistQuality'],2),
                     'tasTimeQuality' => round($row['tasTimeQuality'],2),
                     'tasLaunchQuality' => round($row['tasLaunchQuality'],2),
@@ -77,6 +78,14 @@ function get_comtask($link,$tasPk)
     return $row;
 }
 
+function get_comformula($link,$comPk)
+{
+    $query = "select C.*, F.*, sum(T.tasQuality) as TotalValidity from tblCompetition C left outer join tblFormula F on C.forPk=F.forPk left outer join tblTask T on T.comPk=C.comPk where C.comPk=$comPk group by C.comPk";
+    $result = mysql_query($query,$link) or die('get_comformulatask failed: ' . mysql_error());
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    return $row;
+}
+
 function get_taskwaypoints($link,$tasPk)
 {
     $sql = "SELECT T.*,SR.*,W.* FROM tblTaskWaypoint T, tblShortestRoute SR, tblRegionWaypoint W where T.tasPk=$tasPk and SR.tawPk=T.tawPk and W.rwpPk=T.rwpPk order by T.tawNumber";
@@ -86,6 +95,41 @@ function get_taskwaypoints($link,$tasPk)
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $ret[] = $row;
+    }
+
+    return $ret;
+}
+
+function get_region($link, $regPk, $trackid)
+{
+    // task info ..
+    if ($trackid > 0)
+    {
+        $sql = "SELECT max(T.trlLatDecimal) as maxLat, max(T.trlLongDecimal) as maxLong, min(T.trlLatDecimal) as minLat, min(T.trlLongDecimal) as minLong from tblTrackLog T where T.traPk=$trackid";
+        $result = mysql_query($sql,$link) or die('Track query failed: ' . mysql_error());
+        $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    
+        $maxLat = $row['maxLat'] + 0.02;
+        $maxLong = $row['maxLong'] + 0.02;
+        $minLat = $row['minLat'] - 0.02;
+        $minLong = $row['minLong'] - 0.02;
+        $crad = 400;
+    
+        $sql = "SELECT W.* FROM tblRegionWaypoint W where W.regPk=$regPk and W.rwpLatDecimal between $minLat and $maxLat and W.rwpLongDecimal between $minLong and $maxLong";
+    }
+    else
+    {
+        $crad = 0;
+        $sql = "SELECT W.* FROM tblRegionWaypoint W where W.regPk=$regPk";
+    }
+    $result = mysql_query($sql,$link) or die('Region waypoint query failed: ' . mysql_error());
+    $ret = [];
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+        $id = $row['rwpPk'];
+        unset($row['rwpPk']);
+        unset($row['regPk']);
+        $ret[$id] = $row;
     }
 
     return $ret;

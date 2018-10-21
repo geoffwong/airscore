@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Task Admin</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="microajax.minified.js"></script>
+    <script src="url.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"> <a class="nav-link" href="comp_admin.html">Competitions</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='track_admin.html'+window.location.search;">Tracks</a></li>
+            <li class="nav-item"> <a class="nav-link" href="pilot_admin.html">Pilots</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="region_admin.html">Waypoints</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="airspace_admin.html">Airspace</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_admin.html">Ladders</a> </li>
+            <li class="nav-item"> <a class="nav-link" onClick="document.location.href='competition.html'+window.location.search;">Competition</a></li>
+            <li class="nav-item"> <a class="nav-link" onClick="document.location.href='task_result.html'+window.location.search;">Result</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+    <div class="row mt-3">
+        <div class="col-8"><h2>Task Details</h2></div>
+        <div class="col-4">
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_task();">Save</button>
+            <button class="btn btn-secondary btn-sm float-right" onclick="reset_task();">Reset</button>
+        </div>
+    </div>
+    <div class="row"> 
+        <div class="col">
+        <table class="table form_param" id="taskinfo1">
+        <tbody class="" id="formula1_bd"></tbody>
+        </table>
+        </div>
+        <div class="col">
+        <table class="table form_param" id="taskinfo2">
+        <tbody class="" id="formula2_bd"></tbody>
+        </table>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-4"><h2>Waypoints</h2></div>
+        <div class="col-8">
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="update_waypoints();">Update</button>
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="add_waypoints();">Add</button>
+        </div>
+    </div>
+    <div class="row" id="waypoints">
+        <table class="table table-sm form_param" id="waypointstbl">
+        <thead class="thead-light small" id="waypointstbl_hd">
+            <tr><th>Waypoint</th><th>Type</th><th>How</th><th>Shape</th><th>Size</th><th>Distance</th><th></th></tr>
+        </thead>
+        <tbody class="" id="waypointstbl_bd"></tbody>
+        </table>
+    </div>
+    <div class="row mt-5">
+        <div class="col-4"><h2>Airspace</h2></div>
+        <div class="col-8">
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="add_waypoints();">Check</button>
+        </div>
+    </div>
+    <div class="row">
+        <table class="table table-sm form_param" id="airspace">
+        <thead class="thead-light small">
+            <tr><th>Airspace</th><th>Type</th><th>Low</th><th>High</th></tr>
+        </thead>
+        <tbody class=""></tbody>
+        </table>
+    </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="js/enums.js"></script>
+    <script type="text/javascript" src="js/pop_task_details.js"></script>
+</body>
+</html>
+

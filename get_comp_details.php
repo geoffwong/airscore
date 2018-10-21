@@ -50,10 +50,35 @@ if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $com
     $taskinfo = get_taskinfo($link, $comPk);
 }
 
+$keys = [];
+$keys['comPk'] = $compinfo['comPk'];
+$keys['forPk'] = $compinfo['forPk'];
+$keys['regPk'] = $compinfo['regPk'];
+foreach ($keys as $key => $value)
+{
+    unset($compinfo[$key]);
+}
+
+
+$scoring = [];
+$scoring['comType'] = $compinfo['comType'];
+$scoring['comSanction'] = $compinfo['comSanction'];
+$scoring['comOverallScore'] = $compinfo['comOverallScore'];
+$scoring['comOverallParam'] = $compinfo['comOverallParam'];
+$scoring['comTeamSize'] = $compinfo['comTeamSize'];
+$scoring['comTeamScoring'] = $compinfo['comTeamScoring'];
+$scoring['comTeamOver'] = $compinfo['comTeamOver'];
+$scoring['comLocked'] = $compinfo['comLocked'];
+
+foreach ($scoring as $key => $value)
+{
+    unset($compinfo[$key]);
+}
+
 $formula = [];
 foreach ($compinfo as $key => $value)
 {
-    if (substr($key,0,3) == "for" && $key != 'forPk')
+    if (substr($key,0,3) == "for")
     {
         $formula[$key] = $value;
         unset($compinfo[$key]);
@@ -62,8 +87,10 @@ foreach ($compinfo as $key => $value)
 unset($formula['forOLCBase']);
 unset($formula['forOLCPoints']);
 unset($formula['forHBESS']);
+unset($compinfo['comStyleSheet']);
+unset($compinfo['TotalValidity']);
 
 
-$data = [ 'compinfo' => $compinfo, 'taskinfo' => $taskinfo, 'formula' => $formula ];
+$data = [ 'keys' => $keys, 'compinfo' => $compinfo, 'taskinfo' => $taskinfo, 'formula' => $formula, 'scoring' => $scoring ];
 print json_encode($data);
 ?>

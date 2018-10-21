@@ -75,10 +75,26 @@ my $dbh;
 my $sth;
 my $debug = 0;
 
+
+# Check if waypoints short positions are at the same location
+sub sllequal
+{
+    my ($wp1, $wp2) = @_;
+
+    if (abs($wp1->{'short_lat'} - $wp2->{'short_lat'}) < 0.0000001 and
+        abs($wp1->{'short_long'} - $wp2->{'short_long'}) < 0.0000001)
+    {  
+        return 1;
+    }
+
+    return 0;
+}
+
 #
-# Input: Line segment P1 -> P2 -> P3
+# @param: The waypoints forming line segment P1 -> P2 -> P3
+# @param O2 - original 'P2' point (needed for position / radius in some cases)
+# @param dirn - suggested direction for next waypoint
 # Returns: optimised P2 (to minimise distance)
-# O2 - original 'P2' point (needed for position / radius in some cases)
 #
 sub find_closest
 {
@@ -289,7 +305,7 @@ sub find_closest
         $vl = $vn->length();
         $vn = $vn/$vl;
         $O = $vn * $P2->{'radius'};
-        print "vec_len=", $O->length(), "\n";
+        # print "vec_len=", $O->length(), "\n";
         $CL = $O + $C2;
     }
     else
@@ -368,7 +384,7 @@ sub iterate_short_route
     for (my $i = 0; $i < $num-2; $i++)
     {
         if ($debug) { print "iterate_short_route: $i: ", $orig->[$i]->{'name'}, "\n"; }
-        if (ddequal($orig->[$i+1], $orig->[$i+2]) && ($i < $num-3))
+        if (0 && ddequal($orig->[$i+1], $orig->[$i+2]) && ($i < $num-3))
         {
             my $dirn;
             # should find the intersection of the circle/radius of $i+1 & $i+2
@@ -481,7 +497,9 @@ sub find_shortest_route
 
     # Iterate until it doesn't get shorter?
     my $it2 = iterate_short_route($wpts, \@it1);
-    my $closearr = iterate_short_route($wpts, $it2);
+    my $it3 = iterate_short_route($wpts, $it2);
+    return $it3;
+    my $closearr = iterate_short_route($wpts, $it3);
 
     #print "closearr=", Dumper($closearr);
     return $closearr;
@@ -593,13 +611,13 @@ sub task_distance
         }
         if ($i < $allpoints-1)
         {
-            if (ddequal($waypoints->[$i], $waypoints->[$i+1]) && $waypoints->[$i+1]->{'how'} eq 'exit')
+            if (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'exit') && ($waypoints->[$i]->{'type'} eq 'start'))
             {
                 $cwdist = $cwdist + $waypoints->[$i+1]->{'radius'};
-                if ($waypoints->[$i]->{'type'} ne 'start')
-                {
-                    $cwdist = $cwdist - $waypoints->[$i]->{'radius'};
-                }
+                #if ($waypoints->[$i]->{'type'} ne 'start')
+                #{
+                #    $cwdist = $cwdist - $waypoints->[$i]->{'radius'};
+                #}
             }
             else
             {

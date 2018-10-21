@@ -16,8 +16,16 @@ With the exception of the following code:
 
 einsert.js (http://econym.googlepages.com - copyright Mike Williams)
 elabel.js  (http://econym.googlepages.com - copyright Mike Williams)
-Simple.pm (http://search.cpan.org/~grantm/XML-Simple-2.20/lib/XML/Simple.pm 
-    - copyright Grant McLean distributed under GPL License version 2)
+
+bootstrap
+datatables.net
+open-iconic
+spacelab.css
+leafletjs
+leaflet-fullscreen
+leaflet-ruler
+leaflet-easybutton
+leaflet-sidebar
 
 All rest of the code is provided under the GPL License version 2 
 described in the file "Copying".

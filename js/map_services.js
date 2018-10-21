@@ -45,7 +45,7 @@ L.Control.Play = L.Control.extend({
     onAdd: function(map) {
             var ele = L.DomUtil.create('div');
             this._container = ele;
-            ele.innerHTML = "<div id='playblock'><table><b><tr><td><a href='#' id='clear' onclick='restart();'>&#8920;</a></td><td><a href='#' id='bwd' onclick='backward();'>&ll;</a></td><td><a href='#' id='fwd' onclick='forward();'>&gt;</a></td><td><a href='#' id='ffwd' onclick='fast_forward();'>&gg;</a></td></tr></b></table></div>";
+            ele.innerHTML = "<div id='playblock'></b><table><tr><td><a href='#' id='clear' onclick='restart();'>&#8920;</a></td><td><a href='#' id='bwd' onclick='backward();'>&ll;</a></td><td><a href='#' id='fwd' onclick='forward();'>&gt;</a></td><td><a href='#' id='ffwd' onclick='fast_forward();'>&gg;</a></td></tr><tr><td colspan='4'><small><div id='clock'>00:00:00</div></small></td></tr></table></b></div>";
             ele.className = 'play';
             return this._container;
         },
@@ -105,19 +105,16 @@ function get_tileserver(tileserver, select)
         return http + tileserver;
     }
 }
-
-function plot_pilots_lo(tasPk)
+function plot_pilots_lo(map, tasPk)
 {
-    microAjax("get_pilots_lo.php?tasPk="+tasPk,
-	  function(data) {
+    new microAjax("get_pilots_lo.php?tasPk="+tasPk,
+      function(data) {
           var pilots;
           var pos;
-        
-    
-          // Got a good response, create the map objects
-          pilots = RJSON.unpack(JSON.parse(data));
-          //pbounds = new L.LatLngBounds();
 
+          // Got a good response, create the map objects
+          pilots = JSON.parse(data);
+          //pbounds = new L.LatLngBounds();
           for (row in pilots)
           {
               var overlay;
@@ -125,21 +122,12 @@ function plot_pilots_lo(tasPk)
               lon = pilots[row]["trlLongDecimal"];
               name = pilots[row]["name"];
 
-              //alert("name="+name+" lat="+lat+" lon="+lon);
+              console.log("name="+name+" lat="+lat+" lon="+lon);
               pos = new L.LatLng(lat,lon);
-              if (!pbounds)
-              {
-                pbounds = pos.toBounds();
-              }
-              else
-              {
-                pbounds.extend(pos);
-              }
+              //pbounds.extend(pos);
               overlay = add_label(map, pos, name, "pilot");
-      
           }
-        
-          map.fitBounds(pbounds);
+          //map.fitBounds(pbounds);
     });
 }
 function add_map_server(name, count)
@@ -322,7 +310,7 @@ function plot_task_route(map, ssr)
         }
         else
         {
-            pbounds.extend(gll);
+            pbounds.extend(sll);
         }
         sline.push(sll);
       

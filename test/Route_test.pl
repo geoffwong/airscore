@@ -117,9 +117,27 @@ my $task6 =
 ]
 };
 
+# tasPk=1100 CAN T2 2018
+
+
+
+my $task7 =
+{
+    'tasPk' => 7,
+    'waypoints' =>
+[
+  { 'name' => 'LTAMB',  'key' => 4424, 'number' => 5,  'type' => 'start', 'how' => 'entry', 'shape' => 'circle', 'radius' => 100, 'lat' => -27.950278 * PI() / 180, 'long' => 153.181194 * PI() / 180  },
+  { 'name' => '101STH', 'key' => 4418, 'number' => 10, 'type' => 'speed', 'how' => 'exit', 'shape' => 'circle', 'radius' => 19500, 'lat' => -27.925889 * PI() / 180, 'long' => 153.369256 * PI() / 180  },
+  { 'name' => '84FLIN', 'key' => 4419, 'number' => 20, 'type' => 'waypoint', 'how' => 'entry', 'shape' => 'circle', 'radius' => 37000 , 'lat' => -27.812958 * PI() / 180, 'long' => 152.81003033862 * PI() / 180 },
+  { 'name' => '84FLIN', 'key' => 4420, 'number' => 30, 'type' => 'waypoint', 'how' => 'exit', 'shape' => 'circle', 'radius' => 44000 , 'lat' => -27.812958 * PI() / 180, 'long' => 152.81003033862 * PI() / 180 },
+  { 'name' => '13RATH', 'key' => 4421, 'number' => 40, 'type' => 'waypoint', 'how' => 'entry', 'shape' => 'circle', 'radius' => 15000 , 'lat' => -28.212227 * PI() / 180, 'long' => 152.864441 * PI() / 180 },
+  { 'name' => '84FLIN', 'key' => 4422, 'number' => 50, 'type' => 'endspeed', 'how' => 'entry', 'shape' => 'circle', 'radius' => 14000 , 'lat' => -27.812958 * PI() / 180, 'long' => 152.81003033862 * PI() / 180 },
+  { 'name' => '21COUL', 'key' => 4423, 'number' => 60, 'type' => 'goal', 'how' => 'entry', 'shape' => 'circle', 'radius' => 400 , 'lat' => -27.949383 * PI() / 180, 'long' => 152.7209 * PI() / 180 }
+]
+};
+
+
 my ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist);
-
-
 
 #####
 
@@ -179,10 +197,10 @@ fix_task($task3);
 is($spt, 1, "start speed point");
 is($ept, 5, "end speed point");
 is($gpt, 5, "goal point");
-is(sprintf("%.1f", $ssdist), "60095.3", "speed section distance");
-is($startssdist, 1000, "start speed distance");
-is(sprintf("%.1f", $endssdist), "61095.3", "end speed section distance");
-is(sprintf("%.1f", $totdist), "61095.3", "total distance");
+is(sprintf("%.1f", $ssdist), "60094.2", "speed section distance");
+is(sprintf("%.0f", $startssdist), "1000", "start speed distance");
+is(sprintf("%.1f", $endssdist), "61094.2", "end speed section distance");
+is(sprintf("%.1f", $totdist), "61094.2", "total distance");
 
 # add a test for in_semicircle
 # super simple 2 point task
@@ -216,9 +234,23 @@ print "($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist)\n";
 is($spt, 1, "start speed point");
 is($ept, 5, "end speed point");
 is($gpt, 6, "goal point");
-#is(sprintf("%.1f", $ssdist), "6437.2", "speed section distance");
-#is($startssdist, 5000, "start speed distance");
-#is(sprintf("%.1f", $endssdist), "11437.2", "end speed section distance");
-#is(sprintf("%.1f", $totdist), "11437.2", "total distance");
+is(sprintf("%.1f", $ssdist), "37852.0", "speed section distance");
+is(sprintf("%.1f", $startssdist), "1595.1", "start speed distance");
+is(sprintf("%.1f", $endssdist), "39447.1", "end speed section distance");
+is(sprintf("%.1f", $totdist), "40447.1", "total distance");
+
+fix_task($task7);
+
+#print Dumper($task7);
+($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist) = task_distance($task7);
+print "($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist)\n";
+
+is($spt, 1, "start speed point");
+is($ept, 5, "end speed point");
+is($gpt, 6, "goal point");
+is(sprintf("%.1f", $ssdist), "57476.2", "speed section distance");
+is(sprintf("%.1f", $startssdist), "2096.1", "start speed distance");
+is(sprintf("%.1f", $endssdist), "59572.3", "end speed section distance");
+is(sprintf("%.1f", $totdist), "67060.4", "total distance");
 
 done_testing

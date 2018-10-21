@@ -8,11 +8,10 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Competition Result</title>
+    <title>Competition Admin</title>
 
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/1-col-portfolio.css" rel="stylesheet">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -33,40 +32,72 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
-            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
-            <li class="nav-item active"> 
-                <a class="nav-link" href="#">Overall</a> 
+            <li class="nav-item"> <a class="nav-link" href="comp_admin.html">Competitions</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='track_admin.html'+window.location.search;">Tracks</a></li>
+            <li class="nav-item"> <a class="nav-link" href="pilot_admin.html">Pilots</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="region_admin.html">Waypoints</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="airspace_admin.html">Airspace</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_admin.html">Ladders</a> </li>
+            <li class="nav-item active"> <a class="nav-link" href="#">Competition</a> 
                 <span class="sr-only">(current)</span>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a>
-            </li>
+			</li>
           </ul>
         </div>
       </div>
     </nav>
 
     <div class="container">
-    <div class="row" id="comp_header">
-        <div class="col col-md-8 comp_header mt-1">
-        <h2 id="comp_name"></h2>
-        <h4 id="comp_date"></h4>
-        <h4 id="comp_director"></h4>
+    <div class="row mt-3">
+        <div class="col-8"><h2>Competition</h2></div>
+        <div class="col-4">
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_compinfo();">Save</button>
+            <button class="btn btn-secondary btn-sm float-right" onclick="reset_compinfo();">Reset</button>
         </div>
-        <div class="col col-md-4" class="parameters">
-        <table class="table table-sm" id="compinfo">
-        <thead class="thead-light" id="compinfo_hd">
-            <tr><th>Information</th><th></th></tr>
-        </thead>
-        <tbody class="small" id="compinfo_bd"></tbody>
+    </div>
+    <div class="row"> 
+        <div class="col">
+        <table class="table form_param" id="compinfo1">
+        <tbody class="" id="formula1_bd"></tbody>
+        </table>
+        </div>
+        <div class="col">
+        <table class="table form_param" id="compinfo2">
+        <tbody class="" id="formula2_bd"></tbody>
         </table>
         </div>
     </div>
-    <div class="row mt-3"><h3>Formula</h3></div>
+    <div class="row mt-5">
+        <div class="col-8"><h2>Scoring</h2></div>
+        <div class="col-4">
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_scoring();">Save</button>
+            <button class="btn btn-secondary btn-sm float-right" onclick="reset_compinfo();">Reset</button>
+        </div>
+    </div>
+    <div class="row"> 
+        <div class="col-sm">
+        <table class="table table-sm form_param" id="scoring1">
+        <thead class="thead-light small" id="scoring1_hd">
+            <tr><th>Parameter</th><th>Setting</th></tr>
+        </thead>
+        <tbody class="small" id="formula1_bd"></tbody>
+        </table>
+        </div>
+        <div class="col-sm">
+        <table class="table table-sm form_param" id="scoring2">
+        <thead class="thead-light small" id="scoring2_hd">
+            <tr><th>Parameter</th><th>Setting</th></tr>
+        </thead>
+        <tbody class="small" id="formula2_bd"></tbody>
+        </table>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-4"><h2>Formula</h2></div>
+        <div class="col-8">
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_scoring();">Save</button>
+            <button class="btn btn-secondary btn-sm float-right" onclick="reset_compinfo();">Reset</button>
+        </div>
+    </div>
     <div class="row"> 
         <div class="col-sm">
         <table class="table table-sm form_param" id="formula1">
@@ -93,20 +124,27 @@
         </table>
         </div>
     </div>
-    <div class="row mt-3"><h3>Tasks</h3></div>
+    <div class="row mt-5">
+        <div class="col-4"><h2>Tasks</h2></div>
+        <div class="col-8">
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_scoring();">Add Task</button>
+        </div>
+    </div>
     <div class="row" id="tasks">
         <table class="table table-sm form_param" id="tasktbl">
         <thead class="thead-light small" id="tasktbl_hd">
             <tr><th>Date</th><th>Task</th><th>Dist</th><th>Times</th></tr>
         </thead>
-        <tbody class="small" id="tasktbl_bd"></tbody>
+        <tbody class="" id="tasktbl_bd"></tbody>
         </table>
     </div>
     </div>
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="js/enums.js"></script>
     <script type="text/javascript" src="js/pop_comp_details.js"></script>
 </body>
 </html>
