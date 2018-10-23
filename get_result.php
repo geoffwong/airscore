@@ -81,15 +81,15 @@ function comp_result($comPk, $cls)
             {
                 $dhv = 'CCC';
             }
-            elseif ($dhv == '2/3')
+            elseif ($dhv == '2/3' || $dhv == "rigid")
             {
                 $dhv = 'D';
             }
-            elseif ($dhv == '2')
+            elseif ($dhv == '2' || $dhv == "open")
             {
                 $dhv = 'C';
             }
-            elseif ($dhv == '1/2')
+            elseif ($dhv == '1/2' || $dhv == "kingpost")
             {
                 $dhv = 'B';
             }
@@ -224,7 +224,7 @@ function civl_result($tasks, $sorted)
         }
         $nxt[] = $arr['nation'];
         $nxt[] = $arr['gender'];
-        $nxt[] = $arr['sponsor'];
+        $nxt[] = ''; //$arr['sponsor'];
         $nxt[] = $arr['glider'];
         $nxt[] = $arr['dhv'];
         $nxt[] = "<b>$tot</b>";
@@ -239,7 +239,10 @@ function civl_result($tasks, $sorted)
             if (array_key_exists($name, $arr['tasks']))
             {
                 $score = $arr['tasks'][$name]['score'];
-                $perc = round($arr['tasks'][$name]['perc'], 0);
+                if (array_key_exists('perc', $arr['tasks'][$name]))
+                {
+                    $perc = round($arr['tasks'][$name]['perc'], 0);
+                }
             }
             if (!$score)
             {
@@ -294,11 +297,11 @@ if ($class > 0)
 {
     if ($compinfo['comClass'] == "HG")
     {
-        $carr = array ( "'floater'", "'kingpost'", "'open'", "'rigid'"       );
+        $carr = [ "'floater'", "'kingpost'", "'open'", "'rigid'" ];
     }
     else
     {
-        $carr = array ( "'1/2'", "'2'", "'2/3'", "'competition'"       );
+        $carr = [ "'1/2'", "'2'", "'2/3'", "'competition'" ];
     }
     $classstr = "<b>" . $cstr[reqival('class')] . "</b> - ";
     if ($cval == 4)

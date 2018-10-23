@@ -27,10 +27,141 @@ my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
 my $goal_point;
+my $last_wpt_update = 0;
+
+
+#
+# Find new P2 given P1 -> P2 -> P3
+# P2 should have a radius (P1 & P3 are just points)
+#
+sub find_closest
+{
+    my ($P1, $P2, $P3) = @_;
+    my ($C1, $C2, $C3, $PR, $D1);
+    my ($N, $CL);
+    my ($v, $w, $phi, $phideg);
+    my ($T, $O, $vl, $wl);
+    my ($a, $b, $c);
+    my $u;
+
+    $C1 = polar2cartesian($P1);
+    $C2 = polar2cartesian($P2);
+    $C3 = polar2cartesian($P3);
+
+    $u = (($C2->{'x'} - $C1->{'x'})*($C3->{'x'} - $C1->{'x'}) 
+            + ($C2->{'y'} - $C1->{'y'})*($C3->{'y'} - $C1->{'y'}) 
+            + ($C2->{'z'} - $C1->{'z'})*($C3->{'z'} - $C1->{'z'})) / 
+        (($C3->{'x'} - $C1->{'x'})*($C3->{'x'} - $C1->{'x'}) +
+            + ($C3->{'y'} - $C1->{'y'})*($C3->{'y'} - $C1->{'y'}) 
+            + ($C3->{'z'} - $C1->{'z'})*($C3->{'z'} - $C1->{'z'})); 
+    #print "u=$u cart dist=", vector_length($T), " polar dist=", distance($P1, $P2), "\n";
+
+    $N = $C1 + ($u * ($C3 - $C1));
+    $CL = $N;
+    $PR = cartesian2polar($CL);
+    if (($u >= 0 && $u <= 1)
+        && (distance($PR, $P2) <= $P2->{'radius'}))
+    {
+        my $theta;
+        my $db;
+        my $vn;
+
+        # Ok - we have a ~180deg? connect
+        if ($debug) { print "180 deg connect: u=$u radius=", $P2->{'radius'}, "\n"; }
+#        return $P2;
+    
+#        if ($P2->{'how'} eq 'exit' && $u == 0)
+#        {
+#            $O = vvminus($C3, $C2);
+#            $vl = vector_length($O);
+#            print "short route point must be on the cylinder\n";
+#            if ($vl > 0)
+#            {
+#                $O = cvmult($P2->{'radius'} / $vl, $O);
+#            }
+#            $CL = vvplus($O, $C2);
+#            $PR = cartesian2polar($CL);
+#        }
+
+        # find the intersection points (maybe in cylinder)
+        $v = plane_normal($C1, $C2);
+        $w = plane_normal($C3, $C2);
+
+        #print "dot_prod=",dot_product($a,$b), "\n";
+        #print "theta=$theta\n";
+        $a = $C1 - $C2;
+        $vl = $a->length();
+        if ($vl > 0)
+        {
+            $a = $a/$vl;
+        }
+        $b = $C3 - $C2;
+        $vl = $b->length();
+        if ($vl > 0)
+        {
+            $b = $b/$vl;
+        }
+        $theta = acos($a . $b);
+
+        $vn = $a + $b;
+        $vl = $vn->length();
+        $vn = $vn/$vl;
+        $O = $vn * $P2->{'radius'};
+        # print "vec_len=", $O->length(), "\n";
+        $CL = $O + $C2;
+    }
+    else
+    {
+        my $vla;
+        my $vlb;
+
+        # find the angle between in/out line
+        $v = plane_normal($C1, $C2);
+        $w = plane_normal($C3, $C2);
+        $phi = acos($v . $w);
+        $phideg = $phi * 180 / $pi;
+
+        if ($debug) { print "Route: angle between in/out=$phideg\n"; }
+        
+        # div angle / 2 add to one of them to create new
+        # vector and scale to cylinder radius for new point 
+        $a = $C1 - $C2;
+        $vla = $a->length();
+        if ($vla > 0)
+        {
+            $a = $a / $vla;
+        }
+        $b = $C3 - $C2;
+        $vlb = $b->length();
+        if ($vlb > 0)
+        {
+            $b = $b / $vlb;
+        }
+
+        $O = $a + $b;
+        $vl = $O->length();
+
+        if ($phideg < 180)
+        {
+            if ($debug) { print "    p2->radius=", $P2->{'radius'}, "\n"; }
+            $O = ($P2->{'radius'} / $vl) * $O;
+        }
+        else
+        {
+            if ($debug) { print "    -p2->radius=", $P2->{'radius'}, "\n"; }
+            $O = (-$P2->{'radius'} / $vl) * $O;
+        }
+
+        $CL = $O + $C2;
+    }
+
+    my $result = cartesian2polar($CL);
+    return $result;
+}
 
 sub precompute_waypoint_dist
 {
-    my ($waypoints) = @_;
+    my ($waypoints, $formula) = @_;
     my $wcount = scalar @$waypoints;
 
     my $dist;
@@ -38,6 +169,17 @@ sub precompute_waypoint_dist
     my $exdist;
     my (%s1, %s2);
     
+    # Setup error margin
+    for my $i (0 .. $wcount-1)
+    {
+        my $errm = $waypoints->[$i]->{'radius'} * $formula->{'errormargin'} / 100;
+        if ($errm < 5.0)
+        {
+            $errm = 5.0;
+        }
+        $waypoints->[$i]->{'margin'} = $errm;
+    }
+
     $wptdistcache = [];
 
     $dist = 0.0;
@@ -82,6 +224,7 @@ sub precompute_waypoint_dist
             $waypoints->[$i]->{'inside'} = 0;
         }
     }
+    $total_distance = $dist;
 
     $remainingdistcache = [];
     for my $i (0 .. $wcount-2)
@@ -91,6 +234,7 @@ sub precompute_waypoint_dist
         if ($debug) { print "$i: remdist=$remdist\n"; }
     }
     $remainingdistcache->[$wcount-1] = 0.0;
+    $goal_point = $wcount - 1;
 
     if ($debug) { print "precompute dist=$dist\n"; }
 }
@@ -100,22 +244,31 @@ sub remaining_task_dist
     my $remdist = 0;
     my ($waypoints, $wmade, $coord) = @_;
     my $nextwpt = $waypoints->[$wmade];
+    my $nearwpt;
     my %s1;
+    my %s2;
     my $radius = 0;
 
-    $remdist = $remainingdistcache->[$wmade];
+    if ($nextwpt->{'type'} eq 'goal')
+    {
+        # Special goal case
+        $s1{'lat'} = $nextwpt->{'lat'};
+        $s1{'long'} = $nextwpt->{'long'};
+        my $rdist = qckdist2($coord, \%s1);
+        if ($nextwpt->{'shape'} ne 'line')
+        {
+            $radius = $nextwpt->{'radius'};
+        }
+        $remdist = $rdist - $radius;
+        return $remdist;
+    }
 
-    
     # Special case for entry cylinder on goal
     if ($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'} and $nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'})
     {
         $s1{'lat'} = $nextwpt->{'lat'};
         $s1{'long'} = $nextwpt->{'long'};
-        if ($wmade != $goal_point)
-        {
-            # @todo: handle goal line
-            $radius = $nextwpt->{'radius'};
-        }
+        $radius = $nextwpt->{'radius'};
     }
     else
     {
@@ -123,12 +276,30 @@ sub remaining_task_dist
         # Can we make it efficient?
         # (straight line to next if we're inside the waypoint or (radius - centre) if next waypoint is the same,
         #    ie. exit and re-entry)
+        if ($coord->{'time'} - $last_wpt_update > 120)
+        {
+            my %st;
+
+            $st{'lat'} = $waypoints->[$wmade+1]->{'short_lat'};
+            $st{'long'} = $waypoints->[$wmade+1]->{'short_long'};
+            $last_wpt_update = $coord->{'time'};
+            $nearwpt = find_closest($coord, $nextwpt, \%st);
+            # Update next waypoint
+            print Dumper($nearwpt);
+            $nextwpt->{'short_lat'} = $nearwpt->{'lat'};
+            $nextwpt->{'short_long'} = $nearwpt->{'long'};
+        }
+
         $s1{'lat'} = $nextwpt->{'short_lat'};
         $s1{'long'} = $nextwpt->{'short_long'};
     }
-    my $rdist = qckdist2($coord, \%s1);
+    $s2{'lat'} = $waypoints->[$wmade+1]->{'short_lat'};
+    $s2{'long'} = $waypoints->[$wmade+1]->{'short_long'};
 
+    my $rdist = qckdist2($coord, \%s1) + qckdist2(\%s1, \%s2);
+    # print "    ### remaining_task_dist wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n";
     $remdist = $remdist + $rdist - $radius;
+
     return $remdist;
 }
 
@@ -233,98 +404,15 @@ sub determine_utcmod
 sub distance_flown
 {
     my ($waypoints, $wmade, $coord) = @_;
-    my $nextwpt = $waypoints->[$wmade];
-    my $allpoints = scalar @$waypoints;
-    my $dist = 0;
-    my $cwdist = 0;
-    my $nwdist = 0;
-    my $exitflag = 0;
-    my %s1;
 
-    if ($wmade > 0)
+    my $rem = remaining_task_dist($waypoints, $wmade, $coord);
+    my $altdist = $total_distance - $rem;
+    if ($altdist < 0)
     {
-        if ($nextwpt->{'how'} eq 'exit')
-        {
-            # Move to the end of a sequence of 'exit' cylinders (start / speed / etc)
-            my $nxtnxt = $wmade+1;
-            while (($nxtnxt < scalar @$waypoints) && ($waypoints->[$nxtnxt]->{'how'} eq 'exit') && ddequal($nextwpt, $waypoints->[$nxtnxt]))
-            {
-                $nxtnxt++;
-            }
-
-            if ($nxtnxt < scalar @$waypoints)
-            {
-                if ($waypoints->[$nxtnxt]->{'how'} eq 'entry')
-                {
-                    if (qckdist2($waypoints->[$nxtnxt], $nextwpt) + $waypoints->[$nxtnxt]->{'radius'} < $waypoints->[$nxtnxt-1]->{'radius'})
-                    {
-                        $exitflag = 1;
-                    }
-                }
-            }
-            else
-            {
-                $exitflag = 1;
-            }
-        }
+        $altdist = 0;
     }
-
-
-    if ($exitflag) 
-    {
-        # Scoring any exit direction (because we're coming back in)
-        $cwdist = compute_waypoint_dist($waypoints, $wmade-1);
-        $dist = qckdist2($coord, $nextwpt) + $cwdist;
-    }
-    else
-    {
-        my $rdist;
-                        
-        $nwdist = compute_waypoint_dist($waypoints, $wmade);
-
-        if ($nextwpt->{'type'} ne 'goal' && $nextwpt->{'type'} ne 'endspeed')
-        {
-            # Distance to shortest route waypoint, but should this be shortest distance to make the waypoint?
-            # Note: possibly should dynamically recalculate this point to give shortest distance to fly
-            $s1{'lat'} = $nextwpt->{'short_lat'};
-            $s1{'long'} = $nextwpt->{'short_long'};
-            $rdist = qckdist2($coord, \%s1);
-            #my $sdist = qckdist2($coord, $nextwpt) - $nextwpt->{'radius'};
-            #if ($sdist < $rdist)
-            #{
-            #    $rdist = $sdist;
-            #}
-        }
-        else
-        {
-            # Goal 
-            if ($nextwpt->{'shape'} eq 'line')
-            {
-                # @todo: should really be distance to the goal line (not centre) 
-                $rdist = qckdist2($coord, $nextwpt);
-            }
-            else
-            {
-                $rdist = qckdist2($coord, $nextwpt) - $nextwpt->{'radius'};
-            }
-        }
-
-        $dist = $nwdist - $rdist;
-        if ($dist < $cwdist)
-        {
-            $dist = $cwdist;
-        }
-    }
-
-    if ($debug)
-    {
-        my $rem = remaining_task_dist($waypoints, $wmade, $coord);
-        my $altdist = $total_distance - $rem;
-        print "wmade=$wmade cwdist=$cwdist nwdist=$nwdist dist=$dist\n";
-        print "altdist=$altdist\n";
-    }
-
-    return $dist;
+    # print "altdist=$altdist\n";
+    return $altdist;
 }
 
 1;

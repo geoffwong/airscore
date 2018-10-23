@@ -21,7 +21,6 @@ my $debug = 1;
 my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
-my $goal_point;
 
 sub validate_olc
 {
@@ -98,6 +97,58 @@ sub made_entry_waypoint
     return 1;
 }
 
+sub made_exit_waypoint
+{
+    my ($wpt, $rpt, $ept, $coords, $nc, $dist, $awarded, $wcount, $lastin) = @_;
+    my $made_time = 0;
+    my $entry_time = 0;
+    my $coord = $coords->[$nc];
+
+    if ($awarded)
+    {
+        return 1;
+    }
+
+    if (($dist > ($wpt->{'radius'}-$wpt->{'margin'})) and ($lastin == $wcount)) 
+    {
+        if ($debug)
+        {
+            print "made_exit_waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $made_time, "\n";
+        }
+        $made_time = $coord->{'time'};
+        $entry_time = $coord->{'time'};
+        if (($wpt == $rpt) or ($wpt == $ept))
+        {
+            # timing should be actual crossing time (if available) or closest too ..
+            while ($dist > ($wpt->{'radius'}-$wpt->{'margin'}) and ($dist <= ($wpt->{'radius'})))
+            {
+                $nc++;
+                if ($nc > scalar @{ $coords })
+                {
+                    last;
+                }
+                $made_time = $coord->{'time'};
+                $dist = distance($coords->[$nc], $wpt);
+            }
+            
+            if ($dist > ($wpt->{'radius'}) and ($wpt == $ept))
+            {
+                # waypoint after we exit for ess
+                $made_time = $coord->{'time'};
+            }
+            elsif ($dist < ($wpt->{'radius'}-$wpt->{'margin'}))
+            {
+                # we didn't actually cross the cylinder
+                $made_time = ($entry_time + $made_time) / 2;
+            }
+            # otherwise we take the time from the last time inside the cylinder
+        }
+    }
+    
+
+    return $made_time;
+}
+
 sub re_entered_start
 {
     my ($waypoints, $coord, $lastin, $reflag) = @_;
@@ -114,7 +165,7 @@ sub re_entered_start
     if ($rpt->{'how'} eq 'entry')
     {
         #print "Repeat check ", $rpt->{'type'}, " (reflag=$reflag lastin=$lastin): dist=$rdist\n";
-        if (($rdist < ($rpt->{'radius'}+5))) # and ($reflag == $lastin))
+        if (($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))) # and ($reflag == $lastin))
         {
             # last point inside ..
             #$starttime = 0 + $coord->{'time'};
@@ -135,24 +186,28 @@ sub re_entered_start
             $newreflag = -1;
             $reset = 1;
         }
-        elsif ($rdist >= ($rpt->{'radius'}-11))
+        elsif ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}))
         {
-            #print "Exited entry start/speed cylinder\n";
+            if ($debug)
+            {
+                print "(Re)exited entry start/speed cylinder\n";
+            }
             $newreflag = $lastin;
         }
     }
 
     if ($rpt->{'how'} eq 'exit') 
     {
-        if (($rdist < ($rpt->{'radius'}+5))) # and ($reflag == $lastin))
+        if (($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))) # and ($reflag == $lastin))
         {
             #print "re-entered (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
             $wcount = $lastin;
             #$wpt = $waypoints->[$wcount];
             $newreflag = -1;
         }
-        elsif ($rdist >= ($rpt->{'radius'}-2) and ($reflag == -1))
+        elsif ($rdist >= ($rpt->{'radius'}) and ($reflag == -1))
         {
+            # No margin here because of timing issues ..
             #print "exited (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
             $newreflag = $lastin;
             $reset = 1;
@@ -208,7 +263,7 @@ sub validate_task
     my $startss = 0;
     my $endss = undef;
     my $lastin = -1;
-    my $reflag = -1;
+    my $reflag = 0;
 
     if ($debug)
     {
@@ -221,7 +276,7 @@ sub validate_task
     my $interval = 0 + $task->{'interval'};
 
     my $waypoints = $task->{'waypoints'};
-    precompute_waypoint_dist($waypoints);
+    precompute_waypoint_dist($waypoints, $formula);
     $dist = compute_waypoint_dist($waypoints, $wcount-1);
     my $coords = $flight->{'coords'};
     my $awards = $flight->{'awards'};
@@ -247,12 +302,19 @@ sub validate_task
     # Determine the start gate type and ESS dist
     my ($spt, $ept, $gpt, $essdist, $startssdist, $endssdist, $totdist) = task_distance($task);
     $total_distance = $totdist;
-    $goal_point = $gpt;
-    # print "spt=$spt ept=$ept gpt=$gpt, essdist=$essdist startssdist=$startssdist endssdist=$endssdist totdist=$totdist\n";
+    $rpt = $waypoints->[$spt];
+
+    if ($debug)
+    {
+        print "spt=$spt ept=$ept gpt=$gpt, essdist=$essdist startssdist=$startssdist endssdist=$endssdist totdist=$totdist\n";
+    }
 
     # Go through the coordinates and verify the track against the task
-    for $coord (@$coords)
+
+    for my $coord_count (0 .. scalar @{$coords} - 1)
     {
+        $coord = $coords->[$coord_count];
+
         # Check the task isn't finished ..
         $coord->{'time'} = $coord->{'time'} - $utcmod;
         #print "Coordinate time & stopped: ", $coord->{'time'}, " ", $task->{'sstopped'}, ".\n";
@@ -287,16 +349,16 @@ sub validate_task
 
         # Might re-enter start/speed section for elapsed time tasks 
         # Check if we did re-enter and set the task "back"
+        # print "Repeat check @ ", $coord->{'time'}, " ",  $rpt->{'type'}, " (reflag=$reflag lastin=$lastin/$spt): dist=$rdist ($maxdist-$startssdist)\n";
         if (($lastin >= $spt) and 
-            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'})) or ($task->{'type'} ne 'race')))
+            (((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'})) or (($task->{'type'} ne 'race'))) and ($maxdist - $startssdist < 8000)))
         {
-            $rpt = $waypoints->[$spt];
             # Re-entered start cyclinder?
             $rdist = distance($coord, $rpt);
             if ($rpt->{'how'} eq 'entry')
             {
-                print "Repeat check @", $coord->{'time'}, " ",  $rpt->{'type'}, " (reflag=$reflag lastin=$lastin): dist=$rdist\n";
-                if (($rdist < ($rpt->{'radius'}+5)) and ($reflag == $lastin)) # - only if past start time
+                print "Repeat check @ ", $coord->{'time'}, " ",  $rpt->{'type'}, " (reflag=$reflag lastin=$lastin): dist=$rdist\n";
+                if (($rdist < ($rpt->{'radius'}+$rpt->{'margin'})) and $reflag) # - only if past start time
                 {
                     # last point inside ..
                     $starttime = 0 + $coord->{'time'};
@@ -310,37 +372,40 @@ sub validate_task
                     }
 
                     $startss = $starttime;
+                    $wcount = $spt+1;
+                    $wmade = $wcount;
+                    $wpt = $waypoints->[$wcount];
                     $coeff = 0; $coeff2 = 0; 
-                    $reflag = -1;
+                    $reflag = 0;
                     if ($debug)
                     {
                         print "made startss(entry)=$startss\n";
                     }
                 }
-                elsif ($rdist >= ($rpt->{'radius'}-11))
+                elsif ($rdist >= ($rpt->{'radius'}+$rpt->{'margin'}))
                 {
                     print "Exited entry start/speed cylinder\n";
                     # if next wpt is inside this one then decrement ..
                     #if ($wpt->{'how'} == 'entry') { }
-                    $reflag = $lastin;
+                    $reflag = 1;
                 }
             }
 
             if ($rpt->{'how'} eq 'exit') 
             {
-                if ($rdist < ($rpt->{'radius'}+7.5)) # and ($reflag == $lastin))
+                if ($rdist < ($rpt->{'radius'})) # and ($reflag == $lastin))
                 {
                     print "re-entered (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
                     $wcount = $lastin;
                     #$wmade = $lastin;
                     #printf "dec wmade=$wmade\n";
                     $wpt = $waypoints->[$wcount];
-                    $reflag = -1;
+                    $reflag = 0;
                 }
-                elsif ($rdist >= ($rpt->{'radius'}-2) and ($reflag == -1))
+                elsif ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}) and ($reflag == 0))
                 {
                     #print "exited (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
-                    $reflag = $lastin;
+                    $reflag = 1;
                     $starttime = 0 + $coord->{'time'};
                     if (($task->{'type'} eq 'race') && ($starttime > $task->{'sstart'}))
                     {
@@ -363,7 +428,7 @@ sub validate_task
         # Get the distance flown
         my $newdist = distance_flown($waypoints, $wmade, $coord);
 
-        #print "wcount=$wcount wmade=$wmade newdist=$newdist maxdist=$maxdist starttime=$starttime time=", $coord->{'time'}, "\n";
+        print "wcount=$wcount wmade=$wmade newdist=$newdist maxdist=$maxdist starttime=$starttime time=", $coord->{'time'}, "\n";
 
         # Work out leadout coeff / maxdist if we've moved on
         if (defined($starttime) and ($newdist > $maxdist))
@@ -430,7 +495,6 @@ sub validate_task
         {
             if (made_entry_waypoint($waypoints, $wmade, $coord, $dist, $awarded))
             {
-
                 # Do task timing stuff
                 if (($wpt->{'type'} eq 'start') and (!defined($starttime)) or
                     ($wpt->{'type'} eq 'speed'))
@@ -518,41 +582,41 @@ sub validate_task
             elsif (($dist < $closest) && ($wcount >= $closestwpt))
             {
                 # Entry - check distance to current waypoint
-                if ($debug)
-                {
-                    print "closest (entry) $closestwpt:$closest, distance: $dist\n";
-                }
                 $closest = $dist;
                 $closestcoord = $coord;
                 $closestwpt = $wcount;
-                #print "new closest $closestwpt:$closest\n";
-            }
                 if ($debug)
                 {
-                    print "closest (entry) $closestwpt:$closest, distance: $dist\n";
+                    print "new closest (entry) $closestwpt:$closest, distance: $dist\n";
                 }
+            }
+            if ($debug)
+            {
+                print "closest (entry) check $closestwpt:$closest, distance: $dist\n";
+            }
         } # entry
         else 
         {
             # Handle exit cylinder
             #print "exit waypoint dist=$dist for ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " @ ", $coord->{'time'}, "\n";
-            if ((($dist >= $wpt->{'radius'}-5) || $awarded == 1) and ($lastin == $wcount))
+
+            my $extime = made_exit_waypoint($wpt, $rpt, $waypoints->[$ept], $coords, $coord_count, $dist, $awarded, $wcount, $lastin);
+            if ($extime)
             {
                 #print "exited waypoint ($wasinstart,$wasinSS) ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, "\n";
-                if ((defined($wasinstart) and $wpt->{'type'} eq 'start')
-                    or (defined($wasinSS) and $wpt->{'type'} eq 'speed'))
+                if ($wpt == $rpt)
                 {
                     #print "exit waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " @ ", $coord->{'time'}, "\n";
-                    $starttime = 0 + $coord->{'time'};
+                    $starttime = $extime;
                     if ($awarded == 1 && $awtime > 0)
                     {
                         $starttime = $awtime;
                     }
                     $startss = $starttime;
-                    $coeff = 0; $coeff2 = 0;
+                    $coeff = 0; 
+                    $coeff2 = 0;
                     $reflag = -1;
-                    #print "start(exit)=$startss\n";
-                    if ($task->{'type'} eq 'race')
+                    if (($task->{'type'} eq 'race') && ($starttime > $task->{'sstart'}))
                     {
                         $startss = 0 + $task->{'sstart'};
                     }
@@ -563,12 +627,11 @@ sub validate_task
                 }
     
                 # Goal and speed section checks
-                #if (($wpt->{'type'} eq 'goal') and (!defined($goaltime)))
-                if ($wcount == $gpt and (!defined($goaltime)))
+                if (($wcount == $gpt) and (!defined($goaltime)))
                 {
                     # @todo time should be estimated for the actual
                     # line crossing on speed from last two waypoints ..
-                    $goaltime = 0 + $coord->{'time'};
+                    $goaltime = $extime;
                     if ($stopalt == 0)
                     {
                         $stopalt = $coord->{'alt'};
@@ -580,11 +643,11 @@ sub validate_task
                     }
                 }
     
-                if ($wcount == $ept and (!defined($endss)))
+                if (($wcount == $ept) and (!defined($endss)))
                 {
                     # @todo time should be estimated for the actual
                     # line crossing on speed from last two waypoints ..
-                    $endss = 0 + $coord->{'time'};
+                    $endss = $extime;
                     if ($stopalt == 0)
                     {
                         $stopalt = $coord->{'alt'};
@@ -598,8 +661,6 @@ sub validate_task
                 # Ok - we were in and now we're out ...
                 $wcount++;
                 $wmade = $wcount;
-                #printf "inc exit ($wcount) wmade=$wmade\n";
-                #and (($task->{'type'} eq 'race') or ($task->{'type'} eq 'speedrun') or ($task->'type' eq 'speedrun-interval')))
                 if ($wcount == $allpoints)
                 {
                     # Completed task

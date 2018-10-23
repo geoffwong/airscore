@@ -33,6 +33,10 @@ $(document).ready(function() {
             {
                 $('#comp_header').append('<b>Stopped: ' + json.task.stopped + '</b><br>');
             }
+            if (json.task.comp_class != "PG")
+            {
+                update_classes(json.task.comp_class);
+            }
         
             // waypoints
             for (var c=0; c < json.task.waypoints.length; c++)

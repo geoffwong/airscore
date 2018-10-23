@@ -88,3 +88,28 @@ function create_td(key, val)
         return '<td contenteditable="true">'+val+'</td>';
     }
 }
+
+function update_classes(com_class)
+{
+    if (com_class == 'PG')
+    {
+        var pg = { Novice: 'A', Fun: 'B', Sports: 'C', Serial: 'D', Competition: 'CCC' };
+        $('#dhv option').remove();
+        $('#dhv').append("<option value=\"\" selectd>Open</option>");
+        $.each(pg, function (key, val) {
+            $('#dhv').append("<option value=\""+val+"\">" + key + "</option>");
+        });
+        $('#dhv').val('');
+    }
+    else if (com_class == 'HG')
+    {
+        var hg = { Floater: 'A', Kingpost: 'B', Rigid: 'C' };
+        $('#dhv option').remove();
+        $('#dhv').append("<option value=\"\" selectd>Open</option>");
+        $.each(hg, function (key, val) {
+            $('#dhv').append("<option value=\""+val+"\">" + key + "</option>");
+        });
+        $('#dhv').val('');
+    }
+}
+

@@ -129,15 +129,15 @@ function task_result($link, $comPk, &$tsinfo, $tasPk, $fdhv)
         {
             $trrow[] = 'CCC';
         }
-        elseif ($dhv == '2/3')
+        elseif ($dhv == '2/3' || $dhv == "rigid")
         {
             $trrow[] = 'D';
         }
-        elseif ($dhv == '2')
+        elseif ($dhv == '2' || $dhv == "open")
         {
             $trrow[] = 'C';
         }
-        elseif ($dhv == '1/2')
+        elseif ($dhv == '1/2' || $dhv == "kingpost")
         {
             $trrow[] = 'B';
         }
@@ -275,6 +275,7 @@ $waypoints = get_taskwaypoints($link,$tasPk);
 $goalalt = 0;
 $tsinfo = [];
 $tsinfo["comp_name"] = $comName;
+$tsinfo["comp_class"] = $comClass;
 $tsinfo["task_name"] = $tasName;
 $tsinfo["date"] = $tasDate;
 $tsinfo["task_type"] = strtoupper($tasTaskType);

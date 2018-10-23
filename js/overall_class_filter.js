@@ -3,7 +3,7 @@ $.fn.dataTable.ext.search.push(
     function( settings, data, dataIndex, row, counter ) {
         var flyclass = $('#dhv option:selected').val();
  
-        if (flyclass == '' || flyclass == 'CCC') return true;
+        if (flyclass == '' || flyclass == 'CCC' || flyclass == 'Open') return true;
         if (flyclass == 'D')
         {
             if (data[8] == 'CCC') return false;

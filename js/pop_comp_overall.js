@@ -25,6 +25,10 @@ $(document).ready(function() {
             // comp info
             $('#comp_name').text(json.compinfo.comName);
             $('#comp_date').text(json.compinfo.comDateFrom + ' - ' + json.compinfo.comDateTo);
+            if (json.compinfo.comClass != "PG")
+            {
+                update_classes(json.compinfo.comClass);
+            }
         
             // some GAP parameters
             $('#formula tbody').append(
