@@ -351,7 +351,7 @@ sub validate_task
         # Check if we did re-enter and set the task "back"
         # print "Repeat check @ ", $coord->{'time'}, " ",  $rpt->{'type'}, " (reflag=$reflag lastin=$lastin/$spt): dist=$rdist ($maxdist-$startssdist)\n";
         if (($lastin >= $spt) and 
-            (((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'})) or (($task->{'type'} ne 'race'))) and ($maxdist - $startssdist < 8000)))
+            (((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'})) or (($task->{'type'} ne 'race'))) and ($maxdist - $startssdist < 10000)))
         {
             # Re-entered start cyclinder?
             $rdist = distance($coord, $rpt);
@@ -428,7 +428,7 @@ sub validate_task
         # Get the distance flown
         my $newdist = distance_flown($waypoints, $wmade, $coord);
 
-        print "wcount=$wcount wmade=$wmade newdist=$newdist maxdist=$maxdist starttime=$starttime time=", $coord->{'time'}, "\n";
+        # print "wcount=$wcount wmade=$wmade newdist=$newdist maxdist=$maxdist starttime=$starttime time=", $coord->{'time'}, "\n";
 
         # Work out leadout coeff / maxdist if we've moved on
         if (defined($starttime) and ($newdist > $maxdist))

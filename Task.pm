@@ -263,8 +263,9 @@ sub remaining_task_dist
         return $remdist;
     }
 
+    $remdist = $remainingdistcache->[$wmade+1];
     # Special case for entry cylinder on goal
-    if ($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'} and $nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'})
+    if (($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'}) and ($nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'}))
     {
         $s1{'lat'} = $nextwpt->{'lat'};
         $s1{'long'} = $nextwpt->{'long'};
@@ -285,7 +286,7 @@ sub remaining_task_dist
             $last_wpt_update = $coord->{'time'};
             $nearwpt = find_closest($coord, $nextwpt, \%st);
             # Update next waypoint
-            print Dumper($nearwpt);
+            # print Dumper($nearwpt);
             $nextwpt->{'short_lat'} = $nearwpt->{'lat'};
             $nextwpt->{'short_long'} = $nearwpt->{'long'};
         }
