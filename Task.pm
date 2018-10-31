@@ -298,7 +298,7 @@ sub remaining_task_dist
     $s2{'long'} = $waypoints->[$wmade+1]->{'short_long'};
 
     my $rdist = qckdist2($coord, \%s1) + qckdist2(\%s1, \%s2);
-    # print "    ### remaining_task_dist wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n";
+    ## print "    ### (Task.pm)remaining_task_dist wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n";
     $remdist = $remdist + $rdist - $radius;
 
     return $remdist;
@@ -412,7 +412,7 @@ sub distance_flown
     {
         $altdist = 0;
     }
-    # print "altdist=$altdist\n";
+    # print "    ### distance_flown=$altdist ($total_distance-$rem)\n";
     return $altdist;
 }
 

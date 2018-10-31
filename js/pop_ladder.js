@@ -1,9 +1,7 @@
 
 $(document).ready(function() {
-    var url = new URL('http://highcloud.net/xc/get_ladder.php'+ window.location.search);
-    var ladPk = url.searchParams.get("ladPk");
     $('#ladders').dataTable({
-        ajax: 'get_ladder.php?ladPk='+ladPk,
+        ajax: 'get_ladder.php' + window.location.search,
         paging: true,
         order: [[ 3, 'desc' ]],
         lengthMenu: [ 10, 20, 50, 100, 1000 ],

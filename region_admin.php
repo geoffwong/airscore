@@ -255,7 +255,7 @@ if (reqexists('delete'))
     $regPk = reqival('delete');
     $query = "select * from tblRegion where regPk=$regPk";
     $result = mysql_query($query) or die('Region check failed: ' . mysql_error());
-    $row = mysql_fetch_array($result);
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
     $region = $row['regDescription'];
     $query = "select * from tblTaskWaypoint T, tblRegionWaypoint W, tblRegion R where T.rwpPk=W.rwpPk and R.regPk=W.regPk and R.regPk=$regPk limit 1";
     $result = mysql_query($query) or die('Delete check failed: ' . mysql_error());
@@ -286,7 +286,7 @@ $count = 1;
 $sql = "SELECT R.*, RW.rwpName, RW.rwpPk from tblRegion R left outer join tblRegionWaypoint RW on RW.rwpPk=R.regCentre order by R.regDescription";
 $result = mysql_query($sql,$link);
 
-while($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $id = $row['regPk'];
     $name = $row['regDescription'];
@@ -295,7 +295,7 @@ while($row = mysql_fetch_array($result))
     echo "<li>" . fbut('submit', 'update', $id, 'up'); 
     echo fbut('submit', 'delete', $id, 'del');
     echo fbut('submit', 'download', $id, 'download');
-    echo "<a href=\"waypoint_map.php?regPk=$id\">$name</a>";
+    echo "<a href=\"waypoint_map.html?regPk=$id\">$name</a>";
     //waypoint_select($link, $tasPk, "waypoint$tawPk", $waypt);
     //echo " centre: $centname</a>";
     echo "</li>\n";

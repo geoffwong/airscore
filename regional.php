@@ -13,7 +13,7 @@
         $sql = "select T.*, P.*, CTT.* from tblTrack T, tblPilot P, tblComTaskTrack CTT, tblWaypoint W where W.wptPosition=0 and (abs(W.wptLatDecimal-$lat)+abs(W.wptLongDecimal-$lon)) < 1.0 and T.traPk=W.traPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk $order";
         $result = mysql_query($sql,$link) or die("Invalid track table " . mysql_error());
         $num = mysql_num_rows($result);
-        while($row = mysql_fetch_array($result))
+        while($row = mysql_fetch_array($result, MYSQL_ASSOC))
         {
             $id = $row['traPk'];
             $dist = round($row['traLength']/1000,2);
@@ -35,7 +35,7 @@
     $pilot = reqival('pil');
     $sql = "select RW.*,R.* from tblRegionWaypoint RW, tblRegion R where R.regPk=$regPk and RW.rwpPk=R.regCentre";
     $result = mysql_query($sql,$link);
-    if ($row = mysql_fetch_array($result))
+    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $lat = $row['rwpLatDecimal'];
         $lon = $row['rwpLongDecimal'];
@@ -45,7 +45,7 @@
     {
         $sql = "select P.pilFirstName, P.pilLastName from tblPilot P where P.pilPk=$pilot";
         $result = mysql_query($sql,$link);
-        if ($row = mysql_fetch_array($result))
+        if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
         {
             $name = $row['pilFirstName'] . ' ' . $row['pilLastName'];
             $title = "$name @ $title";

@@ -260,6 +260,7 @@ sub task_totals
     $taskt{'mincoeff'} = $mincoeff;
     $taskt{'distspread'} = \@distspread;
     $taskt{'kmmarker'} = $kmmarker;
+    $taskt{'stopped'} =  $task->{'stopped'};
     $taskt{'endssdistance'} = $task->{'endssdistance'};
 
     return \%taskt;
@@ -778,8 +779,13 @@ sub ordered_results
             if ($taskt->{'goal'} > 0)
             {
                 # adjust for late starters
-                print "No goal, adjust pilot coeff from: ", $ref->{'tarLeadingCoeff'};
-                $taskres{'coeff'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * ($task->{'endssdistance'} - $ref->{'tarDistance'}) / 1800 / $task->{'ssdistance'} ;
+                print "No goal, adjust pilot coeff from: ", $ref->{'tarLeadingCoeff'}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, "\n";
+
+                # $remainingss * ($task->{'sfinish'}-$coord->{'time'})
+                if ($taskt->{'lastarrival'} > 0)
+                {
+                    $taskres{'coeff'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * ($task->{'endssdistance'} - $ref->{'tarDistance'}) / 1800 / $task->{'ssdistance'} ;
+                }
             
                 print " to: ", $taskres{'coeff'}, "\n";
                 # adjust mincoeff?
