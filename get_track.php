@@ -28,7 +28,7 @@ function get_track_body($link, $trackid, $interval)
     $result = mysql_query($sql,$link) or die('Track info query failed: ' . mysql_error());
     if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
-        $name = $row['pilFirstName'] . " " . $row['pilLastName'];
+        $name = utf8_encode($row['pilFirstName'] . " " . $row['pilLastName']);
         $date = $row['traDate'];
         $glider = $row['traGlider'];
         $tasPk = $row['tasPk'];
@@ -89,6 +89,10 @@ function get_track_body($link, $trackid, $interval)
         if ($srow['comClass'] == 'sail')
         {
             $body['class'] = 'sail';
+        }
+        elseif ($srow['comClass'] == 'HG')
+        {
+            $body['class'] = 'hger';
         }
         else
         {

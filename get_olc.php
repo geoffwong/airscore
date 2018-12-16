@@ -1,4 +1,31 @@
 <?php
+
+function dhv2en($dhv)
+{
+    if ($dhv == 'competition')
+    {
+        $dhv = 'CCC';
+    }
+    elseif ($dhv == '2/3' || $dhv == "rigid")
+    {
+        $dhv = 'D';
+    }
+    elseif ($dhv == '2' || $dhv == "open")
+    {
+        $dhv = 'C';
+    }
+    elseif ($dhv == '1/2' || $dhv == "kingpost")
+    {
+        $dhv = 'B';
+    }
+    else
+    {
+        $dhv = 'A';
+    }
+
+    return $dhv;
+}
+
 function olc_sort($result,$top)
 {
     $lastpil = 0;
@@ -27,8 +54,8 @@ function olc_sort($result,$top)
         foreach ($scores as $row)
         {
             $total = $total + $row['adjScore'];
-            $first = $row['pilFirstName'];
-            $last = $row['pilLastName'];
+            $first = utf8_encode($row['pilFirstName']);
+            $last = utf8_encode($row['pilLastName']);
         }
 
         $total = $total . $last;
@@ -39,7 +66,8 @@ function olc_sort($result,$top)
                     'nation' => $row['pilNationCode'],
                     'gender' => $row['pilSex'],
                     'firstname' => $first,
-                    'lastname' => $last
+                    'lastname' => $last,
+                    'dhv' => dhv2en($row['traDHV'])
             ];
     }
 
@@ -49,7 +77,7 @@ function olc_sort($result,$top)
 }
 function olc_result($link,$comPk,$top,$restrict)
 {
-    $sql = "SELECT P.*, T.traPk, T.traScore as adjScore FROM tblTrack T, tblPilot P, tblComTaskTrack CTT where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk and T.traScore is not null $restrict order by P.pilPk, T.traScore desc";
+    $sql = "SELECT P.*, T.traPk, T.traScore as adjScore, T.traDHV FROM tblTrack T, tblPilot P, tblComTaskTrack CTT where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk and T.traScore is not null $restrict order by P.pilPk, T.traScore desc";
     $result = mysql_query($sql,$link) or die('olc_result: ' . mysql_error());
 
     return olc_sort($result,$top);
@@ -85,7 +113,7 @@ function get_olc_result($link, $comPk, $top, $restrict)
             $nxt[] = $count;
             $nxt[] = ''; //$arr['hgfa'];
             $nxt[] = ''; //$arr['civl'];
-            $nxt[] = "<a href=\"pilot.php?pil=" . $arr['pilpk'] . "\">" . $arr['firstname'] . ' ' . $arr['lastname'] . "</a>";
+            $nxt[] = "<a href=\"pilot.html?pilPk=" . $arr['pilpk'] . "\">" . $arr['firstname'] . ' ' . $arr['lastname'] . "</a>";
             $lastcount = $count;
         }
         else
@@ -93,12 +121,13 @@ function get_olc_result($link, $comPk, $top, $restrict)
             $nxt[] = $lastcount; 
             $nxt[] = ''; //$arr['hgfa'];
             $nxt[] = ''; //$arr['civl'];
-            $nxt[] = "<a href=\"pilot.php?pil=" . $arr['pilpk'] . "\">" . $arr['firstname'] . ' ' . $arr['lastname'] . "</a>";
+            $nxt[] = "<a href=\"pilot.html?pilPk=" . $arr['pilpk'] . "\">" . $arr['firstname'] . ' ' . $arr['lastname'] . "</a>";
         }
         $nxt[] = $arr['nation'];
         $nxt[] = $arr['gender'];
         $nxt[] = ''; //$arr['sponsor'];
         $nxt[] = ''; //$arr['glider'];
+        $nxt[] = $arr['dhv'];
         $nxt[] = "<b>" . round(0+$arr['total']/1000, 1) . "</b>";
         
         $taskcount = 0;

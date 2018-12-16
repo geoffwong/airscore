@@ -21,7 +21,7 @@ $.fn.dataTable.ext.search.push(
 $(document).ready(function() {
     // Event listener to the two range filtering inputs to redraw on input
     $('#dhv').change( function() {
-        var table= $('#task_result').DataTable();
+        var table = $('#task_result').DataTable();
         var flyclass = $('#dhv option:selected').val();
         console.log('flyclass='+flyclass);
         table.search('').draw();

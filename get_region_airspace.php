@@ -18,7 +18,7 @@ function get_region_airspace($link, $argPk)
             W.awpLongDecimal between (R.argLongDecimal-R.argSize) and (R.argLongDecimal+R.argSize)
             group by (airPk)) and
             R.airPk=AW.airPk
-        order by R.airName, AW.airOrder";
+        order by R.airName, R.airPk, AW.airOrder";
 
     $result = mysql_query($sql,$link);
     $airspaces = [];
@@ -28,13 +28,13 @@ function get_region_airspace($link, $argPk)
         $id = $row['airPk'];
         if ($id != $airPk)
         {
-            $row['waypoints'] = [ [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'], $row['awpRadius'] ] ];
+            $row['waypoints'] = [ [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'] ] ];
             $airspaces[$id] = $row;
             $airPk=$id;
         }
         else
         {
-            $airspaces[$id]['waypoints'][] = [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'], $row['awpRadius'] ];
+            $airspaces[$id]['waypoints'][] = [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'] ];
         }
 
     }

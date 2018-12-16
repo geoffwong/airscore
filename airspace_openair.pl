@@ -113,6 +113,18 @@ sub oalatlong
     return \%point;
 }
 
+sub pointcopy
+{
+    my ($p1) = @_;
+    my %copy;
+
+    print "pc: lat=", $p1->{'lat'}, " lon=", $p1->{'lon'}, "\n";
+    $copy{'lat'} = $p1->{'lat'};
+    $copy{'lon'} = $p1->{'lon'};
+
+    return \%copy;
+}
+
 sub torad
 {
     my ($v) = @_;
@@ -223,6 +235,7 @@ sub read_openair
 
     while (<FD>)
     {
+        s/\R\z//;
         $row = $_;
         chomp $row;
         @field = split /[ ]+/, $row;
@@ -383,8 +396,13 @@ sub read_openair
     #    push @$points, $last;
     #}
 
-    $rec->{'points'} = $points;
+    # Close a poly ..
+    if (!(($last->{'lat'} == $points->[0]->{'lat'}) and ($last->{'lon'} == $points->[0]->{'lon'})))
+    {
+        push @$points, pointcopy($points->[0]);
+    }
 
+    $rec->{'points'} = $points;
     push @regions, $rec;
 
     #print Dumper(\@regions);
@@ -546,7 +564,7 @@ sub store_airspace
         }
 
         # AirspaceWaypoint too?
-        print "insert ", $air->{'name'}, "\n";
+        print "insert ", $air->{'name'}, " - A", $air->{'class'}, "\n";
         $dbh->do("insert into tblAirspace (airName,airClass,airBase,airTops,airShape) values (?,?,?,?,?)", undef, $air->{'name'}, $air->{'class'}, $air->{'base'}, $air->{'tops'}, $air->{'shape'});
         $id = $dbh->last_insert_id(undef, undef, "tblAirspace", undef);
         $count = 0;

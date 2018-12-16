@@ -42,6 +42,35 @@
       </div>
     </nav>
 
+    <div class="row"><div class="modal fade" id="deltrack" tabindex="-1" role="dialog" aria-labelledby="deltrackModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Confirm Delete Track</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createcomp" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row">
+			  	<label for="date-from" class="col-4 col-form-label">Pilot</label>
+			    <div class="col-8"><input class="form-control" type="text" value="" id="username"></div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="date-from" class="col-4 col-form-label">Date</label>
+			    <div class="col-8"><input class="form-control" type="password" value="" id="password"></div>
+		    </div>
+			</div>
+			</form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="del_track();">Delete</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div></div></div>
+
     <!-- Page Content -->
     <div class="container" id="main">
     <div class="row">
@@ -50,14 +79,15 @@
         <div class="col">
         </div>
     </div>
-    <table id="tracks" class="row-border compact mb-1" cellspacing="0" width="100%">
+    <table id="tracks" class="table row-border compact mb-1" cellspacing="0" width="100%">
     <thead>
         <tr>
             <th>ID</th>
             <th>Date</th>
-            <th>Region</th>
+            <th>Pilot</th>
             <th>Duration</th>
             <th>Dist</th>
+            <th></th>
         </tr>
     </thead>
     </table>
@@ -68,6 +98,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="js/login.js"></script>
     <script src="js/pop_track_admin.js"></script>
 
   </body>

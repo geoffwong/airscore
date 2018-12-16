@@ -459,7 +459,7 @@ create table tblAirspace
 (
     airPk           integer not null primary key auto_increment,
     airName         varchar(32),
-    airClass        enum ( "G", "C", "D", "E", "X", "R", "P", "Q", "W", "GP", "CTR" ) default "C",
+    airClass        enum ( "G", "C", "D", "E", "X", "R", "P", "Q", "W", "GP", "CTR", "F" ) default "C",
     airBase         integer,
     airTops         integer,
     airShape        enum ( "circle", "wedge", "polygon" ) default "circle",

@@ -22,29 +22,30 @@ function taskcmp($a, $b)
 function comp_result($comPk, $cls)
 {
     $sql = "select C.* from tblCompetition C where C.comPk=$comPk";
-    $result = mysql_query($sql) or die('Comp info query failed: ' . mysql_error());
+    $result = mysql_query($sql) or json_die('Comp info query failed: ' . mysql_error());
     if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $how = $row['comOverallScore'];
         $param = $row['comOverallParam'];
     }
 
+    $sql = "select sum(tasQuality) as totValidity, count(*) as tasTotal from tblTask where comPk=$comPk";
+    $result = mysql_query($sql) or json_die('Task validity query failed: ' . mysql_error());
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    $totalvalidity = round($row['totValidity'] * $param * 10,0);
+    $tasktot = $row['tasTotal'];
+
     if ($how == 'all')
     {
         # total # of tasks
-        $param = $tasTotal;
+        $param = $tasktot;
     }
     else if ($how == 'round-perc')
     {
-        $param = round($tasTotal * $comOverallParam / 100, 0);
+        $param = round($tasktot * $comOverallParam / 100, 0);
     }
     else if ($how == 'ftv')
     {
-        $sql = "select sum(tasQuality) as totValidity, count(*) as tasTotal from tblTask where comPk=$comPk";
-        $result = mysql_query($sql) or die('Task validity query failed: ' . mysql_error());
-        $row = mysql_fetch_array($result, MYSQL_ASSOC);
-        $totalvalidity = round($row['totValidity'] * $param * 10,0);
-        $tasktot = $row['tasTotal'];
         $param = $totalvalidity;
         if ($tasktot < 2)
         {
@@ -54,7 +55,7 @@ function comp_result($comPk, $cls)
     }
 
     $sql = "select TK.*,TR.*,P.*,T.traGlider,T.traDHV from tblTaskResult TR, tblTask TK, tblTrack T, tblPilot P, tblCompetition C where C.comPk=$comPk and TK.comPk=C.comPk and TK.tasPk=TR.tasPk and TR.traPk=T.traPk and T.traPk=TR.traPk and P.pilPk=T.pilPk $cls order by P.pilPk, TK.tasPk";
-    $result = mysql_query($sql) or die('Task result query failed: ' . mysql_error());
+    $result = mysql_query($sql) or json_die('Task result query failed: ' . mysql_error());
     $results = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
@@ -77,27 +78,7 @@ function comp_result($comPk, $cls)
             $results[$pilPk]['civl'] = $civlnum;
             $results[$pilPk]['nation'] = $nation;
             $results[$pilPk]['glider'] = $glider;
-            if ($dhv == 'competition')
-            {
-                $dhv = 'CCC';
-            }
-            elseif ($dhv == '2/3' || $dhv == "rigid")
-            {
-                $dhv = 'D';
-            }
-            elseif ($dhv == '2' || $dhv == "open")
-            {
-                $dhv = 'C';
-            }
-            elseif ($dhv == '1/2' || $dhv == "kingpost")
-            {
-                $dhv = 'B';
-            }
-            else
-            {
-                $dhv = 'A';
-            }
-            $results[$pilPk]['dhv'] = $dhv;
+            $results[$pilPk]['dhv'] = dhv2en($dhv);
             $results[$pilPk]['gender'] = $gender;
             $results[$pilPk]['tasks'] = [];
         }
@@ -331,7 +312,7 @@ $comType=$compinfo['comType'];
 if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $comType == 'RACE-handicap')
 {
     $query = "select T.* from tblTask T where T.comPk=$comPk order by T.tasDate";
-    $result = mysql_query($query, $link) or die('Task query failed: ' . mysql_error());
+    $result = mysql_query($query, $link) or json_die('Task query failed: ' . mysql_error());
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $alltasks[] = $row['tasName'];

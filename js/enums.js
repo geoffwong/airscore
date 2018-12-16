@@ -33,7 +33,7 @@ function selectable(name, value)
     if (all_enums.hasOwnProperty(name))
     {
         var nc;
-        var res = '<select id="' + name +'" class="form-control form-control-sm" placeholder=".form-control-sm" onblur="td_blur();">';
+        var res = '<select id="' + name +'" class="form-control form-control-sm" placeholder=".form-control-sm" onblur="td_blur(event);">';
         for (nc = 0; nc < all_enums[name].length; nc++)
         {
             if (value == all_enums[name][nc])
@@ -54,13 +54,13 @@ function selectable(name, value)
         return undefined;
     }
 }
-function td_edit(item)
+function td_edit(event,item)
 {
     var sel = selectable(item);
     var val = event.srcElement.innerText;
     event.srcElement.innerHTML = sel;
 }
-function td_blur()
+function td_blur(event)
 {
     var src = event.srcElement;
     var val = src.options[src.selectedIndex].text;
@@ -70,7 +70,7 @@ function add_td(div, key, val)
 {
     if (is_selectable(key))
     {
-        div.append('<tr><td><b>'+key.substr(3)+"</b></td><td onclick=\"td_edit('"+key+"');\">"+val+'</td></tr>');
+        div.append('<tr><td><b>'+key.substr(3)+"</b></td><td onclick=\"td_edit(event,'"+key+"');\">"+val+'</td></tr>');
     }
     else
     {

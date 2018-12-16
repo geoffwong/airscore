@@ -17,7 +17,7 @@ function get_tracks($link, $comPk, $limit)
     if ($comPk > 0)
     {
         $query = "select comType from tblCompetition where comPk=$comPk";
-        $result = mysql_query($query, $link) or die('Com type query failed: ' . mysql_error());
+        $result = mysql_query($query, $link) or json_die('Com type query failed: ' . mysql_error());
         $comType = mysql_result($result, 0, 0);
 
         if ($comType == 'RACE')
@@ -59,7 +59,7 @@ function get_tracks($link, $comPk, $limit)
             left outer join tblComTaskTrack CTT on CTT.traPk=T.traPk
             order by T.traPk desc limit $limit";
     }
-    $result = mysql_query($sql,$link) or die ("Track query failed: " . mysql_error());
+    $result = mysql_query($sql,$link) or json_die ("Track query failed: " . mysql_error());
 
     $all_tracks = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
@@ -78,6 +78,7 @@ function get_tracks($link, $comPk, $limit)
         $row['pilFirstName'] = utf8_encode($row['pilFirstName'] . ' ' . $row['pilLastName']);
         $row['traDuration'] = hhmmss($row['traDuration']);
         $row['traLength'] = round($row['traLength']/1000,1);
+        $row['cross'] = 0;
         unset($row['comPk']);
         unset($row['tasPk']);
         unset($row['pilLastName']);
@@ -87,7 +88,6 @@ function get_tracks($link, $comPk, $limit)
     return $all_tracks;
 }
 
-#$pilot = get_comp_info($link, $comPk);
 $comp = [];
 $tracks = get_tracks($link, $comPk, $limit);
 $data = [ 'info' => $comp, 'data' => $tracks ];

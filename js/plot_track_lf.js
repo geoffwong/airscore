@@ -1,10 +1,12 @@
 var onscreen = Array();
+var time_bounds = Array();
 var current = -1;
 var pause = 1;
 var timer;
 var trackid;
 var tasPk;
 var interval = 5;
+var step = interval;
 
 String.prototype.format = function()
 {
@@ -51,6 +53,12 @@ function plot_track(jstr)
     segments = Array();
     trklog = Array();
     color = (onscreen.length % 7)+1;
+
+	if (track[0][0] < time_bounds['first'])
+	{
+		time_bounds['first'] = track[0][0];
+	}
+
     for (row in track)
     {
         lasTme = track[row][0];
@@ -94,6 +102,11 @@ function plot_track(jstr)
         count = count + 1;    
     }
 
+	if (lasTme > time_bounds['last'])
+	{
+		time_bounds['last'] = lasTme;
+	}
+
     polyline = new L.Polyline(line, {   
         color: sprintf("#%02x%02x%02x",lasAlt*((color&0x4)>>2) ,lasAlt*((color&0x2)>>1),lasAlt*(color&0x1)), 
         weight: 3, 
@@ -114,7 +127,6 @@ function plot_track(jstr)
     {
         plot_track_wp(points);
     }
-    animate_init();
 }
 function add_track(comPk, traPk, interval)
 {
@@ -350,9 +362,9 @@ function animate_update()
     var lasLat, lasLon, lasAlt, lasTme;
     var flag;
 
-    if (interval < 0)
+    if (step < 0)
     {
-        current = current + interval;
+        current = current + step;
     }
     for (glider in onscreen)
     {
@@ -362,16 +374,17 @@ function animate_update()
         if (count >=0 && count < track.length)
         {
             lasTme = track[count][0];
+            //console.log('count='+count+' lasTme='+lasTme+' current='+current);
             flag = 1;
-            //document.getElementById("foo").value = "l"+lasTme;
-            while ((lasTme*interval < current*interval) && count < track.length)
+            // $('#clock').html(lasTme);
+            while ((lasTme*step < current*step) && (count < track.length))
             {
                 lasTme = track[count][0];
                 lasLat = track[count][1];
                 lasLon = track[count][2];
                 lasAlt = track[count][3];
                 //lasAlt = (track[row][3]/10)%256;
-                if (interval < 0)
+                if (step < 0)
                 {
                     count--;
                 }
@@ -387,10 +400,14 @@ function animate_update()
             }
         }
     }
-    // document.getElementById("foo").value = format_seconds(current * interval);
-    if (interval > 0)
+    $('#clock').html(format_seconds(current*interval));
+	var range = time_bounds['last'] - time_bounds['first'];
+	var perc = (current - time_bounds['first']) * 100 / range;
+	$('#playslider').val(perc);
+
+    if (step > 0)
     {
-        current = current + interval;
+        current = current + step;
     }
     //document.getElementById("foo").value = current;
     if (flag == 1 && pause == 0)
@@ -406,23 +423,27 @@ function animate_init()
     mintime = 999999;
     for (row in onscreen)
     {
-        //document.getElementById("foo").value = "a" + row;
         if (onscreen[row]["track"][0][0] < mintime)
         {
             mintime = onscreen[row]["track"][0][0];
+            console.log('mintime='+mintime);
         }
         onscreen[row]["pos"] = 0;
         onscreen[row]["icon"] = 0;
         onscreen[row]["ic"] = ic++;
     }
-    current = mintime + interval;
-    //document.getElementById("foo").value = current;
+    current = mintime;
 }
 function restart()
 {
     clearTimeout(timer);
+    if (!pause)
+    {
+        $('#fwd').removeClass("fa-pause");
+        $('#fwd').addClass("fa-play");
+    }
     pause = 1;
-    interval = 5;
+    step = interval;
 
     // clear current icons;
     for (glider in onscreen)
@@ -432,29 +453,55 @@ function restart()
             onscreen[glider]["icon"].remove(null);
         }
     }
+    $('#clock').html("00:00:00");
 
     animate_init();
-    //document.getElementById("pause").value = ">>";
-    current == -1;
+    //current = -1;
 }
 function forward()
 {
-    interval = 5;
+    step = interval;
+    if (pause)
+    {
+        //$('#fwd').html("&#8214;");
+        var tm = $('#clock').html();
+        if (tm == '00:00:00' || tm == '')
+        {
+            animate_init();
+        }
+        else
+        {
+            var nc = clock2seconds(tm) / interval;
+            if (nc != current)
+            {
+                current = nc;
+                animate_update();
+            }
+        }
+
+        $('#fwd').removeClass("fa-play");
+        $('#fwd').addClass("fa-pause");
+    }
+    else
+    {
+        //$('#fwd').html("&gt;");
+        $('#fwd').removeClass("fa-pause");
+        $('#fwd').addClass("fa-play");
+    }
     pause = !pause;
-    //document.getElementById("pause").value = "=";
     clearTimeout(timer);
     animate_update();
 }
 function fast_forward()
 {
-    interval = interval * 2;
+    step = step * 2;
     clearTimeout(timer);
     animate_update();
 }
 function backward()
 {
     pause = !pause;
-    interval = -5;
+    step = - interval;
     clearTimeout(timer);
     animate_update();
 }
@@ -479,6 +526,17 @@ function clear_map()
     // clear it ..
     onscreen = Array();
 }
+function set_clock()
+{
+    if (!pause)
+    {
+        $('#fwd').removeClass("fa-pause");
+        $('#fwd').addClass("fa-play");
+    }
+    pause = 1;
+    $('#clock').attr('contenteditable','true');
+    $('#clock').focus();
+}
 function download_track()
 {
     var traPk = url_parameter('trackid');
@@ -489,9 +547,10 @@ function download_top_tracks()
     var tasPk = url_parameter('tasPk');
     if (tasPk > 0)
     {
-        post('download_tracks.php?tasPk=' + tasPk, { }, 'post');
+        post('download_tracks.php', { 'tasPk' : tasPk, 'count' : 20 }, 'post');
     }
 }
+
 
 $(document).ready(function() {
     var comPk = url_parameter("comPk");
@@ -503,6 +562,34 @@ $(document).ready(function() {
     map = add_map_server('map', 0);
     add_map_extra(map);
     add_play_controls(map);
+
+	$('#playslider').on("change", function() {
+		//$(this).next().html($(this).val());
+
+        var tm = $('#clock').html();
+        if (tm == '00:00:00' || tm == '')
+        {
+            animate_init();
+		}
+
+		var range = time_bounds['last'] - time_bounds['first'];
+		$('#fwd').removeClass("fa-pause");
+		$('#fwd').addClass("fa-play");
+		pause = 1;
+		clearTimeout(timer);
+		
+		var new_current = range * $(this).val() / 100 + time_bounds['first'];
+    	step = interval;
+		if (new_current < current)
+		{
+    		step = - interval;
+		}
+		current = new_current;
+		$('#clock').html(format_seconds(current*interval));
+		animate_update();
+	});
+	time_bounds['first'] = 86400 * 2;
+	time_bounds['last'] = -86400 * 2;
 
     if (tasPk > 0)
     {
