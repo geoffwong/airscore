@@ -128,7 +128,7 @@ echo "<input type=\"submit\" name=\"addteam\" value=\"Create Team\">";
 $query = "select T.* from tblTeam T where comPk=$comPk";
 $result = mysql_query($query) or die('Team query failed: ' . mysql_error());
 $teamarr = Array();
-while ($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $teamarr[$row['teaName']] = $row['teaPk'];
 }
@@ -172,7 +172,7 @@ if ($teaPk > 0)
         $query = "select T.*, TP.*, P.* from tblTeam T,tblTeamPilot TP,tblPilot P where TP.teaPk=T.teaPk and P.pilPk=TP.pilPk and T.teaPk=$teaPk order by P.pilLastName";
     }
     $result = mysql_query($query) or die('Team pilots query failed: ' . mysql_error());
-    $row = mysql_fetch_array($result);
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
     $selteaPk = $row['teaPk'];
     if ($row)
     {
@@ -180,7 +180,7 @@ if ($teaPk > 0)
         do 
         {
             $teampilots[] = $row;
-            $row = mysql_fetch_array($result);
+            $row = mysql_fetch_array($result, MYSQL_ASSOC);
         } while ($row);
     }
 
@@ -238,7 +238,7 @@ if ($cat != '')
     $sql = "SELECT P.* FROM tblPilot P where P.pilLastName like '$cat%' order by P.pilLastName";
     $result = mysql_query($sql,$link) or die('Pilot select failed: ' . mysql_error());
 
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $id = $row['pilPk'];
         $lname = $row['pilLastName'];

@@ -68,7 +68,7 @@ sub task_totals
         $fastest = $ref->{'MinTime'};
         $minarr = $ref->{'MinArr'};
     }
-    if (!$fastest)
+    if (0 + $fastest < 1)
     {
         $fastest = 0;
         $minarr = 0;
@@ -86,13 +86,14 @@ sub task_totals
     # Get the top 90% dist ...
     $topnine = 0;
     $dbh->do('set @x=0;');
-    $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarDistance, (tarLastTime - tarSS) as airTime from tblTaskResult where tasPk=$tasPk and (tarResultType='lo' or tarResultType='goal') order by tarDistance desc");
+    $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarDistance, (tarLastTime - tarSS) as airTime from tblTaskResult where tasPk=$tasPk and (tarResultType='lo' or tarResultType='goal') and tarSS is not null order by tarDistance desc");
     $sth->execute();
     while ($ref = $sth->fetchrow_hashref()) 
     {
         if ($fastest == 0 && $ref->{'Place'} == 1)
         {
             $fastest = $ref->{'airTime'};
+            #print Dumper($ref);
         }
 
         if ($ref->{'Place'} <= $self->round($taskt->{'pilots'} * 0.90))

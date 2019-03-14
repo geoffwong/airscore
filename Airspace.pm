@@ -25,7 +25,7 @@ use strict;
 my $dbh;
 
 my $max_height = 3048;  # 10000' limit in oz 
-my $start_below = 20;
+my $start_below = 100;
 #my $max_height = 2591;  # 8500' limit in oz 
 #my $max_height = 1666;  # 5000' limit in oz 
 

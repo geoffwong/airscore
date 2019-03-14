@@ -136,7 +136,6 @@ function filter_results($comPk, $how, $param, $results)
             $pilvalid = 0;
             foreach ($arr['tasks'] as $perf => $taskresult)
             {
-                //echo "pil=$pil perf=$perf valid=", $taskresult['validity'], " score=", $taskresult['score'], "<br>";
                 if ($pilvalid < $param)
                 {
                     $gap = $param - $pilvalid;
@@ -151,7 +150,12 @@ function filter_results($comPk, $how, $param, $results)
                     }
                     $pilvalid = $pilvalid + $taskresult['validity'] * $perc;
                     $pilscore = $pilscore + $taskresult['score'] * $perc;
+                    //echo "pil=$pil valid=$pilvalid cumscore=$pilscore perf=$perf perc=$perc valid=", $taskresult['validity'], " score=", $taskresult['score'], "<br>\n";
                     $arr['tasks'][$perf]['perc'] = $perc * 100;
+                }
+                else
+                {
+                    $arr['tasks'][$perf]['perc'] = 0;
                 }
             }   
         }

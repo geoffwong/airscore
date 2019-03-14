@@ -315,7 +315,7 @@ sub read_task
                             substr($ref->{'tasStoppedTime'},14,2) * 60 +
                             substr($ref->{'tasStoppedTime'},17,2) - 
                             $ref->{'comTimeOffset'} * 3600) % (24*3600);
-            if ($task{'sstopped'} < $task{'slaunch'})
+            if ($task{'sstopped'} < $task{'sstart'})
             {
                 $task{'sstopped'} = $task{'sstopped'} + 24*3600;
             }
@@ -483,7 +483,7 @@ sub read_formula
         $formula{'nomgoal'} = $ref->{'forNomGoal'};
         $formula{'mindist'} = $ref->{'forMinDistance'} * 1000;
         $formula{'nomdist'} = $ref->{'forNomDistance'} * 1000;
-        $formula{'nomlaunch'} = $ref->{'forNomLaunch'} * 1000;
+        $formula{'nomlaunch'} = $ref->{'forNomLaunch'};
         $formula{'nomtime'} = $ref->{'forNomTime'} * 60;
         $formula{'lineardist'} = $ref->{'forLinearDist'};
         $formula{'difframp'} = $ref->{'forDiffRamp'};
@@ -500,6 +500,7 @@ sub read_formula
         $formula{'glidebonus'} = $ref->{'forStoppedGlideBonus'};
         $formula{'arrival'} = $ref->{'forArrival'};
         $formula{'stoppedelapsedcalc'} = $ref->{'forStoppedElapsedCalc'};
+        $formula{'errormargin'} = $ref->{'forErrorMargin'};
     }
 
     # FIX: add failsafe checking?
@@ -509,7 +510,7 @@ sub read_formula
         $formula{'mindist'} = 5000;
     }
 
-    # print "Formula: ", $formula{'class'}, " ", $formula{'version'}, " sspenalty=", $formula{'sspenalty'}, " goal=", $formula{'nomgoal'}, " mindist=", $formula{'mindist'}, " nomdist=", $formula{'nomdist'}, " nomtime=", $formula{'nomtime'}, " linear=", $formula{'lineardist'}, " difframp=", $formula{'difframp'}, " diffdist=", $formula{'diffdist'}, " diffcalc=", $formula{'diffcalc'}, "\n";
+    # print Dumper(\%formula);
 
     return \%formula;
 }

@@ -32,6 +32,8 @@ $(document).ready(function() {
             if (json.task.stopped)
             {
                 $('#comp_header').append('<b>Stopped: ' + json.task.stopped + '</b><br>');
+                $('#altbonus').text("S.Alt");
+
             }
             if (json.task.comp_class != "PG")
             {

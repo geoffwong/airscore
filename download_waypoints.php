@@ -1,5 +1,5 @@
 <?php
-require 'authorisation.php';
+require_once 'authorisation.php';
 //auth('system');
 $link = db_connect();
 // Ozi Explorer format
@@ -97,8 +97,8 @@ function latlon2UTM($latd, $lngd)
 
 if (array_key_exists('download', $_REQUEST))
 {
-    $regPk=intval($_REQUEST['download']);
-    $format=addslashes($_REQUEST['format']);
+    $regPk=reqival('download');
+    $format=reqsval('format');
 
     $sql = "SELECT N.*, R.* from tblRegion N, tblRegionWaypoint R where N.regPk=R.regPk and R.regPk=$regPk order by R.rwpName";
 
@@ -108,13 +108,23 @@ if (array_key_exists('download', $_REQUEST))
     $regname = preg_replace('/\s+/', '', $regname);
 
     # nuke normal header ..
+    $ext = "wpt";
+    if ($format == 'cup')
+    {
+        $ext = 'cup';
+    }
     header("Content-type: text/wpt");
-    header("Content-Disposition: attachment; filename=\"$regname.wpt\"");
+    header("Content-Disposition: attachment; filename=\"$regname.$ext\"");
     header("Cache-Control: no-store, no-cache");
 
     if ($format == 'ozi' || $format == "ozilinux" )
     {
         print ozi_header();
+    }
+    else if ($format == 'cup')
+    {
+        // do nothing
+        print "Title,Code,Country,Latitude,Longitude,Elevation,Style,Direction,Length,Frequency,Description\r\n";
     }
     else
     {
@@ -130,7 +140,8 @@ if (array_key_exists('download', $_REQUEST))
         $alt = $row['rwpAltitude'];
         $falt = round($alt * 3.281);
         $desc = $row['rwpDescription'];
-        $date = '01-JAN-00 00:00:00';
+        //$date = '01-JAN-00 00:00:00';
+        $date = date('d-M-y H:m:s');
         # convert lat/lon to NESW appropriately
         # get some decent date ..
         if ($format == 'ozi')
@@ -149,6 +160,32 @@ if (array_key_exists('download', $_REQUEST))
         {
             $utm = latlon2UTM($lat, $lon);
             print "W  $name $utm $alt $desc\r\n";
+        }
+        elseif ($format == 'cup')
+        {
+            $name=trim($name);
+            $alat = abs($lat);
+            $adeg = floor($alat);
+            $ammm = ($alat - $adeg) * 60;
+            $ns = "N";
+            if ($lat < 0)
+            {
+                $ns = "S";
+            }
+            $slat = sprintf("%2d%2.3f%s", $adeg, $ammm, $ns);
+
+            $alon = abs($lon);
+            $adeg = floor($alon);
+            $ammm = ($alon - $adeg) * 60;
+            $ew = "E";
+            if ($lon < 0)
+            {
+                $ew = "W";
+            }
+            $slon = sprintf("%3d%2.3f%s", $adeg, $ammm, $ew);
+
+            //"Lesce-Bled","LESCE",SI,4621.666N,01410.332E,505.0m,2,130,1140.0m,"123.50","Home airfield"
+            print "\"$desc\",\"$name\",AU,$slat,$slon,${alt}m,1,,,,\r\n";
         }
         else
         {
@@ -171,6 +208,7 @@ if (array_key_exists('download', $_REQUEST))
             {
                 $slon = "$lon" . "\272E";
             }
+            $name = trim($name);
             print "W  $name A $slat $slon $date $alt $desc\r\n";
         }
 

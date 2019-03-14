@@ -306,7 +306,7 @@ sub validate_task
 
     if ($debug)
     {
-        print "spt=$spt ept=$ept gpt=$gpt, essdist=$essdist startssdist=$startssdist endssdist=$endssdist totdist=$totdist\n";
+        print "spt=$spt ept=$ept gpt=$gpt, essdist=$essdist startssdist=$startssdist endssdist=$endssdist totdist=$totdist utcmod=$utcmod\n";
     }
 
     # Go through the coordinates and verify the track against the task
@@ -317,7 +317,7 @@ sub validate_task
 
         # Check the task isn't finished ..
         $coord->{'time'} = $coord->{'time'} - $utcmod;
-        #print "Coordinate time & stopped: ", $coord->{'time'}, " ", $task->{'sstopped'}, ".\n";
+        # print "Coordinate time=: ", $coord->{'time'}, " sstopped=", $task->{'sstopped'}, " laststart=", $task->{'laststart'},  ".\n";
         if (defined($task->{'sstopped'}) && !defined($endss)) 
         {
             my $maxtime;

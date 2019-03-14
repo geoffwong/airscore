@@ -14,10 +14,19 @@ function task_result($link, $comPk, &$tsinfo, $tasPk, $fdhv)
     $sc = 0;
     $conditions = 0;
     $cc = 0;
+	$goalalt = 0;
+
+	foreach ($tsinfo['waypoints'] as $row)
+	{
+	    if ($row['tawType'] == 'goal')
+	    {
+	        $goalalt = $row['rwpAltitude'];
+	    }
+	}
 
     $count = 1;
     $sql = "select TR.*, T.*, P.* from tblTaskResult TR, tblTrack T, tblPilot P where TR.tasPk=$tasPk $fdhv and T.traPk=TR.traPk and P.pilPk=T.pilPk order by TR.tarScore desc, P.pilFirstName";
-    $result = mysql_query($sql,$link) or die('Task Result selection failed: ' . mysql_error());
+    $result = mysql_query($sql,$link) or json_die('Task Result selection failed: ' . mysql_error());
     $lastscore = 0;
     $lastplace = 0;
     $hh = 0;
@@ -199,11 +208,13 @@ function task_result($link, $comPk, &$tsinfo, $tasPk, $fdhv)
         $count++;
     }
 
+    $tsinfo['safety'] = 1;
     if ($sc > 0)
     {
         $tsinfo['safety'] = $safety / $sc;
     }
 
+    $tsinfo['conditions'] = 1.0;
     if ($cc > 0)
     {
         $tsinfo['conditions'] = 2 * $conditions / $cc;
@@ -321,7 +332,7 @@ $formula['start_weight'] = $comf['forWeightStart'];
 $formula['arrival_weight'] = $comf['forWeightArrival'];
 $formula['speed_weight'] = $comf['forWeightSpeed'];
 $formula['scale_to_validity'] = $comf['forScaleToValidity'];
-$formula['error_margin'] = 0.0005; //0 + $comf['forErrorMargin'];
+$formula['error_margin'] = $comf['forErrorMargin']/100;
 $formula['arrival'] = $tasArrival;
 $formula['height_bonus'] = $tasArrival;
 $formula['departure'] = $depcol;

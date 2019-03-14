@@ -162,7 +162,7 @@ sub task_totals
     }
 
     # Sanity
-    if (!$fastest)
+    if (0 + $fastest < 1)
     {
         $fastest = 0;
         $minarr = 0;
@@ -286,7 +286,7 @@ sub day_quality
         $launch = 0;
         $distance = 0;
         $time = 0.1;
-        return ($distance,$time,$launch);
+        return ($distance,$time,$launch,1.0);
     }
 
     $x = $taskt->{'launched'}/($taskt->{'pilots'}*$formula->{'nomlaunch'});
@@ -304,7 +304,7 @@ sub day_quality
         print "Launch invalid - dist quality set to 0\n";
         $launch = 0;
     }
-    print "launch quality=$launch\n";
+    print "\nlaunch quality=$launch\n";
 
     $distance = 2*($taskt->{'distance'}-$taskt->{'launched'}*$formula->{'mindist'}) / ($taskt->{'launched'}*(1+$formula->{'nomgoal'}/100)*($formula->{'nomdist'}-$formula->{'mindist'}));
     print "distance quality=$distance\n";

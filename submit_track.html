@@ -10,6 +10,7 @@
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="task.css" rel="stylesheet">
 
     <script src="microajax.minified.js"></script>
@@ -95,9 +96,9 @@
     <div class="col mb-1">
     <select name="pilotsafety" id="pilotsafety" class="form-control">
         <option value="none" selected>-- select safety conditions --</option>
-        <option value="safe">safe</option>
-        <option value="maybe">not safe for me</option>
-        <option value="unsafe">not safe for all</option>
+        <option value="safe">1 - safe</option>
+        <option value="maybe">2 - not safe for me</option>
+        <option value="unsafe">3 - not safe for all</option>
     </select>
     </div>
     <div class="col mb-1">
@@ -114,7 +115,7 @@
     <div class="form-row">
       <div class="col"></div>
       <div class="col">
-        <button name="foo" id="send" class="btn btn-primary btn-block mt-4" onClick="submit_track();">Send Tracklog</button>
+        <button name="foo" id="send" class="btn btn-primary btn-block mt-4" onClick="submit_track();">Send Tracklog<div id="subspin" class="fa"></div></button>
       </div>
       <div class="col"></div>
       </div>

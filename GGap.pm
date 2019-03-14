@@ -44,7 +44,7 @@ sub day_quality
         return ($distance,$time,$launch);
     }
 
-    $x = $taskt->{'launched'}/$taskt->{'pilots'};
+    $x = $taskt->{'launched'}/($taskt->{'pilots'}*$formula->{'nomlaunch'});
     $launch  = 0.028*$x + 2.917*$x*$x - 1.944*$x*$x*$x;
     if ($launch > 1) 
     {
@@ -111,7 +111,14 @@ sub day_quality
 
     if ($taskt->{'stopped'} > 0)
     {
-        $stopped = sqrt(($taskt->{'maxdist'} - $taskt->{'median'}) / ($taskt->{'endssdistance'} - $taskt->{'maxdist'} + 1) * sqrt($taskt->{'stddev'} / 5)) + ($taskt->{'landed'}/$taskt->{'launched'})**3;
+		if ($taskt->{'maxdist'} >= $taskt->{'endssdistance'})
+		{
+			$stopped = 1;
+		}
+		else
+		{
+        	$stopped = sqrt(($taskt->{'maxdist'} - $taskt->{'median'}) / ($taskt->{'endssdistance'} - $taskt->{'maxdist'} + 1) * sqrt($taskt->{'stddev'} / 5)) + ($taskt->{'landed'}/$taskt->{'launched'})**3;
+		}
 
         print "stopped quality (stddev=", $taskt->{'stddev'}, " endssdist=", $taskt->{'endssdistance'}," landed=", $taskt->{'landed'}, " median=", $taskt->{'median'}, ")=$stopped\n";
         if ($stopped > 1)

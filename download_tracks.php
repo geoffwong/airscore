@@ -14,7 +14,7 @@ function gen_track($link, $traPk, $date, $pilot, $altmax)
     $igcout[] = "HFDTM100DATUM: WGS-1984";
 
     $sql = "SELECT TL.* from tblTrackLog TL where TL.traPk=$traPk order by TL.trlTime";
-    $result = mysql_query($sql,$link) or die("Unable to find tracklog: " . mysql_error() . "\n");
+    $result = mysql_query($sql,$link) or json_die("Unable to find tracklog: " . mysql_error() . "\n");
 
     // B0442223707362S14524802EA0000000650
     $cross = 0;
@@ -104,9 +104,9 @@ if ($tasPk > 0)
     $cominfo = get_comtask($link, $tasPk);
     $comPk = $cominfo['comPk'];
     $date = $cominfo['tasDate'];
-    $sql = "select traPk from tblComTaskTrack where $tasPk $limit";
-    $sql = "select TR.*, P.* from tblTaskResult TR, tblTrack T, tblPilot P where TR.tasPk=$tasPk and T.traPk=TR.traPk and P.pilPk=T.pilPk order by TR.tarScore desc $limit";
-    $result = mysql_query($sql, $link) or die("can't get associated tracks");
+    //$sql = "select traPk from tblComTaskTrack where $tasPk $limit";
+    $sql = "select date_format(T.traStart,'%d%m%y') as Start, TR.*, P.* from tblTaskResult TR, tblTrack T, tblPilot P where TR.tasPk=$tasPk and T.traPk=TR.traPk and P.pilPk=T.pilPk order by TR.tarScore desc $limit";
+    $result = mysql_query($sql, $link) or json_die("can't get associated tracks");
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $tracks[] = $row;
@@ -115,11 +115,11 @@ if ($tasPk > 0)
 else if ($traPk > 0)
 {
     $sql = "select comPk from tblComTaskTrack where traPk=$traPk";
-    $result = mysql_query($sql, $link) or die("can't get associated comp");
+    $result = mysql_query($sql, $link) or json_die("can't get associated comp");
     $comPk = mysql_result($result,0,0);
 
     $sql = "SELECT date_format(T.traStart,'%d%m%y') as Start, P.pilFirstName, P.pilLastName, T.traDate from tblTrack T, tblPilot P where T.traPk=$traPk and T.pilPk=P.pilPk";
-    $result = mysql_query($sql, $link) or die("can't track information");
+    $result = mysql_query($sql, $link) or json_die("can't track information");
     $row = mysql_fetch_array($result, MYSQL_ASSOC);
     $date = $row['Start'];
     $ndate = $row['traDate'];
@@ -138,10 +138,11 @@ foreach ($tracks as $row)
 {
     $pilot = $row['pilFirstName'] . ' ' . $row['pilLastName']; 
     $filename = preg_replace('/[\s+\/]/', '_', strtolower( $row['pilLastName'] . '_' . $row['pilHGFA'] . '.igc'));
-    $fname = '/tmp/' . $filename;
+    mkdir("/tmp/$tasPk");
+    $fname = "/tmp/$tasPk/" . $filename;
     if (!file_exists($fname))
     {
-        $trackstr = gen_track($link, $row['traPk'], $date, $pilot, 2590);
+        $trackstr = gen_track($link, $row['traPk'], $row['Start'], $pilot, 2590);
         file_put_contents($fname, $trackstr);
     }
     $ziplist[] = $filename;
@@ -152,7 +153,7 @@ $allfiles = implode(' ', $ziplist);
 $bname = strtolower(preg_replace('/[\s+\/]/', '_', $cominfo['comName'] . '_' . $cominfo['tasName'] . ".zip"));
 $filename = '/tmp/' . $bname;
 #echo ("zip \"$filename\" $allfiles 2>&1 > /dev/null");
-chdir('/tmp');
+chdir("/tmp/$tasPk");
 $line = system("zip \"$filename\" $allfiles 2>&1 > /dev/null", $retval);
 
 if ($retval == 0)
