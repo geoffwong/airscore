@@ -29,6 +29,8 @@ my $igc = $ARGV[1];
 my $comPk = 0 + $ARGV[2];
 my $tasPk = 0 + $ARGV[3];
 
+my $forClass = '';
+my $forVersion = '';
 
 if (scalar(@ARGV) < 2)
 {
@@ -121,6 +123,7 @@ if ($tasPk == 0)
     $sth->execute();
     if  ($ref = $sth->fetchrow_hashref())
     {
+        print Dumper($ref);
         $tasPk = $ref->{'tasPk'};
         $tasType = $ref->{'tasTaskType'};
         $comType = $ref->{'comType'};
@@ -148,7 +151,7 @@ else
 }
 
 $traStart = 0;
-$sql = "select unix_timestamp(T.traStart) as TStart, unix_timestamp(C.comDateFrom) as CFrom, unix_timestamp(C.comDateTo) as CTo, C.comTimeOffset from tblTrack T, tblCompetition C where traPk=$traPk and C.comPk=$comPk";
+$sql = "select unix_timestamp(T.traStart) as TStart, unix_timestamp(C.comDateFrom) as CFrom, unix_timestamp(C.comDateTo) as CTo, C.comTimeOffset, F.forClass, F.forVersion from tblTrack T, tblCompetition C, tblFormula F where F.comPk=C.comPk and T.traPk=$traPk and C.comPk=$comPk";
 $sth = $dbh->prepare($sql);
 $sth->execute();
 if  ($ref = $sth->fetchrow_hashref())
@@ -157,6 +160,11 @@ if  ($ref = $sth->fetchrow_hashref())
     $comFrom = $ref->{'CFrom'};
     $comTo = $ref->{'CTo'};
     $comTimeOffset = $ref->{'comTimeOffset'};
+
+    $forClass = $ref->{'forClass'};
+    $forVersion = $ref->{'forVersion'};
+    print "comType=$comType\n";
+    print "forClass=$forClass\n";
 }
 
 if ($traStart < ($comFrom-$comTimeOffset*3600))
@@ -216,10 +224,16 @@ else
     $sql = "insert into tblComTaskTrack (comPk,traPk) values ($comPk,$traPk)";
     $dbh->do($sql);
 
+    print "forVersion=$forVersion\n";
     # Nothing else to do but verify ...
-    if ($comType eq 'Free')
+    if ($comType eq 'Free' or $forVersion eq 'free')
     {
         `${BINDIR}optimise_flight.pl $traPk $comPk 0 0`;
+    }
+    elsif ($forVersion eq 'airgain-count')
+    {
+        `${BINDIR}optimise_flight.pl $traPk $comPk`;
+        `${BINDIR}airgain_verify.pl $traPk $comPk`;
     }
     else
     {

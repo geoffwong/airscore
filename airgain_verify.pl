@@ -27,6 +27,10 @@ use Data::Dumper;
 use POSIX qw(ceil floor);
 use TrackLib qw(:all);
 
+use strict;
+
+my $dbh;
+
 sub validate_airgain
 {
     my ($task, $flight, $reg) = @_;
@@ -59,7 +63,7 @@ sub validate_airgain
     {
         my $buc;
         $dist = floor(distance($centre, $coord)/100);
-        #print $coord->{'name'}, " dist to centre: $dist\n";
+        # print $coord->{'name'}, " dist to centre: $dist\n";
         if (!defined($bucket[$dist]))
         {
             $bucket[$dist] = [];
@@ -109,38 +113,7 @@ sub validate_airgain
         }
     }
 
-    # Can't start later than start close time
-    if (defined($task))
-    {
-        if (($task->{'sstartclose'} > $task->{'sstart'}) and ($startss > $task->{'sstartclose'}))
-        {
-            $startss = $task->{'sstartclose'};
-        }
-
-        # Sanity
-        if ($startss > $finish) 
-        {
-            $startss = $finish;
-        }
-    }
-
-    #
-    # Now compute our score
-    #
-    $score = 0.0;
-    for my $k (keys %accum)
-    {
-        $wcount++;
-        $val = 0 + substr($accum{$k}->{'name'},3,3);
-        $score = $score + $val;
-    }
-
-    if ($score < 0)
-    {
-        printf "Somehow the distance score ($score) is < 0\n";
-        $score = 0;
-    }
-
+    my %result;
     $result{'start'} = 0;
     $result{'goal'} = 0;
     $result{'startSS'} = 0;
@@ -151,15 +124,16 @@ sub validate_airgain
     $result{'coeff'} = 0;
     $result{'score'} = $score;
     $result{'waypoints_made'} = $wcount;
+    $result{'waypoints'} = \%accum;
 
     return \%result;
 }
 
 
-sub store_airgain
+sub store_task_airgain
 {
     my ($track,$res) = @_;
-    my ($tasPk,$traPk,$dist,$score,$turnpoints,$comment);
+    my ($tasPk,$traPk,$dist,$score,$turnpoints,$penalty,$comment);
 
     $tasPk = $track->{'tasPk'};
     $traPk = $track->{'traPk'};
@@ -173,9 +147,66 @@ sub store_airgain
 
     #print("insert into tblTaskResult (tasPk,traPk,tarDistance,tarSpeed,tarStart,tarGoal,tarSS,tarES,tarTurnpoints,tarLeadingCoeff,tarPenalty,tarComment) values ($tasPk,$traPk,$dist, 0, 0, 0, 0, 0,$turnpoints,$score,$penalty,'$comment')\n");
 
-    $sth = $dbh->prepare("insert into tblTaskResult (tasPk,traPk,tarDistance,tarSpeed,tarStart,tarGoal,tarSS,tarES,tarTurnpoints,tarLeadingCoeff,tarPenalty,tarComment) values ($tasPk,$traPk,$dist, 0, 0, 0, 0, 0,$turnpoints,$score,$penalty,'$comment')");
+    my $sth = $dbh->prepare("insert into tblTaskResult (tasPk,traPk,tarDistance,tarSpeed,tarStart,tarGoal,tarSS,tarES,tarTurnpoints,tarLeadingCoeff,tarPenalty,tarComment) values ($tasPk,$traPk,$dist, 0, 0, 0, 0, 0,$turnpoints,$score,$penalty,'$comment')");
 
     $sth->execute();
+}
+
+sub read_airgain_existing
+{
+	my ($comPk, $flight) = @_;
+    my $traPk = $flight->{'traPk'};
+    my $pilPk = $flight->{'pilPk'};
+	my %waypoints;
+
+    # AirgainWaypoint needs a comp associated with it too (for same track in multiple comps)?
+    my $query = qq{select G.rwpPk from tblComTaskTrack CTT, tblTrack T, tblAirgainWaypoint G where CTT.comPk=$comPk and CTT.traPk=T.traPk and G.traPk=T.traPk and T.pilPk=$pilPk and T.traPk<>$traPk};
+
+    my $sth = $dbh->prepare($query);
+    my $ref;
+    $sth->execute();
+    while ($ref = $sth->fetchrow_hashref())
+    {
+       	$waypoints{$ref->{'rwpPk'}} = 1;
+    }
+
+	return \%waypoints;
+}
+
+sub store_olc_airgain
+{
+    my ($track,$res) = @_;
+    my ($tasPk,$traPk,$dist,$score,$turnpoints,$comment);
+    my @arr;
+
+    $traPk = $track->{'traPk'};
+    $score = $res->{'score'};
+    $turnpoints = $res->{'waypoints_made'};
+
+    print("traPk=$traPk score=$score\n");
+    if ($score > 0)
+    {
+        $dbh->do("update tblTrack set traScore=? where traPk=?", undef, $score, $traPk);
+        $dbh->do("delete from tblAirgainWaypoint where traPk=?", undef, $traPk);
+
+        my $query = qq{insert into tblAirgainWaypoint (traPk, rwpPk) values };
+        my $accum = $res->{'waypoints'};
+        #print Dumper($accum);
+
+        for my $k (keys %$accum)
+        {
+            my $rwpPk = $accum->{$k}->{'rwpPk'};
+            push @arr, join(",", ( $traPk, $rwpPk ));
+        }
+        my $rest = '(' . join('),(', @arr) . ')';
+    
+        print("rest=$rest\n");
+        $dbh->do($query . $rest);
+    }
+    else
+    {
+        print("Score=0\n");
+    }
 }
 
 
@@ -191,6 +222,7 @@ my $comPk = 0;
 my $regPk;
 my $info;
 my $duration;
+my $score = 0;
 
 if (scalar @ARGV < 1)
 {
@@ -231,14 +263,31 @@ if (0+$ARGV[2] > 0)
 
     $wpts = read_region($task->{'region'});
     $info = validate_airgain($task,$flight,$wpts);
+
+    # score it ..
+    my $accum = $info->{'waypoints'};
+    for my $k (keys %$accum)
+    {
+        my $val = 0 + substr($k,3,3);
+        $score = $score + $val;
+    }
+    $info->{'score'} = $score;
+
+    # Store task result in DB
+    store_task_airgain($flight,$info);
 }
 else
 {
-    $sth = $dbh->prepare("select C.* tblCompetition where C.comPk=$comPk");
+    my $forVersion;
+	my $existing;
+
+    my $sth = $dbh->prepare("select C.*, F.* from tblCompetition C, tblFormula F where F.comPk=C.comPk and C.comPk=$comPk");
+    my $ref;
     $sth->execute();
     if ($ref = $sth->fetchrow_hashref())
     {
         $regPk = 0 + $ref->{'regPk'};
+        $forVersion = $ref->{'forVersion'};
     }
     else
     {
@@ -246,13 +295,37 @@ else
         print "airgain_verify.pl traPk comPk [tasPk]\n";
     }
 
-    print "Free airgain validate\n";
+    print "OLC airgain validate ($regPk)\n";
     $wpts = read_region($regPk);
     $info = validate_airgain(undef,$flight,$wpts);
+
+    if ($forVersion eq 'airgain-count')
+	{
+		$existing = read_airgain_existing($comPk, $flight);
+	}
+    
+    # score it ..
+    my $accum = $info->{'waypoints'};
+    for my $k (keys %$accum)
+    {
+        if ($forVersion eq 'airgain-count')
+        {
+			if (!exists $existing->{$accum->{$k}->{'rwpPk'}})
+			{
+        		$score = $score + 1000;
+			}
+        }
+		else
+		{
+			# score based upon waypoint name
+        	my $val = 0 + substr($k,3,3);
+        	$score = $score + $val;
+		}
+    }
+    $info->{'score'} = $score;
+
+    # Store somewhere (no task)
+    store_olc_airgain($flight,$info);
 }
 
-
-#print Dumper($info);
-# Store results in DB
-store_airgain($flight,$info);
 

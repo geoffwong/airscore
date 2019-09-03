@@ -124,20 +124,20 @@ while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     }
     $location = $row['comLocation'];
     $director = $row['comMeetDirName'];
-    $comparr[] = array("$count.", $datestr, "<a href=\"competition.php?comPk=$id\">" . $name . "</a>", $location, $director);
+    $comparr[] = ["$count.", $datestr, "<a href=\"competition.php?comPk=$id\">" . $name . "</a>", $location, $director];
     $count++;
 }
-echo ftable($comparr, "border=\"0\" cellpadding=\"2\" cellspacing=\"0\" alternate-colours=\"yes\" valign=\"top\" align=\"left\"", array('class="d"', 'class="l"'), '');
+echo ftable($comparr, "border=\"0\" cellpadding=\"2\" cellspacing=\"0\" alternate-colours=\"yes\" valign=\"top\" align=\"left\"", ['class="d"', 'class="l"'], '');
 
 echo "<br><hr>";
 echo "<h2>Add Competition</h2>";
 
-echo ftable(array(
-    array('Name', fin('comname', '', 20), 'Type:', fselect('comptype', 'RACE', array('OLC', 'RACE', 'Free', 'Route', 'Team-RACE'))),
-    array('Date From:', fin('datefrom', '', 10), 'Date To:', fin('dateto', '', 10)),
-    array('Director:', fin('director', '', 10), 'Location:', fin('location', '', 10)),
-    array('Abbreviation:', fin('code', '', 10), 'Time Offset:', fin('timeoffset', '', 7))
-    ), '', '', ''
+echo ftable([
+    ['Name', fin('comname', '', 20), 'Type:', fselect('comptype', 'RACE', ['OLC', 'RACE', 'Free', 'Route', 'Team-RACE'])],
+    ['Date From:', fin('datefrom', '', 10), 'Date To:', fin('dateto', '', 10)],
+    ['Director:', fin('director', '', 10), 'Location:', fin('location', '', 10)],
+    ['Abbreviation:', fin('code', '', 10), 'Time Offset:', fin('timeoffset', '', 7)]
+    ], '', '', ''
 );
 echo fis('add', 'Create Competition', '');
 

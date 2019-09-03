@@ -83,7 +83,7 @@ function get_track_body($link, $trackid, $interval)
         $body['comment'] = $comment;
         $body['initials'] = substr($row['pilFirstName'],0,1) . substr($row['pilLastName'],0,1);
 
-        $sql = "select C.comClass from tblCompetition C, tblComTaskTrack T where C.comPk=T.comPk and T.traPk=$trackid";
+        $sql = "select C.comClass, F.forClass, F.forVersion from tblCompetition C, tblComTaskTrack T, tblFormula F where F.comPk=C.comPk and C.comPk=T.comPk and T.traPk=$trackid";
         $result = mysql_query($sql,$link) or die('Com class query failed: ' . mysql_error());
         $srow = mysql_fetch_array($result, MYSQL_ASSOC);
         if ($srow['comClass'] == 'sail')
@@ -98,6 +98,8 @@ function get_track_body($link, $trackid, $interval)
         {
             $body['class'] = 'pger';
         }
+        $body['formula_class'] = $srow['forClass'];
+        $body['formula_version'] = $srow['forVersion'];
     }
 
     if ($interval < 1)
@@ -146,13 +148,38 @@ function get_track_wp($link, $trackid)
     return $ret;
 }
 
+function get_airgain_wp($link, $trackid)
+{
+    $sql = "SELECT R.* FROM tblAirgainWaypoint A, tblRegionWaypoint R where A.traPk=$trackid and R.rwpPk=A.rwpPk";
+    $ret = [];
+    $result = mysql_query($sql,$link) or die('Track waypoint query failed: ' . mysql_error());
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+    
+        $lasLat = 0.0 + $row['rwpLatDecimal'];
+        $lasLon = 0.0 + $row['rwpLongDecimal'];
+        $ret[] = [ $lasLat, $lasLon, $row['rwpName'] ];
+    }
+
+    // task info ..
+    return $ret;
+}
+
 $result = [];
 $body = get_track_body($link, $trackid, $interval);
 $result['track'] = $body;
 if ($body['tasPk'] == 0)
 {
-    $wps = get_track_wp($link, $trackid);
-    $result['points'] = $wps;
+    if ($body['formula_class'] == 'olc' and $body['formula_version'] == 'airgain-count')
+    {
+        $wps = get_airgain_wp($link, $trackid);
+        $result['points'] = $wps;
+    }
+    else
+    {
+        $wps = get_track_wp($link, $trackid);
+        $result['points'] = $wps;
+    }
 }
 print json_encode($result);
 ?>

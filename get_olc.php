@@ -48,9 +48,11 @@ function olc_sort($result,$top)
     foreach ($toptasks as $pilPk => $scores)
     {
         // cut to max ..
-        $scores = array_slice($scores,0,$top);
+        if ($top != 0)
+        {
+            $scores = array_slice($scores,0,$top);
+        }
         $total = 0;
-
         foreach ($scores as $row)
         {
             $total = $total + $row['adjScore'];
@@ -58,7 +60,7 @@ function olc_sort($result,$top)
             $last = utf8_encode($row['pilLastName']);
         }
 
-        $total = $total . $last;
+        $total = "$total" . $last;
         $topscores[$total] = [
                     'total' => $total,
                     'tasks' => $scores,

@@ -316,6 +316,14 @@ create table tblRegionWaypoint
     rwpDescription  varchar(64)
 );
 
+drop table if exists tblAirgainWaypoint;
+create table tblAirgainWaypoint
+(
+    agwPk           integer not null primary key auto_increment,
+    traPk           integer not null,
+    rwpPk           integer not null 
+);
+
 insert into tblRegionWaypoint (rwpName,rwpLatDecimal,rwpLongDecimal,rwpAltitude,rwpDescription) values ('mys080', -36.757881, 146.965393, 799, 'Mystic');
 
 insert into tblRegion (regCentre, regDescription) values (1, 'Bright');

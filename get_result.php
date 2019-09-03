@@ -329,7 +329,7 @@ else
 {
     $civilised = get_olc_result($link, $comPk, $compinfo['comOverallParam'], '');
     $compinfo['forClass'] = 'OLC'; 
-    $compinfo['forVersion'] = ''; 
+    # $compinfo['forVersion'] = ''; 
 }
 
 

@@ -125,7 +125,7 @@ function plot_track(jstr)
     
     if (!body.tasPk)
     {
-        plot_track_wp(points);
+        plot_track_wp(body, points);
     }
 }
 function add_track(comPk, traPk, interval)
@@ -277,7 +277,7 @@ function plot_track_header(body)
     ihtml = ihtml + "</div>";
     add_panel(map, "topright", ihtml, 'map_panel');
 }
-function plot_track_wp(track)
+function plot_track_wp(body, track)
 {
     var row;
     var line;
@@ -299,29 +299,56 @@ function plot_track_wp(track)
     {
         lasLat = track[row][0];
         lasLon = track[row][1];
-        cname = "" + count;
+        if (track[row].length > 2)
+        {
+            cname = track[row][2];
+        }
+        else
+        {
+            cname = "" + count;
+        }
 
         gll = new L.LatLng(lasLat, lasLon);
         line.push(gll);
         bounds.extend(gll);
     
-        if (count % 10 == 0)
+        if (body['formula_version'] == 'airgain-count')
         {
-            polyline = new L.Polyline(line, {
-                color:"#ff0000", weight:2, opacity:1 }).addTo(map);
-            segments.push(polyline);
-            line = Array();
-            line.push(gll);
+            //var sz = GSizeFromMeters(map, gll, 400*2, 400*2);
+            //overlay = new EInsert(map, gll, "circle.png", sz, map.getZoom());
+			var clor = '#cccccc'
+     		var circle = new L.Circle(gll, {
+                radius:400,
+				color:clor,
+				opacity:1.0,
+				weight:1.0, 
+				fillColor:clor,
+				fillOpacity:0.2,
+			}).addTo(map);
+        }
+        else
+        {
+            if (count % 10 == 0)
+            {
+                polyline = new L.Polyline(line, {
+                    color:"#ff0000", weight:2, opacity:1 }).addTo(map);
+                segments.push(polyline);
+                line = Array();
+                line.push(gll);
+            }
         }
         count = count + 1;    
 
         pos = new L.LatLng(lasLat,lasLon);
-        //wpt = new ELabel(map, pos, cname, "waypoint", new google.maps.Size(0,0), 60);
         wpt = add_label(map, pos, cname, "waypoint");
     }
 
-    polyline = new L.Polyline(line, { color:"#ff0000", weight:2, opacity:1 }).addTo(map);
-    segments.push(polyline);
+    if (body['formula_version'] != 'airgain-count')
+    {
+        polyline = new L.Polyline(line, { color:"#ff0000", weight:2, opacity:1 }).addTo(map);
+        segments.push(polyline);
+    }
+
     map.fitBounds(bounds);
 }
 function plot_glider(glider,lat,lon,alt)
