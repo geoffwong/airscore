@@ -1,14 +1,15 @@
 var comp_json;
 function submit_track()
 {
-    $("#send").html("Sending ...");
+    //$("#send").html("Sending ...");
     var comPk = $('#compsel').val();
     if (!comPk || comPk == 0)
     {
         alert('No competition selected');
         return;
     }
-    var fd = new FormData($("#trackform"));
+    //var fd = new FormData($("#trackform"));
+    var fd = new FormData();
     fd.append('comid' , comPk);
     fd.append('hgfanum' , $("input[name='hgfanum']").val());
     fd.append('lastname' , $("input[name='lastname']").val());
@@ -25,6 +26,8 @@ function submit_track()
         fd.append('route', tasPk);
     }
 
+    $('#subspin').addClass('fa-circle-o-notch');
+    $('#subspin').addClass('fa-spin');
     $.ajax({
             url: 'add_track.php',  
             type: 'POST',
@@ -36,8 +39,18 @@ function submit_track()
             timeout:0,
             dataType: "text",
             success: function(data) {
+                var result;
                 console.log(data);
-                var result = JSON.parse(data);
+                $('#subspin').removeClass('fa-circle-o-notch');
+                $('#subspin').removeClass('fa-spin');
+                //$("#send").html("Send Tracklog");
+                try {
+                    result = JSON.parse(data);
+                }
+                catch (e)
+                {
+                    alert("Upload failed: " + e);
+                }
                 if (result['result'] == 'ok')
                 {
                     var url = "tracklog_map.html?comPk=" + result['comPk'] + "&trackid=" + result['traPk'];
@@ -53,7 +66,6 @@ function submit_track()
                 {
                     alert("Track upload failed: " + result['result']);
                 }
-                $("#send").html("Send Tracklog");
             }
         });
 }
@@ -147,6 +159,10 @@ $(document).ready(function() {
                 if (task[0].comClass == "HG")
                 {
                     update_classes("HG");
+                }
+                if (task[0].comType == "OLC" || task[0].comType == "Route")
+                {
+                    $('#pilotquality').hide();
                 }
             }
             else 

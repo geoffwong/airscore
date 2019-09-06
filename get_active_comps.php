@@ -5,22 +5,24 @@ header('Content-type: application/json; charset=utf-8');
 
 require_once 'authorisation.php';
 
-$usePk = check_auth('system');
-$link = db_connect();
-$comPk = reqival('comPk');
-
-function get_active_comps($link, $comPk)
+function get_active_comps($link, $comPk, $auth)
 {
     $restrict = '';
     if ($comPk > 0)
     {
         $restrict = " C.comPk=$comPk and";
     }
-    $sql = "select C.comPk, C.comName, C.comClass, T.tasPk, T.tasName 
-        from tblCompetition C left outer join tblTask T on T.comPk=C.comPk and C.comType='Route' 
-        where curdate() < date_add(C.comDateTo, interval 3 day) and$restrict C.comDateTo > '0000-00-00' and C.comName not like '%test%' order by C.comName";
 
-    $result = mysql_query($sql,$link) or die('get_all_tasks failed: ' . mysql_error());
+    $notest = " and C.comName not like '%test%'";
+    if ($auth > 0)
+    {
+        $notest = '';
+    }
+    $sql = "select C.comPk, C.comName, C.comClass, T.tasPk, T.tasName, C.comType
+        from tblCompetition C left outer join tblTask T on T.comPk=C.comPk and C.comType='Route' 
+        where curdate() < date_add(C.comDateTo, interval 3 day) and$restrict C.comDateTo > '0000-00-00'$notest order by C.comName";
+
+    $result = mysql_query($sql,$link) or json_die('get_all_tasks failed: ' . mysql_error());
 
     $comps = [];
     $last_comp = 0;
@@ -51,7 +53,11 @@ function get_active_comps($link, $comPk)
     return $comps;
 }
 
-$comps = get_active_comps($link, $comPk);
+$usePk = check_auth('system');
+$link = db_connect();
+$comPk = reqival('comPk');
+
+$comps = get_active_comps($link, $comPk, $usePk);
 print json_encode($comps);
 ?>
 

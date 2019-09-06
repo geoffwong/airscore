@@ -30,6 +30,9 @@ use TrackLib qw(:all);
 use strict;
 
 my $dbh;
+my $debug = 0;
+my $in_radius = 400;
+my $bucket_size = $in_radius * 2;
 
 sub validate_airgain
 {
@@ -62,14 +65,32 @@ sub validate_airgain
     for $coord (@$wpts)
     {
         my $buc;
-        $dist = floor(distance($centre, $coord)/100);
-        # print $coord->{'name'}, " dist to centre: $dist\n";
-        if (!defined($bucket[$dist]))
+        my $dmax = floor((distance($centre, $coord)+$in_radius)/$bucket_size);
+        my $dmin = floor((distance($centre, $coord)-$in_radius)/$bucket_size);
+        if ($dmin < 0)
         {
-            $bucket[$dist] = [];
+            $dmin = 0;
         }
-        $buc = $bucket[$dist];
+        if ($debug)
+        {
+            print $coord->{'name'}, " dist to centre: $dmin - $dmax\n";
+        }
+        if (!defined($bucket[$dmin]))
+        {
+            $bucket[$dmin] = [];
+        }
+        $buc = $bucket[$dmin];
         push @$buc, $coord;
+
+        if ($dmin != $dmax)
+        {
+            if (!defined($bucket[$dmax]))
+            {
+                $bucket[$dmax] = [];
+            }
+            $buc = $bucket[$dmax];
+            push @$buc, $coord;
+        }
     }
     #print "@bucket=", Dumper(\@bucket);
 
@@ -93,20 +114,22 @@ sub validate_airgain
             }
         }
 
-        $dist = floor(distance($centre, $coord)/100);
+        $dist = floor(distance($centre, $coord)/$bucket_size);
         $sub = $bucket[$dist];
 
         if (defined($sub))
         {
-            #print $dist, " ", Dumper($sub);
             for $sc (@$sub)
             {
                 #print Dumper($sc);
                 $dist = distance($coord, $sc);
-                #print "Dist coord to sc=$dist\n";
-                if ($dist < 400)
+                if ($debug)
                 {
-                    print "Inside : ", $sc->{'name'}, "\n";
+                    print "Dist coord to ", $sc->{'name'}, "=$dist\n";
+                }
+                if ($dist < $in_radius)
+                {
+                    #print "Inside : ", $sc->{'name'}, "\n";
                     $accum{$sc->{'name'}} = $sc;
                 }
             }
@@ -184,9 +207,9 @@ sub store_olc_airgain
     $turnpoints = $res->{'waypoints_made'};
 
     print("traPk=$traPk score=$score\n");
+    $dbh->do("update tblTrack set traScore=? where traPk=?", undef, $score, $traPk);
     if ($score > 0)
     {
-        $dbh->do("update tblTrack set traScore=? where traPk=?", undef, $score, $traPk);
         $dbh->do("delete from tblAirgainWaypoint where traPk=?", undef, $traPk);
 
         my $query = qq{insert into tblAirgainWaypoint (traPk, rwpPk) values };

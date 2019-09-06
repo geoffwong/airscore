@@ -38,6 +38,7 @@ function plot_track(jstr)
     var resp;
     var points;
     var lasLat, lasLon, lasAlt, lasTme;
+    var bounds;
 
     count = 1;
     offset = 0;
@@ -83,6 +84,11 @@ function plot_track(jstr)
     
         gll = new L.LatLng(lasLat, lasLon);
         line.push(gll);
+        if (!bounds)
+        {
+            bounds = new L.LatLngBounds();
+            bounds.extend(gll);
+        }
         trklog.push(track[row]);
     
         if (count % 10 == 0)
@@ -101,6 +107,7 @@ function plot_track(jstr)
         }
         count = count + 1;    
     }
+    bounds.extend(gll);
 
 	if (lasTme > time_bounds['last'])
 	{
@@ -125,7 +132,14 @@ function plot_track(jstr)
     
     if (!body.tasPk)
     {
-        plot_track_wp(body, points);
+        if (points.length > 0)
+        {
+            plot_track_wp(body, points);
+        }
+        else
+        {
+            map.fitBounds(bounds);
+        }
     }
 }
 function add_track(comPk, traPk, interval)
