@@ -1,6 +1,25 @@
 
 var task_details;
 
+function deleted_task(json)
+{
+    console.log(json);
+    if (json.result == 'ok')
+    {
+        var comPk = json.comPk;
+        window.location.replace("competition.html?comPk="+comPk);
+        return;
+    }
+
+    if (json.result == 'unauthorised')
+    {
+        alert('Unauthorised to delete task');
+        return;
+    }
+
+    alert(json.error);
+}
+
 function updated_compinfo(result)
 {
     $('#savespin').removeClass('fa-spinner');
@@ -67,6 +86,16 @@ function save_task()
     $('#savespin').addClass('fa-circle-o-notch');
     $('#savespin').addClass('fa-spin');
     $.post("update_task.php", options, updated_compinfo);
+}
+
+function delete_task()
+{
+    var id = url_parameter('comPk');
+    var taskid = task_details.keys.tasPk;
+    var options = { comPk : id, tasPk : taskid };
+    console.log(options);
+
+    $.post("delete_task.php", options, deleted_task);
 }
 
 function save_waypoints()

@@ -1,6 +1,65 @@
 
 var comp_details;
 
+function create_task()
+{
+    var comPk = url_parameter('comPk');
+    var options = { };
+    var fd = new FormData();
+    fd.append('comPk', comPk);
+    fd.append('taskname', $('#taskname').val());
+    fd.append('date', $('#date').val());
+    fd.append('region', $('#region option:selected').val());
+    fd.append('userfile', $("#customFile")[0].files[0]);
+
+    $.ajax({
+            url: 'add_task.php',  
+            type: 'POST',
+            enctype: 'multipart/form-data',
+            data: fd,
+            cache: false,
+            contentType: false,
+            processData: false,
+            timeout:0,
+            dataType: "text",
+            success: function(data) {
+                var result;
+                console.log(data);
+                try {
+                    result = JSON.parse(data);
+                }
+                catch (e)
+                {
+                    alert("Upload failed: " + e);
+                }
+                if (result['result'] == 'ok')
+                {
+                    var tasPk = result['tasPk'];
+                    var url = 'task.html?comPk=' + comPk + '&tasPk=' + tasPk;
+                    console.log(url);
+                    window.location.replace(url);
+                }
+                else
+                {
+                    alert(res.result + ": " + res.error);
+                }
+            }
+        });
+    $.post('add_task.php', options, function (res) {
+        console.log(res);
+
+        var url;
+        var tasPk = res.tasPk;
+        if (!comPk || res.result != "ok")
+        {
+            alert(res.result + ": " + res.error);
+            return;
+        }
+        url = 'task.html?comPk=' + comPk + '&tasPk=' + tasPk;
+        console.log(url);
+        window.location.replace(url);
+    });
+}
 function updated_compinfo(result)
 {
     console.log(result);
@@ -82,16 +141,18 @@ function save_task()
 
 function reset_compinfo()
 {
+    var header = $('#comp_header');
     $('#compinfo1 tbody').html('');
     $('#compinfo2 tbody').html('');
-    comp_card(header, json.compinfo);
+    comp_card(header, comp_details.compinfo);
 }
 
 function reset_scoring()
 {
+    var header = $('#comp_header');
     $('#scoring1 tbody').html('');
     $('#scoring2 tbody').html('');
-    scoring_card(header, json.scoring);
+    scoring_card(header, comp_details.scoring);
 }
 
 function reset_formula()
@@ -99,7 +160,7 @@ function reset_formula()
     $('#formula1 tbody').html('');
     $('#formula2 tbody').html('');
     $('#formula3 tbody').html('');
-    formula_card(json.formula);
+    formula_card(comp_details.formula);
 }
 function comp_card(div, info)
 {
@@ -162,17 +223,56 @@ function formula_card(info)
 function task_card(info)
 {
     var comPk = url_parameter('comPk');
+    if (!info) 
+    {
+        return;
+    }
     for (var tc = 0; tc < info.length; tc++)
     {
-         $('#tasktbl tbody').append("<tr><td><a href=\"task.html?comPk="+comPk+'&tasPk='+info[tc].tasPk+"\">" + info[tc].tasDate + '</a></td><td>' + info[tc].tasName + '</td><td>' + info[tc].tasDistance + 
-            '<td>' + info[tc].tasStartTime.substr(11,8) + ' - ' + info[tc].tasFinishTime.substr(11,8) + '</td></tr>');
+        var st = info[tc].tasStartTime;
+        var ft = info[tc].tasFinishTime;
+        if (st && st.length > 17)
+        {
+            st = st.substr(11,8);
+        }
+        if (ft && ft.length > 17)
+        {
+            ft = ft.substr(11,8);
+        }
+        $('#tasktbl tbody').append("<tr><td><a href=\"task.html?comPk="+comPk+'&tasPk='+info[tc].tasPk+"\">" + info[tc].tasDate + '</a></td><td>' + info[tc].tasName + '</td><td>' + info[tc].tasDistance + 
+            '<td>' + st + ' - ' + ft + '</td></tr>');
     }
+}
+
+function region_modal(info,regPk)
+{
+    var res = '<select id="region" class="form-control">';
+    var allkeys = Object.keys(info);
+    var values = Object.values(info);
+
+    for (nc = 0; nc < allkeys.length; nc++)
+    {
+        if (regPk == allkeys[nc])
+        {
+            res += '<option value="' + allkeys[nc] + '" selected>' + values[nc] + '</option>';
+        }
+        else
+        {
+            res += '<option value="' + allkeys[nc] + '">' + values[nc] + '</option>';
+        }
+    }
+    res += '</select>';
+
+    $('#regiondiv').html(res);
 }
 
 $(document).ready(function() {
     var comPk = url_parameter("comPk");
+    var dstr = (new Date()).toISOString().substring(0,10);
+    $('#date').val(dstr);
     microAjax('get_comp_details.php' + window.location.search, function(data) {
             var json = JSON.parse(data);
+            console.log(json);
 
             var header = $('#comp_header');
             var tasks = $('#tasks');
@@ -184,18 +284,30 @@ $(document).ready(function() {
 
             scoring_card(header, json.scoring);
         
-            if (json.compinfo.comType == "OLC")
+            console.log('comType='+json.scoring.comType);
+            if (json.scoring.comType == "OLC")
             {
                 // hide divs
+                $('#formrow').hide();
+                $('#formula').hide();
+                $('#taskrow').hide();
+                $('#tasks').hide();
                 return;
             }
 
             // formula
             formula_card(json.formula);
 
-
             // tasks
             task_card(json.taskinfo);
+
+            // regions
+            region_modal(json.regions, json.keys.regPk);
+
     });
 });
 
+$('#customFile').change(function() {
+  var file = $('#customFile')[0].files[0].name;
+  $('#selected_task').text(file);
+});
