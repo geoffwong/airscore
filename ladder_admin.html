@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Competition Ladders</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+    <link href="navbar.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="microajax.minified.js"></script>
+    <script src="url.js"></script>
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top" data-spy="affix">
+      <div class="container">
+        <a class="navbar-brand" href="#">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a></li>
+            <li class="nav-item active"> <a class="nav-link" href="#">Ladders</a> <span class="sr-only">(current)</span></li>
+            <li class="nav-item"> <a class="nav-link" href="pilot_overview.html">Pilots</a></li>
+            <li class="nav-item"><a class="nav-link" href="submit_track.html">Submit</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Modal -->
+	<div class="modal fade" id="laddermodal" tabindex="-1" role="dialog" aria-labelledby="ladderModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Create Ladder</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createladder" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row">
+			  	<label for="laddername" class="col-2 col-form-label">Name</label>
+			    <div class="col-10">
+                    <input type="text" class="form-control mb-2" id="laddername" placeholder="Ladder Name">
+			    </div>
+		    </div>
+			<div class="form-row">
+			  <label for="date-from" class="col-2 1ol-form-label">From</label>
+			  <div class="col-10">
+			    <input class="form-control" type="date" value="2019-07-01" id="datefrom">
+			  </div>
+			  <label for="date-to" class="col-2 col-form-label">To</label>
+			  <div class="col-10">
+			    <input class="form-control" type="date" value="2020-06-30" id="dateto">
+			  </div>
+			</div>
+		    <div class="form-row">
+			  	<label for="nation" class="col-2 col-form-label">Nation</label>
+			    <div class="col-4">
+                    <select name="nation" id="nation" class="form-control" placeholder="AUS">
+                    <option value="AUS" selected>AUS</option>
+                    <option value="NZL">NZL</option>
+                    </select>
+			    </div>
+			  	<label for="class" class="col-2 col-form-label">Class</label>
+			    <div class="col-4">
+                    <select name="compclass" id="compclass" class="form-control" placeholder="PG">
+                    <option value="PG" selected>PG</option>
+                    <option value="HG">HG</option>
+                    </select>
+			    </div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="scoring" class="col-2 col-form-label">Scoring</label>
+			    <div class="col-4">
+                    <select name="method" id="method" class="form-control" placeholder="Scoring Method">
+                    <option value="fixed">Fixed</option>
+                    <option value="ftv" selected>FTV (%AAA)</option>
+                    <option value="ftv-fixed">FTV (fixed)</option>
+                    </select>
+			    </div>
+			  	<label for="param" class="col-2 col-form-label">Param</label>
+			    <div class="col-4">
+                    <input type="text" class="form-control mb-2" id="param" placeholder="Scoring Param">
+			    </div>
+		    </div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="add_ladder();">Create</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+	</div>
+
+    <div class="container" id="main">
+    <br>
+    <div class="row">
+    <button type="button" id="cbutton" class="btn btn-primary mt-3" data-toggle="modal" data-target="#laddermodal">Create</button>
+    </div>
+    <table id="ladders" class="row-border stripe compact mb-1" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>Ladder</th>
+            <th>Nation</th>
+            <th>Class</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Method</th>
+        </tr>
+    </thead>
+    </table>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <!-- script src="https://rawgit.com/bassjobsen/affix/master/assets/js/affix.js"></script -->
+    <!-- script type="text/javascript" src="navbar.js"></script -->
+    <script type="text/javascript" src="js/pop_all_ladders.js"></script>
+</body>
+</html>
+
