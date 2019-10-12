@@ -260,6 +260,7 @@ if ($row)
     $tasDistQuality = round($row['tasDistQuality'],2);
     $tasTimeQuality = round($row['tasTimeQuality'],2);
     $tasLaunchQuality = round($row['tasLaunchQuality'],2);
+    $tasStopQuality = round($row['tasStopQuality'],2);
     $tasArrival = $row['tasArrival'];
     $tasHeightBonus = $row['tasHeightBonus'];
     $tasStoppedTime = substr($row['tasStoppedTime'],11);
@@ -300,6 +301,7 @@ $tsinfo["quality"] = number_format($tasQuality,3);
 $tsinfo["dist_quality"] = number_format($tasDistQuality,3);
 $tsinfo["time_quality"] = number_format($tasTimeQuality,3);
 $tsinfo["launch_quality"] = number_format($tasLaunchQuality,3);
+$tsinfo["stop_quality"] = number_format($tasStopQuality,3);
 $tsinfo["comment"] = $tasComment;
 $tsinfo["offset"] = $comTOffset;
 $tsinfo["hbess"] = $tasHeightBonus;
@@ -344,6 +346,10 @@ $metric["day quality"] = number_format($tasQuality,3);
 $metric["dist_quality"] = number_format($tasDistQuality,3);
 $metric["time_quality"] = number_format($tasTimeQuality,3);
 $metric["launch_quality"] = number_format($tasLaunchQuality,3);
+if ($tasStoppedTime > 0)
+{
+    $metric["stop_quality"] = number_format($tasStopQuality,3);
+}
 $metric["pilot_safety"] = round($tsinfo['safety'], 1);
 $metric["pilot_quality"] = round($tsinfo['conditions']/10, 2);
 

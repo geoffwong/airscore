@@ -20,7 +20,7 @@ function included_comps($link,$ladPk)
     }
     $result = mysql_query($sql,$link);
     $comps = [];
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         // FIX: if not finished & no tracks then submit_track page ..
         // FIX: if finished no tracks don't list!
@@ -40,25 +40,29 @@ function taskcmp($a, $b)
     return ($a['name'] < $b['name']) ? -1 : 1;
 }
 
-function add_result(&$results, $row, $topnat, $how)
+function add_result(&$results, $row, $topnat, $how, $ladPk)
 {
+    if (!$topnat)
+    {
+        $topnat = 1000;
+    }
     $score = round($row['ladScore'] / $topnat);
     $validity = $row['tasQuality'] * 1000;
     $pilPk = $row['pilPk'];
     // $row['tasName'];
     $tasName = substr($row['comName'], 0, 5) . ' ' . substr($row['comDateTo'],0,4);
-    $fullName = substr($row['comName'], 0, 3) . substr($row['comDateTo'],2,2) . '&nbsp;' . substr($row['tasName'],0,1) . substr($row['tasName'], -1, 1);
+    $fullName = substr($row['comName'], 0, 3) . substr($row['comDateTo'],2,2) . '&nbsp;' .  str_replace(' ', '', $row['tasName']);
 
     if (!array_key_exists($pilPk,$results) || !$results[$pilPk])
     {
         $results[$pilPk] = [];
-        $results[$pilPk]['name'] = utf8_decode($row['pilFirstName'] . ' ' . $row['pilLastName']);
+        $results[$pilPk]['name'] = "<a href=\"comp_pilot.html?pilPk=$pilPk&ladPk=$ladPk\">" . utf8_decode($row['pilFirstName'] . ' ' . $row['pilLastName']) . "</a>";
         $results[$pilPk]['hgfa'] = $row['pilHGFA'];
         $results[$pilPk]['scores'] = [];
         //$results[$pilPk]['civl'] = $civlnum;
     }
     $perf = 0;
-    if ($how == 'ftv') 
+    if ($how == 'ftv' or $how == 'ftv-fixed') 
     {
         $perf = 0;
         if ($validity > 0)
@@ -80,8 +84,9 @@ function add_result(&$results, $row, $topnat, $how)
     return "${perf}${fullName}";
 }
 
-function ladder_result($ladPk, $ladder, $restrict)
+function ladder_result($ladPk, $ladder, $restrict, $altval)
 {
+    $class = $ladder['ladClass'];
     $start = $ladder['ladStart'];
     $end = $ladder['ladEnd'];
     $how = $ladder['ladHow'];
@@ -93,7 +98,7 @@ function ladder_result($ladPk, $ladder, $restrict)
             from tblTaskResult T, tblTrack TL, tblPilot P
             where T.traPk=TL.traPk and TL.pilPk=P.pilPk and P.pilNationCode='$nat'
             group by tasPk";
-    $result = mysql_query($sql) or die('Top National Query: ' . mysql_error());
+    $result = mysql_query($sql) or json_die('Top National Query: ' . mysql_error());
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $topnat[$row['tasPk']] = $row['topNat'];
@@ -105,10 +110,10 @@ function ladder_result($ladPk, $ladder, $restrict)
         TK.tasPk, TK.tasName, TK.tasDate, TK.tasQuality, 
         C.comName, C.comDateTo, LC.lcValue, 
         case when date_sub('$end', INTERVAL 365 DAY) > C.comDateTo 
-        then (TR.tarScore * LC.lcValue * 0.90 * TK.tasQuality) 
+        then (TR.tarScore * LC.lcValue * L.ladDepreciation * TK.tasQuality) 
         else (TR.tarScore * LC.lcValue * TK.tasQuality) end as ladScore, 
         (TR.tarScore * LC.lcValue * (case when date_sub('$end', INTERVAL 365 DAY) > C.comDateTo 
-            then 0.90 else 1.0 end) / (TK.tasQuality * LC.lcValue)) as validity
+            then L.ladDepreciation else 1.0 end) / (TK.tasQuality * LC.lcValue)) as validity
 from    tblLadderComp LC 
         join tblLadder L on L.ladPk=LC.ladPk
         join tblCompetition C on LC.comPk=C.comPk
@@ -120,23 +125,35 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
     and TP.pilNationCode=L.ladNationCode 
     order by TP.pilPk, C.comPk, (TR.tarScore * LC.lcValue * TK.tasQuality) desc";
 
-    $result = mysql_query($sql) or die('Ladder query failed: ' . mysql_error());
+    $result = mysql_query($sql) or json_die('Ladder query failed: ' . mysql_error());
     $results = [];
 
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
-        add_result($results, $row, $topnat[$row['tasPk']], $how);
+        add_result($results, $row, $topnat[$row['tasPk']], $how, $ladPk);
     }
 
     // Work out how much validity we want (not really generic)
-    $sql = "select sum(tasQuality)*1000 from tblLadderComp LC 
+
+    if ($how == 'ftv')
+    {
+        $sql = "select sum(tasQuality)*1000 from tblLadderComp LC 
         join tblLadder L on L.ladPk=LC.ladPk and LC.lcValue=450
         join tblCompetition C on LC.comPk=C.comPk
         join tblTask TK on C.comPk=TK.comPk
         WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'";
 
-    $result = mysql_query($sql) or die('Total quality query failed: ' . mysql_error());
-    $param = mysql_result($result,0,0) * $ladParam / 100 ;
+        $result = mysql_query($sql) or json_die('Total quality query failed: ' . mysql_error());
+        $param = mysql_result($result,0,0) * $ladParam / 100 ;
+    }
+    else 
+    {
+        $param = $ladParam;
+    }
+    if ($altval > 0)
+    {
+        $param = $altval;
+    }
 
     // Add external task results (to 1/3 of validity)
     if ($ladder['ladIncExternal'] > 0)
@@ -145,23 +162,23 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
         TP.pilPk, TP.pilLastName, TP.pilFirstName, TP.pilNationCode, TP.pilHGFA, TP.pilSex,
         TK.tasName, TK.tasQuality, TK.comName, TK.comDateTo, TK.lcValue, TK.tasTopScore,
         case when date_sub('$end', INTERVAL 365 DAY) > TK.comDateTo 
-        then (ER.etrScore * TK.lcValue * 0.90 * TK.tasQuality) 
+        then (ER.etrScore * TK.lcValue * TK.extDepreciation * TK.tasQuality) 
         else (ER.etrScore * TK.lcValue * TK.tasQuality) end as ladScore, 
         (ER.etrScore * TK.lcValue * (case when date_sub('$end', INTERVAL 365 DAY) > TK.comDateTo 
-            then 0.90 else 1.0 end) / (TK.tasQuality * TK.lcValue)) as validity
+            then TK.extDepreciation else 1.0 end) / (TK.tasQuality * TK.lcValue)) as validity
         from tblExtTask TK
         join tblExtResult ER on ER.extPk=TK.extPk
         join tblPilot TP on TP.pilPk=ER.pilPk
-WHERE TK.comDateTo > '$start' and TK.comDateTo < '$end'
+        WHERE TK.extClass='$class' and TK.comDateTo > '$start' and TK.comDateTo < '$end'
         $restrict
         order by TP.pilPk, TK.extPk, (ER.etrScore * TK.lcValue * TK.tasQuality) desc";
-        $result = mysql_query($sql) or die('Ladder query failed: ' . mysql_error());
+        $result = mysql_query($sql) or json_die('Ladder query failed: ' . mysql_error());
         while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
         {
-            $res = add_result($results, $row, $row['tasTopScore'], $how);
+            $res = add_result($results, $row, $row['tasTopScore'], $how, $ladPk);
         }
 
-        $filtered = filter_results($ladPk, $how, $param, $param * 0.33, $results);
+        $filtered = filter_results($ladPk, $how, $param, $param * $ladder['ladIncExternal'] / 100, $results);
     }
     else
     {
@@ -280,34 +297,6 @@ function filter_results($ladPk, $how, $param, $extpar, $results)
     return $sorted;
 }
 
-function output_ladder_list($ladder, $fdhv, $class)
-{
-    $rtable = [];
-    $rdec = [];
-
-    $hdr = [ fb('Name'),  fb('Nation'), fb('Start'), fb('End'), fb('Method') ];
-    $rtable[] = $hdr;
-    $rdec[] = 'class="h"';
-    $max = sizeof($ladder);
-
-    foreach ($ladder as $row)
-    {
-        $ladPk = $row['ladPk'];
-        $rtable[] = [ "<a href=\"ladder.php?ladPk=$ladPk\">" . $row['ladName'] . "</a>", $row['ladNationCode'], $row['ladStart'], $row['ladEnd'], $row['ladHow'] ];
-        if ($count % 2)
-        {
-            $rdec[] = 'class="d"';
-        }
-        else
-        {
-            $rdec[] = 'class="l"';
-        }
-        $count++;
-    }
-
-    //echo ftable($rtable, "border=\"0\" cellpadding=\"3\" alternate-colours=\"yes\" align=\"center\"", $rdec, '');
-}
-
 
 // Clean up the structure into one suitable for jquery datatable display
 function datatable_clean($sorted)
@@ -385,6 +374,8 @@ function datatable_clean($sorted)
 $ladPk = reqival('ladPk');
 $start = reqival('start');
 $class = reqsval('class');
+$altval = reqival('validity');
+error_log("altval=$altval");
 if ($start < 0)
 {
     $start = 0;
@@ -394,7 +385,7 @@ $link = db_connect();
 $isadmin = is_admin('admin',$usePk,-1);
 $title = 'highcloud.net';
 
-#$result = mysql_query("charset utf8") or die('UTF-8 setting failed: ' . mysql_error());
+#$result = mysql_query("charset utf8") or json_die('UTF-8 setting failed: ' . mysql_error());
 ini_set("default_charset", 'utf-8');
 
 if (reqexists('addladder'))
@@ -408,7 +399,7 @@ if (reqexists('addladder'))
     $param = reqival('param');
 
     $query = "insert into tblLadder (ladName, ladNationCode, ladStart, ladEnd, ladHow, ladParam) value ('$lname','$nation', '$start', '$end', '$method', $param)";
-    $result = mysql_query($query) or die('Ladder insert failed: ' . mysql_error());
+    $result = mysql_query($query) or json_die('Ladder insert failed: ' . mysql_error());
 }
 
 if (reqexists('addladcomp'))
@@ -424,7 +415,7 @@ if (reqexists('addladcomp'))
     else
     {
         $query = "insert into tblLadderComp (lcValue, ladPk, comPk) value ($sanction, $ladPk, $comPk)";
-        $result = mysql_query($query) or die('LadderComp insert failed: ' . mysql_error());
+        $result = mysql_query($query) or json_die('LadderComp insert failed: ' . mysql_error());
     }
 }
 
@@ -459,18 +450,26 @@ $clean = [];
 if ($ladPk < 1)
 {
     $query = "SELECT L.* from tblLadder L order by ladEnd desc";
-    $result = mysql_query($query) or die('Ladder query failed: ' . mysql_error());
+    $result = mysql_query($query) or json_die('Ladder query failed: ' . mysql_error());
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
+        if ($row['ladClass'] == "PG")
+        {
+            $img = '<img src="images/pg_symbol.png"></img>';
+        }
+        elseif ($row['ladClass'] == "HG")
+        {
+            $img = '<img src="images/hg_symbol.png"></img>';
+        }
         $clean[] = [ '<a href="ladder_result.html?ladPk=' . $row['ladPk'] . '">' . $row['ladName'] . '</a>', 
-            $row['ladNationCode'], $row['ladStart'], $row['ladEnd'], 
+            $row['ladNationCode'], $img, $row['ladStart'], $row['ladEnd'], 
             $row['ladHow'] . ' (' . $row['ladParam'] . ')' ];
     }
 }
 else
 {
     $query = "SELECT L.* from tblLadder L where ladPk=$ladPk";
-    $result = mysql_query($query) or die('Ladder query failed: ' . mysql_error());
+    $result = mysql_query($query) or json_die('Ladder query failed: ' . mysql_error());
     $row = mysql_fetch_array($result, MYSQL_ASSOC);
     if ($row)
     {
@@ -484,10 +483,10 @@ else
 if ($ladPk > 0)
 {
     //output_ladder($ladPk, $ladder, $fdhv, $class);
-    $sorted = ladder_result($ladPk, $ladder, $fdhv);
+    $sorted = ladder_result($ladPk, $ladder, $fdhv, $altval);
     $ladder['totValidity'] = round($sorted['validity'],0);
     $included = included_comps($link, $ladPk);
-    $clean = datatable_clean($sorted['filtered']);
+    $clean = datatable_clean($sorted['filtered'], $ladPk);
 }
 
 

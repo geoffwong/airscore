@@ -59,7 +59,6 @@ foreach ($keys as $key => $value)
     unset($compinfo[$key]);
 }
 
-
 $scoring = [];
 $scoring['comType'] = $compinfo['comType'];
 $scoring['comSanction'] = $compinfo['comSanction'];
@@ -90,7 +89,10 @@ unset($formula['forHBESS']);
 unset($compinfo['comStyleSheet']);
 unset($compinfo['TotalValidity']);
 
+$regions = get_all_regions($link);
+//$compinfo['comWaypoints'] = $regions[$keys['regPk']];
+$compinfo['comWaypoints'] = $keys['regPk'];
 
-$data = [ 'keys' => $keys, 'compinfo' => $compinfo, 'taskinfo' => $taskinfo, 'formula' => $formula, 'scoring' => $scoring ];
+$data = [ 'keys' => $keys, 'compinfo' => $compinfo, 'taskinfo' => $taskinfo, 'formula' => $formula, 'scoring' => $scoring, 'regions' => $regions ];
 print json_encode($data);
 ?>

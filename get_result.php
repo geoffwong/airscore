@@ -327,7 +327,7 @@ if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $com
 }
 else
 {
-    $civilised = get_olc_result($link, $comPk, $compinfo['comOverallParam'], '');
+    $civilised = get_olc_result($link, $comPk, $compinfo, '');
     $compinfo['forClass'] = 'OLC'; 
     # $compinfo['forVersion'] = ''; 
 }

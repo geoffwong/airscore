@@ -17,7 +17,7 @@ function hcincludedcomps($link,$ladPk)
     }
     $result = mysql_query($sql,$link);
     $comps = [];
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         // FIX: if not finished & no tracks then submit_track page ..
         // FIX: if finished no tracks don't list!
@@ -79,6 +79,7 @@ function add_result(&$results, $row, $topnat, $how)
 
 function ladder_result($ladPk, $ladder, $restrict)
 {
+    $class = $ladder['ladClass'];
     $start = $ladder['ladStart'];
     $end = $ladder['ladEnd'];
     $how = $ladder['ladHow'];
@@ -148,7 +149,7 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
         from tblExtTask TK
         join tblExtResult ER on ER.extPk=TK.extPk
         join tblPilot TP on TP.pilPk=ER.pilPk
-WHERE TK.comDateTo > '$start' and TK.comDateTo < '$end'
+        WHERE TK.extClass='$class' and TK.comDateTo > '$start' and TK.comDateTo < '$end'
         $restrict
         order by TP.pilPk, TK.extPk, (ER.etrScore * TK.lcValue * TK.tasQuality) desc";
         $result = mysql_query($sql) or die('Ladder query failed: ' . mysql_error());
@@ -157,7 +158,7 @@ WHERE TK.comDateTo > '$start' and TK.comDateTo < '$end'
             $res = add_result($results, $row, $row['tasTopScore'], $how);
         }
 
-        return filter_results($ladPk, $how, $param, $param * 0.33, $results);
+        return filter_results($ladPk, $how, $param, $param * $ladder['ladIncExternal'] / 100, $results);
     }
 
     return filter_results($ladPk, $how, $param, 0, $results);
@@ -558,7 +559,7 @@ if ($ladPk > 0)
     {
         echo "<br><br>";
         echo "<form action=\"ladder.php?ladPk=$ladPk\" name=\"ladadmin\" method=\"post\">";
-        $query = "select C.comPk, C.comName from tblCompetition C, tblLadder L where L.ladPk=$ladPk and C.comDateFrom between L.ladStart and L.ladEnd";
+        $query = "select C.comPk, C.comName from tblCompetition C, tblLadder L where L.ladPk=$ladPk and C.comDateTo between L.ladStart and L.ladEnd";
         $result = mysql_query($query) or die('Ladder query failed: ' . mysql_error());
         $comparr = [];
         while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
@@ -591,7 +592,7 @@ else
             array(
                 array('Name:', fin('lname','', 20), 'Nation:', fselect('nation', '', array('AUS', 'NZL'))),
                 array('Start Date:', fin('sdate', '', 10), 'End Date:', fin('edate', '', 10) ),
-                array('Scoring:', fselect('method', '', array('all', 'ftv', 'round', 'round-perc' )), 'Score param:', fin('param',0, 10)),
+                array('Scoring:', fselect('method', '', array('fixed', 'ftv', 'ftv-fixed', 'comp' )), 'Score param:', fin('param',0, 10)),
             ), '', '', ''
         );
     

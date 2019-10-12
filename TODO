@@ -11,6 +11,9 @@ Task distance computation:
       (of course that could mean people making the same waypoint have different distances)
     - where optimal waypoint inside a cylinder, choose the cylinder boundary closest to start as SR distance?
 
+Ladder Result:
+    - should be cached in a result table so it doesn't change if the formula change ..
+
 UI:
     - update to use bootstrap - more mobile friendly? (although JS heavy)
 

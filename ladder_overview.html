@@ -41,13 +41,89 @@
       </div>
     </nav>
 
+    <!-- Modal -->
+	<div class="modal fade" id="laddermodal" tabindex="-1" role="dialog" aria-labelledby="ladderModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Create Ladder</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createladder" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row">
+			  	<label for="laddername" class="col-2 col-form-label">Name</label>
+			    <div class="col-10">
+                    <input type="text" class="form-control mb-2" id="laddername" placeholder="Ladder Name">
+			    </div>
+		    </div>
+			<div class="form-row">
+			  <label for="date-from" class="col-2 1ol-form-label">From</label>
+			  <div class="col-10">
+			    <input class="form-control" type="date" value="2019-07-01" id="datefrom">
+			  </div>
+			  <label for="date-to" class="col-2 col-form-label">To</label>
+			  <div class="col-10">
+			    <input class="form-control" type="date" value="2020-06-30" id="dateto">
+			  </div>
+			</div>
+		    <div class="form-row">
+			  	<label for="nation" class="col-2 col-form-label">Nation</label>
+			    <div class="col-4">
+                    <select name="nation" id="nation" class="form-control" placeholder="AUS">
+                    <option value="AUS" selected>AUS</option>
+                    <option value="NZL">NZL</option>
+                    </select>
+			    </div>
+			  	<label for="class" class="col-2 col-form-label">Class</label>
+			    <div class="col-4">
+                    <select name="compclass" id="compclass" class="form-control" placeholder="PG">
+                    <option value="PG" selected>PG</option>
+                    <option value="HG">HG</option>
+                    </select>
+			    </div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="scoring" class="col-2 col-form-label">Scoring</label>
+			    <div class="col-4">
+                    <select name="method" id="method" class="form-control" placeholder="Scoring Method">
+                    <option value="fixed">Fixed</option>
+                    <option value="ftv" selected>FTV (%AAA)</option>
+                    <option value="ftv-fixed">FTV (fixed)</option>
+                    </select>
+			    </div>
+			  	<label for="param" class="col-2 col-form-label">Param</label>
+			    <div class="col-4">
+                    <input type="text" class="form-control mb-2" id="param" placeholder="Scoring Param">
+			    </div>
+		    </div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="add_ladder();">Create</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+	</div>
+
     <div class="container" id="main">
     <br>
+    <div class="row">
+    <button type="button" id="cbutton" class="btn btn-primary mt-3" data-toggle="modal" data-target="#laddermodal">Create</button>
+    </div>
     <table id="ladders" class="row-border stripe compact mb-1" cellspacing="0" width="100%">
     <thead>
         <tr>
             <th>Ladder</th>
             <th>Nation</th>
+            <th>Class</th>
             <th>From</th>
             <th>To</th>
             <th>Method</th>

@@ -100,6 +100,32 @@ function get_taskwaypoints($link,$tasPk)
     return $ret;
 }
 
+function get_all_regions($link)
+{
+	$regarr = [];
+	$sql = "SELECT * FROM tblRegion R order by regDescription";
+	$result = mysql_query($sql,$link);
+	while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+	{
+		$id = $row['regPk'];
+		$regarr[$id] = $row['regDescription'];
+	}
+
+	return $regarr;
+}
+
+function get_comp_region($link, $comPk)
+{
+    $sql = "select regPk from tblCompetition where comPk=$comPk";
+    $result = mysql_query($sql,$link) or die('Region query failed: ' . mysql_error());
+    if (!$row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+        die('No region associated with competition');
+        return;
+    }
+    return get_region($link, $row['regPk'], 0);
+}
+
 function get_region($link, $regPk, $trackid)
 {
     // task info ..

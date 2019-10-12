@@ -80,6 +80,7 @@ create table tblComTaskTrack
     comPk               integer not null,
     tasPk               integer,
     traPk               integer not null,
+    traScore            float default 0.0,
     index indTrack (traPk)
 );
 
@@ -612,11 +613,14 @@ create table tblLadder
     ladStart        date,
     ladEnd          date,
     ladNationCode   varchar(3),
-    ladHow          enum ('fixed', 'ftv', 'comp') default 'fixed',
+    ladClass        enum('PG','HG') default 'PG', 
+    ladHow          enum ('fixed', 'ftv', 'comp', 'ftv-fixed') default 'fixed',
     ladParam        integer default 10,
     ladIncExternal  integer default 0,
     ladImageM       varchar(128),
-    ladImageF       varchar(128)
+    ladImageF       varchar(128),
+    ladTotalValdity integer default 0,
+    ladLocked       integer default 0
 );
 
 create table tblLadderComp
@@ -626,6 +630,16 @@ create table tblLadderComp
     ladPk       integer,
     comPk       integer
 );
+
+create table tblLadderResult
+{
+    lcPk        integer not null primary key auto_increment,
+    ladPk       integer,
+    pilPk       integer,
+    tasPk       integer,
+    ldrResult   float,
+    ldrValidity float
+}
 
 create table tblExtTask
 (

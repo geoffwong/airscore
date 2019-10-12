@@ -885,6 +885,11 @@ sub validate_task
         printf "Warning: somehow the distance ($dist_flown) is < 0\n";
         $dist_flown = 0;
     }
+    if ($dist_flown < $startssdist)
+    {
+        $coeff = 0;
+        $coeff2 = 0;
+    }
 
     $result{'start'} = 0+$starttime;
     $result{'goal'} = $goaltime;

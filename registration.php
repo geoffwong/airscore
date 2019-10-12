@@ -159,7 +159,7 @@ if ($cat != '')
     $sql = "SELECT P.* FROM tblPilot P where P.pilLastName like '$cat%' order by P.pilLastName";
     $result = mysql_query($sql,$link) or die('Pilot select failed: ' . mysql_error());
 
-    while($row = mysql_fetch_array($result))
+    while($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $id = $row['pilPk'];
         $lname = $row['pilLastName'];

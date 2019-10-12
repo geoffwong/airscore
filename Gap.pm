@@ -5,7 +5,7 @@
 # Determines how much of a task (and time) is completed
 # given a particular competition / task 
 # 
-# Geoff Wong 2007
+# Geoff Wong 2007-2019
 #
 package Gap;
 
@@ -88,6 +88,7 @@ sub task_totals
     my ($minarr, $maxarr, $fastest, $firstdep, $mincoeff, $tqtime);
     my $launchvalid;
     my $median;
+    my $avdist;
     my $stddev;
     my @distspread;
     my $landed;
@@ -169,7 +170,7 @@ sub task_totals
     }
 
     # FIX: lead out coeff - first departure in goal and adjust min coeff 
-    $sth = $dbh->prepare("select min(tarLeadingCoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarLeadingCoeff is not NULL");
+    $sth = $dbh->prepare("select min(tarLeadingCoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarLeadingCoeff is not NULL and tarLeadingCoeff > 0");
     $sth->execute();
     $mincoeff = 0;
     if ($ref = $sth->fetchrow_hashref())
@@ -212,6 +213,15 @@ sub task_totals
     }
     #print "Median=$median\n";
 
+    # Find the average distance
+    $sth = $dbh->prepare("select avg(TR.tarDistance) AS avdist FROM tblTaskResult TR where tasPk=$tasPk and tarResultType not in ('abs', 'dnf')");
+    $sth->execute();
+    if ($ref = $sth->fetchrow_hashref()) 
+    {
+        $avdist = $ref->{'avdist'};
+    }
+    print "Avdist=$avdist\n";
+
     
     # Find the distance spread
     if ($formula->{'diffcalc'} eq 'lo')
@@ -243,6 +253,7 @@ sub task_totals
     $taskt{'maxdist'} = $maxdist;
     $taskt{'distance'} = $totdist;
     $taskt{'median'} = $median;
+    $taskt{'avdist'} = $avdist;
     $taskt{'stddev'} = $stddev;
     #$taskt{'taskdist'} = $taskdist;
     $taskt{'landed'} = $landed;
@@ -278,6 +289,7 @@ sub day_quality
     my $launch = 0;
     my $distance = 0;
     my $time = 0;
+    my $stopped = 0;
     my $topspeed;
     my $x;
 
@@ -291,7 +303,7 @@ sub day_quality
 
     $x = $taskt->{'launched'}/($taskt->{'pilots'}*$formula->{'nomlaunch'});
     $launch  = 0.028*$x + 2.917*$x*$x - 1.944*$x*$x*$x;
-    if ($launch > 1) 
+    if ($x > 1 or $launch > 1) 
     {
         $launch = 1;
     }
@@ -348,7 +360,30 @@ sub day_quality
         $time = 0.1;
     }
 
-    return ($distance,$time,$launch,1.0);
+    if ($taskt->{'stopped'} > 0)
+    {
+        # should check version of GAP here > 2017(?) - else 1.0
+		if ($taskt->{'maxdist'} >= $taskt->{'endssdistance'})
+		{
+			$stopped = 1;
+		}
+		else
+		{
+        	$stopped = sqrt(($taskt->{'maxdist'} - $taskt->{'avdist'}) / ($taskt->{'endssdistance'} - $taskt->{'maxdist'} + 1) * sqrt($taskt->{'stddev'} / 5000)) + ($taskt->{'landed'}/$taskt->{'launched'})**3;
+
+		}
+
+        print "stopped quality (stddev=", $taskt->{'stddev'}, " endssdist=", $taskt->{'endssdistance'}," landed=", $taskt->{'landed'}, " launched=", $taskt->{'launched'}, " maxdist=", $taskt->{'maxdist'}, " avdist=", $taskt->{'avdist'}, ")=$stopped\n";
+        if ($stopped > 1)
+        {
+            $stopped = 1;
+        }
+    }
+    else
+    {
+        $stopped = 1;
+    }
+    return ($distance,$time,$launch,$stopped);
 }
 
 
@@ -462,7 +497,7 @@ sub calc_kmdiff
 
         $x = $x + $kmdiff->[$dif];
         # Use only landed-out pilots or all pilots for difficulty?
-        if ($formula->{'diffcalc'} eq 'lo' && $Nlo > 0)
+        if ($formula->{'diffcalc'} eq 'lo' and $Nlo > 0)
         {
             $rdif = $x/$Nlo;
         }
@@ -564,7 +599,7 @@ sub pilot_departure_leadout
             #print "Astart=$Astart PKM=", Dumper($pil->{'kmmarker'});
             for my $km (1..scalar(@tmarker))
             {
-                if ($pil->{'kmmarker'}->[$km] > 0 && $tmarker[$km] > 0)
+                if ($pil->{'kmmarker'}->[$km] > 0 and $tmarker[$km] > 0)
                 {
                     #$x = 1 - ($pil->{'kmmarker'}->[$km] - $tmarker[$km]) / ($tmarker[$km]/4);
                     $x = 1 - ($pil->{'kmmarker'}->[$km] - $tmarker[$km]) / 600;
@@ -594,8 +629,8 @@ sub pilot_departure_leadout
     {
         # Normal departure points ..
         $x = ($pil->{'startSS'} - $taskt->{'firstdepart'})/$formula->{'nomtime'};
-        # print "    normal departure x=$x\n";
-        if ($x < 1/2 && $pil->{'time'} > 0)
+        print "    normal departure ss=", $pil->{'startSS'}, " firstdep=", $taskt->{'firstdepart'}, "x=$x\n";
+        if ($x < 1/2 and $pil->{'time'} > 0)
         {
             my $Pspeed = $self->pilot_speed($formula, $task, $taskt, $pil, $Aspeed);
 
@@ -742,7 +777,7 @@ sub ordered_results
         $taskres{'stopalt'} = $ref->{'tarLastAltitude'};
         # set pilot to min distance if they're below that ..
         # print "sstopped=", $task->{'sstopped'}, " stopalt=", $taskres{'stopalt'}, " glidebonus=", $formula->{'glidebonus'}, "\n";
-        if ($task->{'sstopped'} > 0 && $taskres{'stopalt'} > 0 && $formula->{'glidebonus'} > 0)
+        if ($task->{'sstopped'} > 0 and $taskres{'stopalt'} > 0 and $formula->{'glidebonus'} > 0)
         {
             print "Stopped height bonus: ", $formula->{'glidebonus'} * $taskres{'stopalt'}, "\n";
             if ($taskres{'stopalt'} > $task->{'goalalt'})

@@ -117,7 +117,7 @@ sub day_quality
 		}
 		else
 		{
-        	$stopped = sqrt(($taskt->{'maxdist'} - $taskt->{'median'}) / ($taskt->{'endssdistance'} - $taskt->{'maxdist'} + 1) * sqrt($taskt->{'stddev'} / 5)) + ($taskt->{'landed'}/$taskt->{'launched'})**3;
+        	$stopped = sqrt(($taskt->{'maxdist'} - $taskt->{'median'}) / ($taskt->{'endssdistance'} - $taskt->{'maxdist'} + 1) * sqrt($taskt->{'stddev'} / 5000)) + ($taskt->{'landed'}/$taskt->{'launched'})**3;
 		}
 
         print "stopped quality (stddev=", $taskt->{'stddev'}, " endssdist=", $taskt->{'endssdistance'}," landed=", $taskt->{'landed'}, " median=", $taskt->{'median'}, ")=$stopped\n";
@@ -188,7 +188,15 @@ sub points_weight
     my $leading = $formula->{'weightstart'} * 1000;
 
     $x = $taskt->{'goal'} / $taskt->{'launched'};
-    $distweight = 1-0.8*sqrt($x);
+    if ($formula->{'weightdist'} eq 'post2014')
+    {
+        $distweight = 0.9-1.665*$x+1.713*$x*$x-0.587*$x*$x*$x;
+    }
+    else
+    {
+        $distweight = 1-0.8*sqrt($x);
+    }
+
     my $Fversion = $formula->{'version'};
     
     # need to rescale if depart / arrival are "off"

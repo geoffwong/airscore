@@ -2,35 +2,50 @@
 
 function dhv2en($dhv)
 {
+    $res = 'CCC';
+
     if ($dhv == 'competition')
     {
-        $dhv = 'CCC';
+        $res = 'CCC';
     }
-    elseif ($dhv == '2/3' || $dhv == "rigid")
+    elseif ($dhv == '2/3')
     {
-        $dhv = 'D';
+        $res = 'D';
     }
-    elseif ($dhv == '2' || $dhv == "open")
+    elseif ($dhv == '2')
     {
-        $dhv = 'C';
+        $res = 'C';
     }
-    elseif ($dhv == '1/2' || $dhv == "kingpost")
+    elseif ($dhv == '1/2')
     {
-        $dhv = 'B';
+        $res = 'B';
     }
-    else
+    elseif ($dhv == "floater")
     {
-        $dhv = 'A';
+        $res = 'F';
+    }
+    elseif ($dhv == "kingpost")
+    {
+        $res = 'G';
+    }
+    elseif ($dhv == "open")
+    {
+        $res = 'H';
+    }
+    elseif ($dhv == "rigid")
+    {
+        $res = 'I';
     }
 
-    return $dhv;
+    return $res;
 }
 
-function olc_sort($result,$top)
+function olc_sort($result,$info)
 {
     $lastpil = 0;
     $topscores = [];
     $toptasks = [];
+    $top = $info['comOverallParam'];
 
     // fetch the rows from the db
     while ($row = mysql_fetch_array($result,MYSQL_ASSOC))
@@ -77,14 +92,14 @@ function olc_sort($result,$top)
 
     return $topscores;
 }
-function olc_result($link,$comPk,$top,$restrict)
+function olc_result($link,$comPk,$info,$restrict)
 {
     $sql = "SELECT P.*, T.traPk, T.traScore as adjScore, T.traDHV FROM tblTrack T, tblPilot P, tblComTaskTrack CTT where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk and T.traScore is not null $restrict order by P.pilPk, T.traScore desc";
     $result = mysql_query($sql,$link) or die('olc_result: ' . mysql_error());
 
-    return olc_sort($result,$top);
+    return olc_sort($result,$info);
 }
-function olc_handicap_result($link,$top,$restrict)
+function olc_handicap_result($link,$info,$restrict)
 {
     $sql = "SELECT P.*, T.traPk, (T.traScore * H.hanHandicap) as adjScore FROM 
                 tblTrack T, tblPilot P, tblComTaskTrack CTT, 
@@ -96,11 +111,11 @@ function olc_handicap_result($link,$top,$restrict)
             order by P.pilPk, T.traScore desc";
     $result = mysql_query($sql,$link) or die('Top score: ' . mysql_error());
 
-    return olc_sort($result,$top);
+    return olc_sort($result,$info);
 }
-function get_olc_result($link, $comPk, $top, $restrict)
+function get_olc_result($link, $comPk, $info, $restrict)
 {
-    $sorted = olc_result($link, $comPk, $top, $restrict);
+    $sorted = olc_result($link, $comPk, $info, $restrict);
 
     $count = 1;
     $lastcount = 1;
@@ -130,7 +145,14 @@ function get_olc_result($link, $comPk, $top, $restrict)
         $nxt[] = ''; //$arr['sponsor'];
         $nxt[] = ''; //$arr['glider'];
         $nxt[] = $arr['dhv'];
-        $nxt[] = "<b>" . round(0+$arr['total']/1000, 1) . "</b>";
+        if ($info['forVersion'] == 'airgain-count')
+        {
+            $nxt[] = "<a href=\"airgain_map.html?comPk=$comPk&pilPk=" . $arr['pilpk'] . "\">" . round(0+$arr['total']/1000, 1) . "</a>";
+        }
+        else
+        {
+            $nxt[] = "<b>" . round(0+$arr['total']/1000, 1) . "</b>";
+        }
         
         $taskcount = 0;
 
