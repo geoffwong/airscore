@@ -45,20 +45,6 @@ function create_task()
                 }
             }
         });
-    $.post('add_task.php', options, function (res) {
-        console.log(res);
-
-        var url;
-        var tasPk = res.tasPk;
-        if (!comPk || res.result != "ok")
-        {
-            alert(res.result + ": " + res.error);
-            return;
-        }
-        url = 'task.html?comPk=' + comPk + '&tasPk=' + tasPk;
-        console.log(url);
-        window.location.replace(url);
-    });
 }
 function updated_compinfo(result)
 {
@@ -247,18 +233,28 @@ function task_card(info)
 function region_modal(info,regPk)
 {
     var res = '<select id="region" class="form-control">';
-    var allkeys = Object.keys(info);
-    var values = Object.values(info);
+    var array = [];
 
-    for (nc = 0; nc < allkeys.length; nc++)
+    for (var key in info) {
+      array.push({
+        name: key,
+        value: info[key]
+      });
+    }
+
+    var sorted = array.sort(function(a, b) {
+        return (a.value > b.value) ? 1 : ((b.value > a.value) ? -1 : 0)
+    });	
+
+    for (nc = 0; nc < sorted.length; nc++)
     {
-        if (regPk == allkeys[nc])
+        if (regPk == sorted[nc].key)
         {
-            res += '<option value="' + allkeys[nc] + '" selected>' + values[nc] + '</option>';
+            res += '<option value="' + sorted[nc].key + '" selected>' + sorted[nc].value + '</option>';
         }
         else
         {
-            res += '<option value="' + allkeys[nc] + '">' + values[nc] + '</option>';
+            res += '<option value="' + sorted[nc].key + '">' + sorted[nc].value + '</option>';
         }
     }
     res += '</select>';

@@ -8,7 +8,7 @@ require_once 'dbextra.php';
 require_once 'xcdb.php';
 
 
-function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte)
+function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
 {
     $taskin = file_get_contents($tmpfile, false, NULL, 0, 10000);
     $taskjson = json_decode($taskin, true);
@@ -46,6 +46,10 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte)
         // add one day 
     }
 
+    $start = gmdate('H:i:s', strtotime($start) - strtotime('TODAY') + $offset*3600);
+    $finish = gmdate('H:i:s', strtotime($finish) - strtotime('TODAY') + $offset*3600);
+    error_log("  $dte start=$start finish=$finish");
+
     // insert a task sub
     $query = "insert into tblTask (comPk, tasName, tasDate, tasTaskStart, tasFinishTime, tasStartTime, tasStartCloseTime, tasSSInterval, tasTaskType, regPk, tasDeparture, tasArrival) values ($comPk, '$name', '$dte', '$dte $start', '$dtef $finish', '$dte $start', '$dtef $finish', 0, 'race', $regPk, 'kmbonus', 'off')";
     $result = mysql_query($query, $link) or json_die('Add task failed: ' . mysql_error());
@@ -55,6 +59,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte)
     // insert the turnpoints
     $waypoints = $taskjson['turnpoints'];
     $num = 10;
+    $wtype = "'waypoint'";
     foreach ($waypoints as $wpt)
     {
         $rwpPk = $regid[$wpt['waypoint']['name']];
@@ -80,14 +85,15 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte)
         $wshape = "'circle'";
         if ($wtype == "'speed'")
         {
-            $whow = $how[$wpt['sss']['direction']];   
+            $whow = $how[$taskjson['sss']['direction']];   
         }
         elseif ($wtype == "'goal'")
         {
-            $wshape = $shape[$wpt['goal']['type']];   
+            $wshape = $shape[$taskjson['goal']['type']];   
         }
         $query = "insert into tblTaskWaypoint (tasPk, rwpPk, tawNumber, tawType, tawHow, tawShape, tawRadius) values ($tasPk, $rwpPk, $num, $wtype, $whow, $wshape, $radius)";
-        $result = mysql_query($query) or json_die('Failed to copy task waypoints ' . mysql_error());
+        error_log($query);
+        $result = mysql_query($query) or json_die('Failed to add task waypoints ' . mysql_error());
         $num = $num + 10;
     }
 
@@ -95,7 +101,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte)
     return $tasPk;
 }
 
-function add_task($link, $comPk, $name)
+function add_task($link, $comPk, $name, $offset)
 {
     $date = reqsval('date');
     $region = reqival('region');
@@ -104,7 +110,7 @@ function add_task($link, $comPk, $name)
     if ($name == '')
     {
         json_die('Can\'t create a task with no name');
-   		exit(0);
+        return;
     }
 
     $tmpfile = $_FILES['userfile']['tmp_name'];
@@ -114,7 +120,7 @@ function add_task($link, $comPk, $name)
         copy($_FILES['userfile']['tmp_name'], $copyname);
         chmod($copyname, 0644);
         // Process the file
-        $tasPk = add_xctrack_task($link, $tmpfile, $comPk, $name, $region, $date);
+        $tasPk = add_xctrack_task($link, $tmpfile, $comPk, $name, $region, $date, $offset);
     }
 
     if ($tasPk == 0)
@@ -172,7 +178,9 @@ if (!is_admin('admin',$usePk,$comPk))
    return;
 }
 
-$tasPk = add_task($link, $comPk, $name);
+$comformula = get_comformula($link, $comPk);
+$offset = $comformula['comTimeOffset'];
+$tasPk = add_task($link, $comPk, $name, $offset);
 
 $res['result'] = 'ok';
 $res['tasPk'] = $tasPk;

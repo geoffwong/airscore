@@ -73,16 +73,16 @@ function comp_result($comPk, $cls)
         if (!array_key_exists($pilPk,$results) || !$results[$pilPk])
         {
             $results[$pilPk] = [];
-            $results[$pilPk]['name'] = $row['pilFirstName'] . ' ' . $row['pilLastName'];
+            $results[$pilPk]['name'] = utf8_encode($row['pilFirstName'] . ' ' . $row['pilLastName']);
             $results[$pilPk]['hgfa'] = $pilnum;
             $results[$pilPk]['civl'] = $civlnum;
             $results[$pilPk]['nation'] = $nation;
-            $results[$pilPk]['glider'] = $glider;
+            $results[$pilPk]['glider'] = utf8_encode(htmlspecialchars($glider));
             $results[$pilPk]['dhv'] = dhv2en($dhv);
             $results[$pilPk]['gender'] = $gender;
             $results[$pilPk]['tasks'] = [];
         }
-        //echo "pilPk=$pilPk tasname=$tasName, result=$score<br>\n";
+        #echo "pilPk=$pilPk tasname=$tasName, result=$score<br>\n";
         $perf = 0;
         if ($how == 'ftv') 
         {
