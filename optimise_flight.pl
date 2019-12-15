@@ -1242,6 +1242,7 @@ if ($tasPk > 0 and ($task->{'type'} ne 'airgain'))
 }
 
 $dbh->do("update tblTrack set traLength=?, traScore=? where traPk=?", undef, $totlen, $score, $traPk);
+$dbh->do("update tblComTaskTrack set cttScore=? where traPk=? and comPk=?", undef, $score, $traPk, $comPk);
 
 print "traPk=$traPk\n";
 

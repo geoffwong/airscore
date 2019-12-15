@@ -80,7 +80,7 @@ create table tblComTaskTrack
     comPk               integer not null,
     tasPk               integer,
     traPk               integer not null,
-    traScore            float default 0.0,
+    cttScore            float default 0.0,
     index indTrack (traPk)
 );
 

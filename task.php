@@ -324,7 +324,7 @@ if (reqexists('add'))
     {
         $sql = "SELECT max(tawNumber) as maxNum FROM tblTaskWaypoint where tasPk=$tasPk";
         $result = mysql_query($sql,$link);
-        $row = mysql_fetch_array($result);
+        $row = mysql_fetch_array($result, MYSQL_ASSOC);
         $waynum = 1 + $row['maxNum'];
     }
     $query = "insert into tblTaskWaypoint (tasPk, rwpPk, tawNumber, tawType, tawHow, tawShape, tawTime, tawRadius) values ($tasPk, $rwppk, $waynum, '$waytype', '$how', '$shape', 0, $radius)";
@@ -375,7 +375,7 @@ if (reqexists('update'))
     }
 }
 
-$tasktypes = array (
+$tasktypes = [
     'RACE' => 'race',
     'olc' => 'olc',
     'speedrun' => 'speedrun',
@@ -385,7 +385,7 @@ $tasktypes = array (
     'free-pin' => 'free-pin',
     'airgain' => 'airgain',
     'aat' => 'aat'
-);
+];
 
 echo "<form action=\"task.php?tasPk=$tasPk\" name=\"taskadmin\" method=\"post\">";
 echo "<p><table>";

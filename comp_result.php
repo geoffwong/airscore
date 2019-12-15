@@ -5,7 +5,7 @@ function overall_handicap($comPk, $how, $param, $cls, $link)
     $sql = "select T.tasPk, max(TR.tarScore) as maxScore from tblTask T, tblTaskResult TR where T.tasPk=TR.tasPk and T.comPk=$comPk group by T.tasPk";
     $result = mysql_query($sql, $link) or die('Handicap maxscore failed: ' . mysql_error());
     $maxarr = [];
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $maxarr[$row['tasPk']] = $row['maxScore'];
     }
@@ -15,7 +15,7 @@ function overall_handicap($comPk, $how, $param, $cls, $link)
 
     $result = mysql_query($sql, $link) or die('Task result query failed: ' . mysql_error());
     $results = [];
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $tasPk = $row['tasPk'];
         if ($row['tasTaskType'] == 'free-pin')
@@ -212,6 +212,7 @@ if ($start < 0)
 }
 $link = db_connect();
 $title = 'highcloud.net';
+$comOverall = 'all';
 
 $query = "SELECT T.*,F.* FROM tblCompetition T left outer join tblFormula F on F.comPk=T.comPk where T.comPk=$comPk";
 $result = mysql_query($query, $link) or die('Comp query failed: ' . mysql_error());
@@ -515,7 +516,10 @@ else if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' ||
             if (array_key_exists($name, $arr))
             {
                 $score = $arr[$name]['score'];
-                $perc = round($arr[$name]['perc'], 0);
+                if (array_key_exists('perc', $arr[$name]))
+                {
+                    $perc = round($arr[$name]['perc'], 0);
+                }
             }
             if (!$score)
             {

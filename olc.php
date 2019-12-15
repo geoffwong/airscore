@@ -68,6 +68,7 @@ function olc_handicap_result($link,$top,$restrict)
 }
 function display_olc_result($comPk, $rtable, $sorted, $top, $count)
 {
+    $start = 0;
     $rdec = [];
     $rdec[] = 'class="h"';
     $rdec[] = 'class="h"';

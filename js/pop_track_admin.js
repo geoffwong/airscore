@@ -1,19 +1,30 @@
 
+var track_to_delete;
+var rowind_to_delete;
+
 function del_track(div, id)
 {
     var options = { };
-    options.tasPk = tasPk;
-    options.id = id;
+    //options.tasPk = tasPk;
+    options.traPk = track_to_delete;
+    options.comPk = url_parameter('comPk');
     console.log(options);
 
-    $.post('del_track.php', options, function (res) {
+    $.post('delete_track.php', options, function (res) {
         console.log(res);
 
         var url;
-        if (res.result == "unauthorised")
+        if (res.result == "ok")
         {
+            var comPk = options.comPk;
+            var jrow = $('#tracks tr:eq('+rowind_to_delete+')').remove();
+            return;
         }
-        else if (!tawPk || res.result != "ok")
+        else if (res.result == "unauthorised")
+        {
+            alert("Unauthorised to delete track");
+        }
+        else if (res.result != "ok")
         {
             alert(res.result + ": " + res.error);
             return;
@@ -23,9 +34,11 @@ function del_track(div, id)
     // delete from table ..  
 }
 
-function confirm_del_track(div)
+function confirm_del_track(div, trackid)
 {
-    var rowind = div.parentNode.rowIndex;
+    rowind_to_delete = div.parentNode.parentNode.parentNode.rowIndex;
+    console.log('rowind='+rowind_to_delete);
+    track_to_delete = trackid;
 
     $("#deltrack").modal();
 }
@@ -42,7 +55,7 @@ $(document).ready(function() {
         //"columnDefs": [ { "targets": [ 0 ], "visible": false } ],
         "createdRow": function( row, data, index, cells )
         {
-            cells[5].innerHTML = '<b><a href="#/" onclick="confirm_del_track(this);">&cross;</a></b>';
+            cells[5].innerHTML = '<b><a href="#/" onclick="confirm_del_track(this,'+data[0]+');">&cross;</a></b>';
         }
     });
 });
