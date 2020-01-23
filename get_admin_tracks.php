@@ -24,7 +24,7 @@ function get_tracks($link, $comPk, $limit)
         {
             #$sql = "SELECT T.*, P.* FROM tblTaskResult CTT left join tblTrack T on CTT.traPk=T.traPk left outer join tblPilot P on T.pilPk=P.pilPk where CTT.tasPk in (select tasPk from tblTask TK where TK.comPk=$comPk) order by T.traStart desc";
             $sql = "(
-                    SELECT T.traPk, T.traStart, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, $comPk, CTT.tasPk 
+                    SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, $comPk, CTT.tasPk 
                         from tblTrack T
                         left outer join tblTaskResult CTT on CTT.traPk=T.traPk 
                         left outer join tblPilot P on T.pilPk=P.pilPk 
@@ -32,7 +32,7 @@ function get_tracks($link, $comPk, $limit)
                 )
                 union
                 (
-                    SELECT T.traPk, T.traStart, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk 
+                    SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk 
                     FROM tblComTaskTrack CTT 
                         join tblTrack T on CTT.traPk=T.traPk 
                         left outer join tblPilot P on T.pilPk=P.pilPk 
@@ -42,7 +42,7 @@ function get_tracks($link, $comPk, $limit)
         }
         else
         {
-            $sql = "SELECT T.traPk, T.traStart, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk
+            $sql = "SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk
                 FROM tblComTaskTrack CTT 
                 join tblTrack T 
                     on CTT.traPk=T.traPk 
@@ -53,7 +53,7 @@ function get_tracks($link, $comPk, $limit)
     }
     else
     {
-        $sql = "SELECT T.traPk, T.traStart, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk from
+        $sql = "SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk from
             tblTrack T
             left outer join tblPilot P on T.pilPk=P.pilPk
             left outer join tblComTaskTrack CTT on CTT.traPk=T.traPk
@@ -62,6 +62,9 @@ function get_tracks($link, $comPk, $limit)
     $result = mysql_query($sql,$link) or json_die ("Track query failed: " . mysql_error());
 
     $all_tracks = [];
+    $dispclass =  [ '1' => 'A', '1/2' => 'B', '2' => 'C', '2/3' => 'D', 'competition' => 'CCC', 
+                    'floater' => 'floater', 'kingpost' => 'kingpost', 'open' => 'HG-open', 'rigid' => 'rigid' ];
+
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $tasPk = '';
@@ -74,6 +77,7 @@ function get_tracks($link, $comPk, $limit)
         {
             $tasPk='&tasPk=' . $row['tasPk'];
         }
+        $row['traDHV'] = $dispclass[$row['traDHV']];
         $row['traStart'] = "<a href=\"tracklog_map.html?trackid=" . $row['traPk'] . $comPk . $tasPk . "\">" . $row['traStart'] . "</a>";
         $row['pilFirstName'] = utf8_encode($row['pilFirstName'] . ' ' . $row['pilLastName']);
         $row['traDuration'] = hhmmss($row['traDuration']);

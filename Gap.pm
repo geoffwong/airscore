@@ -47,6 +47,18 @@ sub min
     return $x;
 }
 
+sub max
+{
+    my ($self, $list) = @_;
+    my $x = ~0 >> 1;
+
+    foreach my $y (@$list)
+    {
+        $x = $y if $y > $x;
+    }
+    return $x;
+}
+
 sub spread
 {
     my ($self, $buc) = @_;
@@ -317,8 +329,15 @@ sub day_quality
         $launch = 0;
     }
     print "\nlaunch quality=$launch\n";
+    
 
-    $distance = 2*($taskt->{'distance'}-$taskt->{'launched'}*$formula->{'mindist'}) / ($taskt->{'launched'}*(1+$formula->{'nomgoal'}/100)*($formula->{'nomdist'}-$formula->{'mindist'}));
+    my $mdist = $formula->{'nomgoal'}/100 *($taskt->{'maxdist'} - $formula->{'nomdist'});
+    if ($mdist < 0)
+    {
+        $mdist = 0;
+    }
+    my $nomdistarea = $taskt->{'launched'}*((1+$formula->{'nomgoal'}/100)*($formula->{'nomdist'}-$formula->{'mindist'}) + $mdist) / 2;
+    $distance = ($taskt->{'distance'}-$taskt->{'launched'}*$formula->{'mindist'}) / $nomdistarea;
     print "distance quality=$distance\n";
     if ($distance > 1) 
     {

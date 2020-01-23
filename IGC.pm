@@ -185,6 +185,86 @@ sub extract_fix
     return \%loc;
 }
 
+sub read_header
+{
+    my ($f) = @_;
+    my %header;
+    my @coords;
+    my $row;
+    my $rowtype;
+    my $errors = 0;
+    my $crd;
+
+    #print "reading: $f\n";
+    open(FD, "$f") or die "can't open $f: $!";
+
+    while (<FD>)
+    {
+        $row = $_;
+        $rowtype = substr $row, 0, 1;
+        #print "rowtype=#$rowtype#\n";
+
+        if ($rowtype eq "A")
+        {
+            # manafacturer & identification of recorder (1st record)
+        }
+        elsif ($rowtype eq "B")
+        {
+            # skip the rest 
+            last;
+        }
+        elsif ($rowtype eq "C")
+        {
+            # task & declaration
+        }
+        elsif ($rowtype eq "D")
+        {
+            # differential GPS
+        }
+        elsif ($rowtype eq "E")
+        {
+            # event
+        }
+        elsif ($rowtype eq "F")
+        {
+            # satellite constellation (change)
+        }
+        elsif ($rowtype eq "G")
+        {
+            # Security (last record)
+        }
+        elsif ($rowtype eq "H")
+        {
+            # header (2nd)
+            extract_header(\%header, $row);
+        }
+        elsif ($rowtype eq "I")
+        {
+            # list of extension data included at end of each B record
+        }
+        elsif ($rowtype eq "J")
+        {
+            # list of extension data included at end of each K record
+        }
+        elsif ($rowtype eq "K")
+        {
+            # extension data
+        }
+        elsif ($rowtype eq "L")
+        {
+            # Log book / comments (3rd)
+        }
+
+        if ($errors > $max_errors)
+        {
+            print "Too many errors in IGC log\n";
+            return undef;
+        }
+    }
+
+    return \%header;
+}
+
 sub read_igc
 {
     my ($f) = @_;

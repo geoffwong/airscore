@@ -1,9 +1,10 @@
 function update_table(data)
 {
+    console.log(data);
     $('#pilots').DataTable().ajax.reload(null,false);
     //$('#pilots').DataTable({ ajax: 'get_admin_pilots.php' }).ajax.reload(null,false);
     $('#control').blur();
-    $('#delbut').blur();
+    $('#delete').blur();
 }
 function clear_pilot()
 {
@@ -18,6 +19,11 @@ function clear_pilot()
     $('#clear').hide();
     $('#delete').hide();
 }
+function new_pilot()
+{
+    clear_pilot();
+    $("#pilotmodal").modal("show");
+}
 function addup_pilot()
 {
     var action = 'add';
@@ -27,9 +33,10 @@ function addup_pilot()
     var nation = $("input[name='nation']").val();
     var hgfa = $("input[name='hgfa']").val();
     var civl = $("input[name='civl']").val();
-    var sex = $("input[name='gender'] option:selected").val();
+    var sex = $("#gender option:selected").val();
     if (parseInt(id) > 0)
     {
+        console.log(sex);
         $.post("update_pilot.php", { 'update' : id, 'fname' : fname, 'lname' :  lname, 'nation' :  nation, 'hgfa' : hgfa, 'civl' : civl, 'sex' : sex }, update_table);
     }
     else
@@ -79,6 +86,7 @@ $(document).ready(function() {
             $("input[name='hgfa']").val(data[1]);
             $("input[name='civl']").val(data[2]);
             $("input[name='gender']").val(data[5]);
+            $("#pilotmodal").modal("show");
         }
     } );
 });

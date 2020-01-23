@@ -26,12 +26,10 @@ function add_map_row(comPk, task, count)
                     '<tr><td>Task Distance:</td><td>' + task.tasShortest + ' km</td></tr>' + 
                     '<tr><td>Day Quality:</td><td>' + task.tasQuality + '</td></tr></table><br>';
 
-    var createB = document.createElement('a');
-    createB.setAttribute('href', 'task_result.html?comPk='+comPk+'&tasPk='+task.tasPk);
-    createB.className="btn btn-primary";
-    createB.appendChild(document.createTextNode('Task Scores'));
+    body.innerHTML = body.innerHTML + '<a class="btn btn-primary" href="task_result.html?comPk='+comPk+'&tasPk='+task.tasPk+'");">Task Scores</a>';
 
-    body.appendChild(createB);
+    body.innerHTML = body.innerHTML + '&nbsp;<a class="btn btn-secondary mr-1" href="download_task.php?comPk='+comPk+'&tasPk='+task.tasPk+'");">XCTrack</a>';
+    
     colmd5.appendChild(body);
 
     var ele = document.getElementById('row'+count);

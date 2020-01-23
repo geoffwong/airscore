@@ -23,6 +23,7 @@ my $res;
 my $ex;
 my ($glider,$dhv);
 my ($comFrom, $comTo);
+my $hdglider;
 
 my $pil = $ARGV[0];
 my $igc = $ARGV[1];
@@ -67,8 +68,31 @@ if ($ref = $sth->fetchrow_hashref())
 }
 else
 {
-    print "Unable to identify pilot: $pil\n";
-    exit(1);
+    my $header = read_header($igc);
+
+    my $pilot = $header->{'pilot'};
+    $hdglider = $header->{'glider'};
+
+    if (defined($pilot))
+    {
+        # split lastname(s) and select from database .. pick one?
+        my @arr = split(/ /, $pilot, 2);
+        my $lastname = $arr[1];
+        my $sth = $TrackLib::dbh->prepare("select pilPk from tblPilot where pilLastName=$lastname");
+        $sth->execute();
+        my $res = $sth->fetchrow_array();
+        if ($sth->rows() == 1)
+        {
+            # @todo: improve to use firstname if multiple results returned
+            $pilPk=$res;
+        }
+    }
+
+    if ($pilPk == 0)
+    {
+        print "Unable to identify pilot: $pil\n";
+        exit(1);
+    }
 }
 
 
@@ -83,7 +107,14 @@ if  ($ref = $sth->fetchrow_hashref())
 }
 else
 {
-    $glider = 'Unknown';
+    if (defined($hdglider))
+    {
+        $glider = $hdglider;
+    }
+    else
+    {
+        $glider = 'Unknown';
+    }
 }
 
 

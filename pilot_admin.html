@@ -41,39 +41,68 @@
       </div>
     </nav>
 
-    <div class="container" id="main">
+    <!-- Modal -->
+	<div class="modal fade" id="pilotmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
 
-    <div class="row mt-2">
-
-    <div class="col-4">
-    <h1 class="mt-2">Pilot Admin</h1>
-    <hr>
-    <div class="row mt-4">
-        <input name="pilotid" type="hidden">
-        <div class="col mb-1"><input name="first" type="text" class="form-control" placeholder="First Name"></div>
-        <div class="col mb-1"><input name="last" type="text" class="form-control" placeholder="Last Name"></div>
-    </div>
-    <div class="row">
-        <div class="col mb-1"><input name="nation" type="text" class="form-control" placeholder="Nation"></div>
-        <div class="col mb-1">
-        <select name="gender" id="gender" class="form-control" placeholder="Gender">
-        <option value="M">male</option>
-        <option value="F">female</option>
-        </select>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Pilot Details</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
+        
+        <div class="modal-body">
+		    <form id="createpilot" action="javascript:void(0);" method="post">
+			<input name="pilotid" type="hidden">
+		    <div class="form-group">
+		    <div class="form-row">
+			  	<label for="first" class="col-2 col-form-label">First Name</label>
+			    <div class="col-10">
+			 		<input class="form-control" type="text" value="" name="first">
+			    </div>
+			  	<label for="last" class="col-2 col-form-label">Last Name</label>
+			    <div class="col-10">
+			 		<input class="form-control" type="text" value="" name="last">
+			    </div>
+		    </div>
+            <div class="form-row">
+			    <label for="nation" class="col-2 col-form-label">Nation</label>
+                <div class="col mb-1"><input name="nation" type="text" class="form-control" placeholder="Nation"></div>
+			    <label for="gender" class="col-2 col-form-label">Gender</label>
+                <div class="col mb-1">
+                <select name="gender" id="gender" class="form-control" placeholder="Gender">
+                <option value="M">male</option>
+                <option value="F">female</option>
+                </select>
+                </div>
+            </div>
+			<div class="form-row">
+			  <label for="hgfa" class="col-2 col-form-label">HGFA#</label>
+              <div class="col"><input name="hgfa" type="text" class="form-control" placeholder="HGFA #"></div>
+			  <label for="civl" class="col-2 col-form-label">CIVL</label>
+              <div class="col"><input name="civl" type="text" class="form-control" placeholder="CIVL #"></div>
+			</div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="control" class="btn btn-primary float-left" data-dismiss="modal" onclick="addup_pilot();">Commit</button>
+          <button type="button" id="clear" class="btn btn-primary float-left" onclick="clear_pilot();">Clear</button>
+          <button type="button" id="delete" class="btn btn-danger" data-dismiss="modal" onclick="delete_pilot();">Delete</button>
+          <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Cancel</button>
+        </div>
+        
+      </div>
     </div>
+	</div>
+
+    <div class="container" id="main">
+	<br>
     <div class="row">
-        <div class="col mb-1"><input name="hgfa" type="text" class="form-control" placeholder="HGFA #"></div>
-        <div class="col mb-1"><input name="civl" type="text" class="form-control" placeholder="CIVL #"></div>
-    </div>
-    <div class="row">
-        <div class="col mb-1"><button name="control" class="btn btn-primary btn-md btn-block" onclick="addup_pilot();" id="control">Add</button></div>
-        <div class="col mb-1" id="clear"><button name="clear" class="btn btn-primary btn-md btn-block" onclick="clear_pilot();">Clear</button></div>
-        <div class="col mb-1" id="delete"><button name="delete" class="btn btn-primary btn-md btn-block" onclick="delete_pilot();" id="delbut">Delete</button></div>
-    </div>
+    	<button class="btn btn-primary btn-sm float-left mt-5" onclick="new_pilot()">New Pilot</button>
     </div>
 
-    <div class="col-8">
     <table id="pilots" class="row-border stripe compact mb-1" cellspacing="0" width="100%">
       <thead><tr>
             <th>Id</th>
@@ -85,10 +114,6 @@
             <th>Nation</th>
       </tr></thead>
     </table>
-    </div>
-
-
-    </div>
 
     </div>
 

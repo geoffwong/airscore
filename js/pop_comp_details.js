@@ -10,6 +10,7 @@ function create_task()
     fd.append('taskname', $('#taskname').val());
     fd.append('date', $('#date').val());
     fd.append('region', $('#region option:selected').val());
+    //fd.append('region', $('#region').val());
     fd.append('userfile', $("#customFile")[0].files[0]);
 
     $.ajax({
@@ -48,6 +49,8 @@ function create_task()
 }
 function updated_compinfo(result)
 {
+    $('#subspin').removeClass('fa-circle-o-notch');
+    $('#subspin').removeClass('fa-spin');
     console.log(result);
 }
 
@@ -56,6 +59,9 @@ function save_compinfo()
 	var $rows1 = $('#compinfo1').find('tr:not(:hidden)');
 	var $rows2 = $('#compinfo2').find('tr:not(:hidden)');
 	var options = { comPk : comp_details.keys.comPk };
+
+    $('#subspin').addClass('fa-circle-o-notch');
+    $('#subspin').addClass('fa-spin');
 
   	$rows1.each(function () {
     	var $td = $(this).find('td');
@@ -232,7 +238,7 @@ function task_card(info)
 
 function region_modal(info,regPk)
 {
-    var res = '<select id="region" class="form-control">';
+    //var res = '<select name="region" id="region" class="form-control">';
     var array = [];
 
     for (var key in info) {
@@ -250,16 +256,16 @@ function region_modal(info,regPk)
     {
         if (regPk == sorted[nc].key)
         {
-            res += '<option value="' + sorted[nc].key + '" selected>' + sorted[nc].value + '</option>';
+            $("#region").append('<option value="' + sorted[nc].key + '" selected>' + sorted[nc].value + '</option>');
         }
         else
         {
-            res += '<option value="' + sorted[nc].key + '">' + sorted[nc].value + '</option>';
+            $("#region").append('<option value="' + sorted[nc].key + '">' + sorted[nc].value + '</option>');
         }
     }
     res += '</select>';
 
-    $('#regiondiv').html(res);
+    //$('#regiondiv').html(res);
 }
 
 $(document).ready(function() {
