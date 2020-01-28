@@ -260,6 +260,19 @@ sub task_totals
         $kmmarker->[$ref->{'tmDistance'}] = $ref->{'FirstArrival'};
     }
 
+
+    my $nlo = $launched - $goal;
+    my $lookahead = $formula->{'diffdist'};
+    if (($formula->{'difframp'} eq 'flexible') and $nlo > 0)
+    {
+        $lookahead = $self->round(30 * $maxdist / (1000 * $nlo));
+        if ($lookahead < 30)
+        {
+            $lookahead = 30;
+        }
+        print("kmdiff $maxdist/$nlo lookahead=$lookahead\n");
+    }
+
     # task quality 
     $taskt{'pilots'} = $pilots;
     $taskt{'maxdist'} = $maxdist;
@@ -285,6 +298,7 @@ sub task_totals
     $taskt{'kmmarker'} = $kmmarker;
     $taskt{'stopped'} =  $task->{'stopped'};
     $taskt{'endssdistance'} = $task->{'endssdistance'};
+    $taskt{'lookahead'} = $lookahead;
 
     return \%taskt;
 }
@@ -472,6 +486,7 @@ sub calc_kmdiff
     my $distspread;
     my $difdist;
     my $debc = 0;
+    my $lookahead = $taskt->{'lookahead'};
 
     $tasPk = $task->{'tasPk'};
     $Nlo = $taskt->{'launched'}-$taskt->{'goal'};
@@ -487,7 +502,7 @@ sub calc_kmdiff
     {
         # populate kmdiff
         # At half the difficulty dist back they get all the points
-        $difdist = 0 + $ref->{'Distance'} - ($formula->{'diffdist'}/200);
+        $difdist = 0 + $ref->{'Distance'} - ($lookahead/2);
         if ($difdist < 0) 
         {
             $difdist = 0;
@@ -500,7 +515,7 @@ sub calc_kmdiff
 
     # Then smooth it out (non-linearly) for the other half
     #print Dumper($kmdiff);
-    for my $it ( 0 .. ($formula->{'diffdist'}/200))
+    for my $it ( 0 .. ($lookahead/2))
     {
         $kmdiff = $self->spread($kmdiff);
     }
