@@ -21,7 +21,44 @@
   </head>
 
   <body>
+    <!-- The Modal -->
+	<div class="modal fade" id="regionmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
 
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">New Waypoint Region</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createcomp" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row" id="region">
+			  	<label for="regionname" class="col-2 col-form-label">Name</label>
+			    <div class="col-10">
+			 		<input name="regionname" class="form-control" type="text" value="" id="regionname" required>
+			    </div>
+		    </div>
+            <div class="form-row">
+                <div class="col">
+                <input name="userfile" type="file" class="custom-file-input" id="customFile">
+                <label class="custom-file-label" for="customFile" id="selected_task">Region From File</label>
+                </div>
+            </div>
+            </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="create_region();">Create</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+        
+      </div>
+
+    </div>
+	</div>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
       <div class="container">
@@ -44,12 +81,13 @@
 
     <!-- Page Content -->
     <div class="container" id="main">
+    <br>
     <div class="row">
-        <div class="col comp_header mt-2">
-        </div>
         <div class="col">
+		    <button class="btn btn-primary float-left mt-2" data-toggle="modal" data-target="#regionmodal">Create</button>
         </div>
     </div>
+
     <table id="regions" class="row-border compact mb-1" cellspacing="0" width="100%">
     <thead>
         <tr>
@@ -66,6 +104,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="js/login.js"></script>
     <script src="js/pop_regions.js"></script>
 
   </body>

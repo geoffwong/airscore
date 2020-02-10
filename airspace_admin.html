@@ -21,6 +21,54 @@
   </head>
 
   <body>
+    <!-- The Modal -->
+	<div class="modal fade" id="airspacemodal" tabindex="-1" role="dialog" aria-labelledby="airspaceModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+    <div class="modal-content">
+
+    <div class="modal-header">
+        <h4 class="modal-title">Airspace Region</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <form enctype="multipart/form-data" action="load_airspace.php" method="post">
+
+        <div class="form-row mt-4">
+            <div class="col-9">
+            <div class="custom-file mb-1">
+                <input type="hidden" name="MAX_FILE_SIZE" value="1000000000">
+                <input name="userfile" type="file" class="custom-file-input" id="customFile">
+                <label class="custom-file-label" for="customFile" id="selected_openair">OpenAir File</label>
+            </div>
+            </div>
+            <div class="col-3"><button type="submit" name="foo" class="btn btn-primary btn-md btn-block">Add</button></div>
+        </div>
+
+        <div class="form-row mt-4">
+            <input name="regid" type="hidden">
+            <div class="col mb-1"><input name="region" type="text" class="form-control" placeholder="Region"></div>
+            <div class="col mb-1"><input name="size" type="text" class="form-control" placeholder="Size(deg)"></div>
+        </div>
+
+        <div class="form-row">
+            <div class="col mb-1"><input name="lat" type="text" class="form-control" placeholder="Latitude"></div>
+            <div class="col mb-1"><input name="long" type="text" class="form-control" placeholder="Longitude"></div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" name="delete" class="btn btn-danger btn-md mr-4 float-left" onclick="delete_airspace();" id="delbut">Delete</button>
+            <button type="button" name="clear" class="btn btn-secondary btn-md ml-1 float-right" onclick="clear_airspace();">Clear</button>
+            <button type="button" name="control" class="btn btn-primary btn-md ml-1 float-right" onclick="addup_airspace();" id="control">Update</button>
+        </div>
+
+      </form>
+	</div>
+	</div>
+	</div>
+	</div>
+
     <!-- Navigation -->
     <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top" data-spy="affix">
       <div class="container">
@@ -43,41 +91,14 @@
 
     <div class="container" id="main">
 
-    <div class="row mt-2">
+    <div class="row mt-3"><h1>Airspace Admin</h1></div>
 
-    <div class="col-5">
-    <h1>Airspace Admin</h1>
-    <form enctype="multipart/form-data" action="load_airspace.php" method="post">
-    <input type="hidden" name="MAX_FILE_SIZE" value="1000000000">
-    <div class="form-row mt-4">
-    <div class="col-9">
-    <div class="custom-file mb-1">
-        <input name="userfile" type="file" class="custom-file-input" id="customFile">
-        <label class="custom-file-label" for="customFile" id="selected_openair">OpenAir File</label>
-    </div>
-    </div>
-    <div class="col-3"><button type="submit" name="foo" class="btn btn-primary btn-md btn-block">Add</button></div>
-    </div>
-    </form>
-    <hr>
-    <div class="row mt-4">
-        <input name="regid" type="hidden">
-        <div class="col mb-1"><input name="region" type="text" class="form-control" placeholder="Region"></div>
-        <div class="col mb-1"><input name="size" type="text" class="form-control" placeholder="Size(deg)"></div>
-    </div>
     <div class="row">
-        <div class="col mb-1"><input name="lat" type="text" class="form-control" placeholder="Latitude"></div>
-        <div class="col mb-1"><input name="long" type="text" class="form-control" placeholder="Longitude"></div>
-    </div>
-    </form>
-    <div class="row">
-        <div class="col mb-1"><button name="control" class="btn btn-primary btn-md btn-block" onclick="addup_airspace();" id="control">Add</button></div>
-        <div class="col mb-1" id="clear"><button name="clear" class="btn btn-primary btn-md btn-block" onclick="clear_airspace();">Clear</button></div>
-        <div class="col mb-1" id="delete"><button name="delete" class="btn btn-primary btn-md btn-block" onclick="delete_airspace();" id="delbut">Delete</button></div>
-    </div>
+        <div class="col">
+            <button class="btn btn-primary bt-md float-left mt-2" data-toggle="modal" data-target="#airspacemodal">Create</button>
+        </div>
     </div>
 
-    <div class="col-7">
     <table id="airspace" class="row-border stripe compact mb-1" cellspacing="0" width="100%">
       <thead><tr>
             <th>ID</th>
@@ -89,16 +110,12 @@
     </table>
     </div>
 
-
-    </div>
-
-    </div>
-
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="js/login.js"></script>
     <script type="text/javascript" src="js/pop_admin_airspace.js"></script>
 </body>
 </html>

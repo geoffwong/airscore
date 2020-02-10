@@ -105,6 +105,11 @@ function add_task($link, $comPk, $name, $offset)
 {
     $date = reqsval('date');
     $region = reqival('region');
+    if (!$region)
+    {
+        // @todo: remove this hack
+        $region = 28;
+    }
     $tasPk = 0;
 
     if ($name == '')
@@ -164,8 +169,8 @@ function add_task($link, $comPk, $name, $offset)
 
 $usePk = auth('system');
 $link = db_connect();
-$cgi = var_export($_REQUEST,true);
-error_log($cgi);
+#$cgi = var_export($_REQUEST,true);
+#error_log($cgi);
 $res = [];
 $comPk = reqival('comPk');
 $name = reqsval('taskname');

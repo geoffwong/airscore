@@ -625,13 +625,24 @@ sub pilot_departure_leadout
     {
         my $kmarr = $taskt->{'kmmarker'};
         my @tmarker = @$kmarr;
+        my $kmdist;
+        my $notkm;
 
         print "TMARKER=", Dumper(\@tmarker);
         # KmBonus award points
+
+        # Don't do the section at the end
+        $notkm = $task->{'ssdistance'} * 0.15;
+        if ($notkm < 10000.0)
+        {
+            $kmdist = 10000.0;
+        }
+        $kmdist = floor(($task->{'ssdistance'} - $notkm) / 1000.0);
+
         if (scalar(@tmarker) > 0)
         {
             #print "Astart=$Astart PKM=", Dumper($pil->{'kmmarker'});
-            for my $km (1..scalar(@tmarker))
+            for (my $km = 1; $km < $kmdist; $km++)
             {
                 if ($pil->{'kmmarker'}->[$km] > 0 and $tmarker[$km] > 0)
                 {
@@ -643,7 +654,7 @@ sub pilot_departure_leadout
                     }
                 }
             }
-            $Pdepart = $Pdepart * $Astart * 1.25 / floor($task->{'ssdistance'}/1000.0);
+            $Pdepart = $Pdepart * $Astart * 1.25 / $kmdist;
             if ($Pdepart > $Astart)
             {
                 $Pdepart = $Astart;

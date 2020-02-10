@@ -24,7 +24,7 @@ function get_tracks($link, $comPk, $limit)
         {
             #$sql = "SELECT T.*, P.* FROM tblTaskResult CTT left join tblTrack T on CTT.traPk=T.traPk left outer join tblPilot P on T.pilPk=P.pilPk where CTT.tasPk in (select tasPk from tblTask TK where TK.comPk=$comPk) order by T.traStart desc";
             $sql = "(
-                    SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, $comPk, CTT.tasPk 
+                    SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, $comPk as comPk, CTT.tasPk 
                         from tblTrack T
                         left outer join tblTaskResult CTT on CTT.traPk=T.traPk 
                         left outer join tblPilot P on T.pilPk=P.pilPk 

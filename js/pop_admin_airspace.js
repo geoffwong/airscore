@@ -7,7 +7,11 @@ $(document).ready(function() {
         lengthMenu: [ 15, 30, 60, 1000 ],
         searching: true,
         info: false,
-        "dom": '<"#search"f>rt<"bottom"lip><"clear">'
+        "dom": '<"#search"f>rt<"bottom"lip><"clear">',
+        "createdRow": function( row, data, index, cells )
+        {
+            cells[1].innerHTML = '<a href=\"airspace_map.html?argPk=' + data[0] + '\">' + data[1] + '</a>';
+        }
     });
 
 
@@ -21,6 +25,7 @@ $(document).ready(function() {
         else {
             var table=$('#airspace').DataTable();
             var data = table.row(this).data();
+            $("#airspacemodal").modal("show");
             table.$('tr.selected').removeClass('selected');
             $(this).addClass('selected');
             $('#control').html('Update');
@@ -30,6 +35,7 @@ $(document).ready(function() {
             $("input[name='region']").val(data[1]);
             $("input[name='lat']").val(data[2]);
             $("input[name='long']").val(data[3]);
+            $("input[name='size']").val(data[4]);
         }
     });
 });

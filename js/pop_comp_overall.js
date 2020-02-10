@@ -2,6 +2,11 @@
 $(document).ready(function() {
     var url = new URL('http://highcloud.net/xc/get_result.php' + window.location.search);
     var comPk = url.searchParams.get("comPk");
+    var flyclass = url_parameter("class");
+    if (flyclass)
+    {
+        $('#dhv').val(flyclass);
+    }
     $('#task_result').dataTable({
         ajax: 'get_result.php?comPk='+comPk,
         paging: false,

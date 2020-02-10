@@ -577,5 +577,19 @@ sub get_one_track
     return \%ret;
 }
 
+sub delete_airspace
+{
+    my ($dbh, $airs) = @_;
+    my $ref;
+    my @airs;
+
+    # print "allair=$allair\n";
+    my $allair = join(',', @$airs);
+    $dbh->do("delete from tblTaskAirspace where airPk in ($allair)", undef);
+    $dbh->do("delete from tblAirspaceWaypoint where airPk in ($allair)", undef);
+    $dbh->do("delete from tblAirspace where airPk in ($allair)", undef);
+}
+
+
 1;
 
