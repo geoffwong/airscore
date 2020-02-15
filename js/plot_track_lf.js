@@ -412,7 +412,7 @@ function animate_update()
         track = onscreen[glider]["track"];
         count = onscreen[glider]["pos"];
         lasLat = 0;
-        if (count >=0 && count < track.length)
+        if (count >= 0 && count < track.length)
         {
             lasTme = track[count][0];
             //console.log('count='+count+' lasTme='+lasTme+' current='+current);
@@ -597,6 +597,12 @@ $(document).ready(function() {
     var comPk = url_parameter("comPk");
     var tasPk = url_parameter("tasPk");
     var trackid = url_parameter('trackid');
+    var posint = parseInt(url_parameter('interval'));
+    if (posint > 0)
+    {
+        console.log(posint);
+        interval = posint;
+    }
 
     var mapdiv = document.getElementById("map");
     mapdiv.setAttribute('style', 'top: 0px; left: 0px; width:100%; height:90vh; float: left');
@@ -636,7 +642,7 @@ $(document).ready(function() {
     {
         plot_task(tasPk, false, trackid);
     }
-    add_track(comPk, trackid, 5);
+    add_track(comPk, trackid, interval);
 });
 
 $(document).ready(function() {

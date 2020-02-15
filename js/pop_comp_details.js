@@ -243,7 +243,7 @@ function region_modal(info,regPk)
 
     for (var key in info) {
       array.push({
-        name: key,
+        key: key,
         value: info[key]
       });
     }
@@ -254,16 +254,26 @@ function region_modal(info,regPk)
 
     for (nc = 0; nc < sorted.length; nc++)
     {
-        if (regPk == sorted[nc].key)
+        console.log("key="+sorted[nc].key+" value="+sorted[nc].value);
+        if (regPk == sorted[nc].value)
         {
-            $("#region").append('<option value="' + sorted[nc].key + '" selected>' + sorted[nc].value + '</option>');
+            //$("#region").append('<option value="' + sorted[nc].key + '" selected>' + sorted[nc].value + '</option>');
+            $('#region').append($('<option>', {
+                value: sorted[nc].key,
+                text: sorted[nc].value,
+                selected: true
+            }));
         }
         else
         {
-            $("#region").append('<option value="' + sorted[nc].key + '">' + sorted[nc].value + '</option>');
+            //$("#region").append('<option value="' + sorted[nc].key + '">' + sorted[nc].value + '</option>');
+            $('#region').append($('<option>', {
+                value: sorted[nc].key,
+                text: sorted[nc].value
+            }));
         }
     }
-    res += '</select>';
+    //res += '</select>';
 
     //$('#regiondiv').html(res);
 }

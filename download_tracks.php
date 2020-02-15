@@ -137,7 +137,7 @@ $ziplist = [];
 foreach ($tracks as $row)
 {
     $pilot = $row['pilFirstName'] . ' ' . $row['pilLastName']; 
-    $filename = preg_replace('/[\s+\/]/', '_', strtolower( $row['pilLastName'] . '_' . $row['pilHGFA'] . '.igc'));
+    $filename = preg_replace('/[\s+\/]/', '_', addslashes(strtolower( $row['pilLastName'] . '_' . $row['pilHGFA'] . '.igc')));
     mkdir("/tmp/$tasPk");
     $fname = "/tmp/$tasPk/" . $filename;
     if (!file_exists($fname))

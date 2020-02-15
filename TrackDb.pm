@@ -640,5 +640,23 @@ sub store_result
     return;
 }
 
+
+sub duplicate_flight
+{
+    my ($pilPk, $flightstart) = @_;
+
+    my $sth = $dbh->prepare("select traPk from tblTrack where pilPk=$pilPk and traStart='$flightstart'");
+    $sth->execute();
+    my $traPk = $sth->fetchrow_array();
+    if (defined($traPk))
+    {
+        # it's a duplicate ...
+        print "Duplicate track found ($traPk) from $flightstart\n";
+        return 1;
+    }
+
+    return 0;
+}
+
 1;
 

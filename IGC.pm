@@ -675,7 +675,7 @@ sub is_flying
 
 sub trim_flight
 {
-    my ($flight, $pilPk) = @_;
+    my ($flight) = @_;
     my $full;
     my @reduced;
     my $dist;
@@ -865,6 +865,41 @@ sub determine_filetype
 
     return undef;
 }
+
+sub read_flight
+{
+    my ($f, $trim) = @_;
+    my $flight;
+
+    my $ftype = determine_filetype($f);
+    if ($ftype eq "igc")
+    {
+        $flight = read_igc($f);
+    }
+    elsif ($ftype eq "live")
+    {
+        $flight = read_live($f);
+        #print Dumper($flight);
+    }
+    elsif ($ftype eq "kml")
+    {
+        $flight = read_kml($f);
+    }
+    else
+    {
+        print "Unsupported file type detected: $ftype\n";
+        print "Please submit an IGC file\n";
+    }
+
+    # Trim off silly points ...
+    if ($trim)
+    {
+        $flight = trim_flight($flight);
+    }
+
+    return $flight;
+}
+
 
 1;
 

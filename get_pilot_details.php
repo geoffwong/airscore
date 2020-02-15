@@ -31,7 +31,7 @@ function get_pilot_info($link, $pilPk)
     }
 
     // get AAA race performance (last 5 years)
-    $sql = "select avg(tarPlace) as AvgPlace, min(tarPlace) as BestPlace, count(*) as TotalTasks, count(IF(TR.tarGoal > 0, 1, NULL)) as InGoal, avg(IF(TR.tarGoal > 0, tarSpeed, NULL)) as GoalSpeed from tblComTaskTrack CTT, (select comPk, lcValue from tblLadderComp group by comPk) LC, tblTrack T, tblTaskResult TR where CTT.traPk=T.traPk and LC.comPk=CTT.comPk and LC.lcValue=450 and TR.traPk=T.traPk and TR.tasPk=CTT.tasPk and T.traDate > date_sub(now(), interval 5 year) and T.pilPk=$pilPk";
+    $sql = "select avg(tarPlace) as AvgPlace, min(tarPlace) as BestPlace, count(*) as TotalTasks, count(IF(TR.tarGoal > 0, 1, NULL)) as InGoal, avg(IF(TR.tarGoal > 0, tarSpeed, NULL)) as GoalSpeed from tblComTaskTrack CTT, (select comPk, lcValue from tblLadderComp group by comPk) LC, tblTrack T, tblTaskResult TR where CTT.traPk=T.traPk and LC.comPk=CTT.comPk and LC.lcValue in (360, 450) and TR.traPk=T.traPk and TR.tasPk=CTT.tasPk and T.traDate > date_sub(now(), interval 5 year) and T.pilPk=$pilPk";
     $result = mysql_query($sql,$link) or json_die('get_pilot_info (2) failed: ' . mysql_error());
 
     if ($row = mysql_fetch_array($result, MYSQL_ASSOC))

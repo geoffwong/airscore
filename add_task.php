@@ -28,8 +28,11 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
     $regid = [];
     foreach ($region as $key => $row)
     {
-        $regid[$row['rwpName']] = $key;
+        $regid[trim($row['rwpName'])] = $key;
     }
+    //$regids = var_export($regid,true);
+    error_log("region $regPk");
+    //error_log($regids);
 
     $waytype = [ 'TAKEOFF' => "'start'", 'SSS' => "'speed'", 'ESS' => "'endspeed'", '' => "'waypoint'" ];
     $how = [ 'ENTER' => "'entry'", 'EXIT' => "'exit'"];
@@ -62,7 +65,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
     $wtype = "'waypoint'";
     foreach ($waypoints as $wpt)
     {
-        $rwpPk = $regid[$wpt['waypoint']['name']];
+        $rwpPk = $regid[trim($wpt['waypoint']['name'])];
         $radius = $wpt['radius'];
         if ($wtype == "'endspeed'")
         {
@@ -85,11 +88,11 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
         $wshape = "'circle'";
         if ($wtype == "'speed'")
         {
-            $whow = $how[$taskjson['sss']['direction']];   
+            $whow = $how[trim($taskjson['sss']['direction'])]; 
         }
         elseif ($wtype == "'goal'")
         {
-            $wshape = $shape[$taskjson['goal']['type']];   
+            $wshape = $shape[trim($taskjson['goal']['type'])];
         }
         $query = "insert into tblTaskWaypoint (tasPk, rwpPk, tawNumber, tawType, tawHow, tawShape, tawRadius) values ($tasPk, $rwpPk, $num, $wtype, $whow, $wshape, $radius)";
         error_log($query);
@@ -103,12 +106,13 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
 
 function add_task($link, $comPk, $name, $offset)
 {
+    error_log("add_task region " . $_REQUEST['region']);
     $date = reqsval('date');
     $region = reqival('region');
     if (!$region)
     {
         // @todo: remove this hack
-        $region = 28;
+        $region = 393;
     }
     $tasPk = 0;
 

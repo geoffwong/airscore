@@ -66,12 +66,13 @@
 			  </div>
 			</div>
 		    <div class="form-row">
-			  	<label for="date-from" class="col-2 col-form-label">Name</label>
+			  	<label for="taskname" class="col-2 col-form-label">Name</label>
                 <div class="col-10"><input class="form-control" type="text" value="" id="taskname"></div>
 		    </div>
 		    <div class="form-row">
-			  	<label for="date-from" class="col-2 col-form-label">Region</label>
+			  	<label for="regiondiv" class="col-2 col-form-label">Region</label>
 			    <div class="col-10" id="regiondiv">
+                <select name="region" id="region" class="form-control"></select>
 			    </div>
 		    </div>
 		    <div class="form-row">
@@ -98,7 +99,7 @@
     <div class="row mt-3">
         <div class="col-8"><h2>Competition</h2></div>
         <div class="col-4">
-            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_compinfo();">Save</button>
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_compinfo();">Save<div id="subspin" class="fa"></div></button>
             <button class="btn btn-secondary btn-sm float-right" onclick="reset_compinfo();">Reset</button>
         </div>
     </div>
@@ -193,7 +194,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="js/enums.js"></script>
-    <script type="text/javascript" src="js/pop_comp_details.js"></script>
+    <script type="text/javascript" src="js/pop_comp_details.js?v=9"></script>
 </body>
 </html>
 

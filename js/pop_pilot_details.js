@@ -1,9 +1,14 @@
 
 $(document).ready(function() {
-    var url = new URL('http://highcloud.net/xc/get_pilot_details.php' + window.location.search);
-    var pilPk = url.searchParams.get("pilPk");
+    var pilPk = url_parameter("pilPk");
+    var ladPk = url_parameter("ladPk");
+    var url = 'pilPk=' + pilPk;
+    if (ladPk > 0)
+    {
+        url = url + '&ladPk=' + ladPk;
+    }
     $('#pilot_tracks').dataTable({
-        ajax: 'get_pilot_details.php?pilPk='+pilPk,
+        ajax: 'get_pilot_details.php?'+url,
         paging: true,
         searching: true,
         info: false,
@@ -25,7 +30,7 @@ $(document).ready(function() {
             $('#pilot_details tbody').append(
                         "<tr><td>Total tracks" + "</td><td>" + json.info.numTracks + 
                         "<tr><td>Hours logged" + "</td><td>" + json.info.total_hours + 
-                        "</tr><tr></td><td>AAA Tasks</td><td>" + json.info.tasks + 
+                        "</tr><tr></td><td>AA/AAA Tasks</td><td>" + json.info.tasks + 
                         "</tr><tr></td><td>Goal Percentage</td><td>" + json.info.goal_perc + 
                         "</tr><tr></td><td>Avg. Goal Speed</td><td>" + json.info.goal_speed + 
                         "</td></tr>");

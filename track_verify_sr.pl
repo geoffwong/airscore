@@ -350,7 +350,7 @@ sub validate_task
         # Might re-enter start/speed section for elapsed time tasks 
         # Check if we did re-enter and set the task "back"
         if (($lastin >= $spt) and 
-            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'})) or 
+            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'}) and ($maxdist - $startssdist < 8000)) or 
             (($task->{'type'} ne 'race') and ($wmade < $spt+2) and ($maxdist - $startssdist < 8000)))
            )
         {
@@ -358,36 +358,43 @@ sub validate_task
             $rdist = distance($coord, $rpt);
             if ($rpt->{'how'} eq 'entry')
             {
-                # print "Repeat check @ ", $coord->{'time'}, " type=",  $rpt->{'type'}, " (reflag=$reflag lastin=$lastin/$spt): dist=$rdist ($maxdist-$startssdist) (wmade=$wmade ($spt))\n";
+                print "Repeat check @ ", $coord->{'time'}, " type=",  $rpt->{'type'}, " (reflag=$reflag lastin=$lastin/$spt): dist=$rdist ($maxdist-$startssdist) (wmade=$wmade ($spt))\n";
+                # reflag 
+                #  -1 - within margin boundary
+                #  0  - haven't entered (no time)
+                #  1 -  outside outer margin bounary
+                #  2  - inside inner margin boundary
                 if (($reflag == 1) and ($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))) 
                 {
                     # last point inside ..
                     $wcount = $spt;
                     $wmade = $wcount;
                     $wpt = $waypoints->[$wcount];
-                    $reflag = 0;
-                    print "re-entered speed/startss (enter)\n";
+                    $reflag = -1;
+                    print "re-entered speed/startss (enter spt=$spt wmade=$wmade reflag to -1)\n";
                 }
                 elsif (($reflag == 2) and ($rdist > ($rpt->{'radius'}-$rpt->{'margin'}))) 
                 {
                     # last point inside ..
-                    $reflag = 1;
-                    print "re-exited speed/startss (enter)\n";
+                    $reflag = -1;
+                    print "re-exited speed/startss (enter) from inner to reflag=-1 (ouside boundary)\n";
                 }
                 elsif ($reflag == -1) 
                 {
                     if ($rdist > ($rpt->{'radius'}+$rpt->{'margin'}))
                     {
+                        print "from reflag -1 (inside boundary) to reflag 1 (outside)\n";
                         $reflag = 1;
                     }
-                    elsif (($rdist < ($rpt->{'radius'}-$rpt->{'margin'})) and ($reflag == -1))
+                    elsif ($rdist < ($rpt->{'radius'}-$rpt->{'margin'}))
                     {
+                        print "from reflag -1 (inside boundary) to reflag 2 (inner)\n";
                         $reflag = 2;
                     }
                 }
                 elsif ($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))
                 {
-                    print "enable re-entry (reflag=1)\n";
+                    print "enable re-entry (reflag=-1)\n";
                     $reflag = -1;
                 }
             }

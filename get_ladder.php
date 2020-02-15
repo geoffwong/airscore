@@ -51,7 +51,7 @@ function add_result(&$results, $row, $topnat, $how, $ladPk)
     $pilPk = $row['pilPk'];
     // $row['tasName'];
     $tasName = substr($row['comName'], 0, 5) . ' ' . substr($row['comDateTo'],0,4);
-    $fullName = substr($row['comName'], 0, 3) . substr($row['comDateTo'],2,2) . '&nbsp;' .  str_replace(' ', '', $row['tasName']);
+    $fullName = substr($row['comName'], 0, 3) . substr($row['comDateTo'],2,2) . '&nbsp;' .  substr(str_replace(' ', '', $row['tasName']), 0, 2);
 
     if (!array_key_exists($pilPk,$results) || !$results[$pilPk])
     {
@@ -461,9 +461,15 @@ if ($ladPk < 1)
         {
             $img = '<img src="images/hg_symbol.png"></img>';
         }
+
+        $param = $row['ladParam'];
+        if ($row['ladHow'] == 'ftv')
+        {
+            $param = $param . '%';
+        }
         $clean[] = [ '<a href="ladder_result.html?ladPk=' . $row['ladPk'] . '">' . $row['ladName'] . '</a>', 
             $row['ladNationCode'], $img, $row['ladStart'], $row['ladEnd'], 
-            $row['ladHow'] . ' (' . $row['ladParam'] . ')' ];
+            $row['ladHow'] . ' (' . $param . ')' ];
     }
 }
 else
@@ -484,7 +490,18 @@ if ($ladPk > 0)
 {
     //output_ladder($ladPk, $ladder, $fdhv, $class);
     $sorted = ladder_result($ladPk, $ladder, $fdhv, $altval);
+    if ($ladder['ladClass'] = 'PG' and $ladder['ladIncExternal'] != 0)
+    {
+        $maxscore = $sorted['validity'] * 0.475;
+    }
+    else
+    {
+        $maxscore = $sorted['validity'] * 0.45;
+    }
+
+
     $ladder['totValidity'] = round($sorted['validity'],0);
+    $ladder['maxScore'] = round($maxscore,0);
     $included = included_comps($link, $ladPk);
     $clean = datatable_clean($sorted['filtered'], $ladPk);
 }

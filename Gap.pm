@@ -328,7 +328,7 @@ sub day_quality
     }
 
     $x = $taskt->{'launched'}/($taskt->{'pilots'}*$formula->{'nomlaunch'});
-    $launch  = 0.028*$x + 2.917*$x*$x - 1.944*$x*$x*$x;
+    $launch  = 0.027*$x + 2.917*$x*$x - 1.944*$x*$x*$x;
     if ($x > 1 or $launch > 1) 
     {
         $launch = 1;
@@ -1000,6 +1000,10 @@ sub points_allocation
 
         # Total score
         my $Pscore = $Pdist + $Pspeed + $Parrival + $Pdepart - $penalty;
+        if ($Pscore < 0)
+        {
+            $Pscore = 0;
+        }
 
         # Store back into tblTaskResult ...
         if (defined($tarPk))
