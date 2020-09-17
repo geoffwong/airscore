@@ -11,6 +11,7 @@
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
     <link href="sidebar/L.Control.Sidebar.css" rel="stylesheet">
@@ -52,6 +53,7 @@
         <h3>Track Downloads</h3>
         <button class="btn btn-primary btn-sm btn-block" onclick="download_track();">This Track</button>
         <button class="btn btn-primary btn-sm btn-block" onclick="download_top_tracks();">Top 20 Tracks</button>
+        <button class="btn btn-primary btn-sm btn-block" onclick="download_all_tracks();">All Tracks</button>
         <hr>
         <h3>View Tracks</h3>
         <select class="custom-select mb-3" name="tracks" id="tracks"></select>
@@ -79,7 +81,7 @@
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="js/map_services.js"></script>
     <script src="js/airspace_services.js"></script>
-    <script src="js/plot_track_lf.js"></script>
+    <script src="js/plot_track_lf.js?v=1"></script>
     <script src="js/uair_lf.js"></script>
 
   </body>

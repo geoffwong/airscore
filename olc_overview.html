@@ -10,22 +10,19 @@
 
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/fullscreen/leaflet.fullscreen.css" rel="stylesheet">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
+    <link href="leaflet.css" rel="stylesheet">
 
+    <script src="leaflet.js"></script>
     <script src="microajax.minified.js"></script>
+    <script src="utils.js"></script>
+    <script src="rjson.js"></script>
     <script src="url.js"></script>
-    <script>
-        // Initialise 
-        function initialize()
-        {
-            comPk = url_parameter("comPk");
-            plot_all_tasks(comPk);
-        }
-    </script>
   </head>
 
-  <body onload="initialize()">
+  <body>
 
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
@@ -61,27 +58,21 @@
     <!-- Page Content -->
     <div class="container" id="main">
       <h1 class="my-4" id="comp_name"></h1>
-      <div class="row" id="row14"></div>
-      <div class="row" id="row13"></div>
-      <div class="row" id="row12"></div>
-      <div class="row" id="row11"></div>
-      <div class="row" id="row10"></div>
-      <div class="row" id="row9"></div>
-      <div class="row" id="row8"></div>
-      <div class="row" id="row7"></div>
-      <div class="row" id="row6"></div>
-      <div class="row" id="row5"></div>
-      <div class="row" id="row4"></div>
-      <div class="row" id="row3"></div>
-      <div class="row" id="row2"></div>
       <div class="row" id="row1"></div>
+      <div class="row" id="row2"></div>
+      <div class="row" id="row3"></div>
+      <div class="row" id="row4"></div>
+      <div class="row" id="row5"></div>
+      <div class="row" id="row6"></div>
     </div>
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/fullscreen/Leaflet.fullscreen.min.js"></script>
     <script src="js/map_services.js"></script>
     <script src="js/olc_overview.js"></script>
   </body>
 </html>
+

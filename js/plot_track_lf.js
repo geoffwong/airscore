@@ -591,6 +591,14 @@ function download_top_tracks()
         post('download_tracks.php', { 'tasPk' : tasPk, 'count' : 20 }, 'post');
     }
 }
+function download_all_tracks()
+{
+    var tasPk = url_parameter('tasPk');
+    if (tasPk > 0)
+    {
+        post('download_tracks.php', { 'tasPk' : tasPk, 'count' : 0 }, 'post');
+    }
+}
 
 
 $(document).ready(function() {

@@ -172,14 +172,24 @@ create table tblShortestRoute
     ssrNumber       integer not null
 );
 
+
 drop table if exists tblGlider;
 create table tblGlider
 (
     gliPk           integer not null primary key auto_increment,
     gliName         varchar(32),
     gliManufacturer varchar(32),
+    gliBottomWeight integer,
+    gliTopWeight    integer,
+    gliCells        integer,
+    gliSize         varchar(3),
     gliClass        enum('PG', 'HG') default 'PG',
-    gliDHV          enum('1','1/2','2','2/3','competition','floater','kingpost','open','rigid') default 'competition'
+	gliProjectedArea float,
+	gliFlatArea 	float,
+	gliProjectedSpan float,
+	gliFlatSpan 	float,
+	gliMaxChord 	float,
+    gliDHV          enum('A','B','C','D','CCC','floater','kingpost','open','rigid') default 'CCC'
     -- class?
 );
 
