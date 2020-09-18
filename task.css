@@ -12,6 +12,17 @@
     width:100%;
     border:1px #000000 solid;
     }
+.missedwpt {
+    background: #cc0000;
+    opacity:0.6;
+    color:#000000;
+    font-size:11px;
+    font-weight:bold;
+    margin:0px;
+    padding:0px;
+    width:100%;
+    border:1px #000000 solid;
+    }
 .pilot {
     background: #ffff00;
     opacity:0.6;
@@ -51,18 +62,17 @@
     padding:3px;
 }
 .map_panel {
-    border:solid black 2px;
-    background-color:white;
-    opacity: 0.80;
-    color:black;
+    border:solid #AAA 2px;
+    border-radius: 5px;
+    background-color:rgba(255, 255, 255, .6);
     font-family:Arial, Helvetica, Bold, sans-serif;
-    font-size:11px;
+    font-size:12px;
     text-align:left;
-    margin:5px;
-    padding:3px;
+    margin:10px;
+    padding:0px;
 }
 .play {
-    border:solid black 2px;
+    border:solid grey 1px;
     border-radius: 5px;
     background-color:white;
     opacity: 1;
@@ -95,16 +105,66 @@
     margin: 0px;
     font-size: 10em;
 }
+#waypoints td:hover {
+    cursor:move;
+}
 @media (max-width: 576px) { .modal-dialog.modal-dialog-slideout {width: 80%}}
 body {
   padding-top: 54px;
+  background: rgb(68,110,155);
+  background: linear-gradient(90deg, rgba(68,110,155,0.1474790599833683) 0%, rgba(255,255,255,1) 50%, rgba(68,110,155,0.15028018043154767) 100%); 
 }
 @media (min-width: 992px) {
   body {
     padding-top: 56px;
   }
 }
+@media only print {
+    a { color: #000; text-decoration: none; }
+    a:hover,a:visited { color:#000; text-decoration: none; }
+    .btn { outline: none; }
+}
 .modal-dialog-slideout {min-height: 100%; margin: 0 auto 0 0 ;background: #fff;}
 .modal.fade .modal-dialog.modal-dialog-slideout {-webkit-transform: translate(-100%,0);transform: translate(-100%,0);}
 .modal.fade.show .modal-dialog.modal-dialog-slideout {-webkit-transform: translate(0,0);transform: translate(0,0);flex-flow: column;}
 .modal-dialog-slideout .modal-content{border: 0;}
+@keyframes spinner {
+    0% {
+        transform: translate3d(-50%, -50%, 0) rotate(0deg);
+    }
+    100% {
+         transform: translate3d(-50%, -50%, 0) rotate(360deg);
+    }
+}
+.spinner {
+    // The height here is just for demo purposes
+    height: 20vh;
+    opacity: 1;
+    position: relative;
+    transition: opacity linear 0.1s;    
+
+    &::before {
+        animation: 2s linear infinite spinner;
+        border: solid 3px #eee;
+        border-bottom-color: #EF6565;
+        border-radius: 50%;
+        content: "";
+        height: 40px;
+        left: 50%;
+        opacity: inherit;
+        position: absolute;
+        top: 50%;
+        transform: translate3d(-50%, -50%, 0);
+        transform-origin: center;
+        width: 40px;
+        will-change: transform;
+    }
+}
+.trackInfo
+{
+    border:none;
+    background-color:rgba(255, 255, 255, .7);
+    color:black;
+    padding:6px;
+}
+

@@ -1,3 +1,4 @@
+// Relies on font awesome for Play Control
 var tile_server_selection = 0;
 var http = 'https://';
 //http var tileserver = 'tile.opentopomap.org/{z}/{x}/{y}.png';
@@ -45,7 +46,8 @@ L.Control.Play = L.Control.extend({
     onAdd: function(map) {
             var ele = L.DomUtil.create('div');
             this._container = ele;
-            ele.innerHTML = "<div id='playblock'></b><table><tr><td><a href='#' id='clear' onclick='restart();'>&#8920;</a></td><td><a href='#' id='bwd' onclick='backward();'>&ll;</a></td><td><a href='#' id='fwd' onclick='forward();'>&gt;</a></td><td><a href='#' id='ffwd' onclick='fast_forward();'>&gg;</a></td></tr><tr><td colspan='4'><small><div id='clock'>00:00:00</div></small></td></tr></table></b></div>";
+            //ele.innerHTML = "<div id='playblock'></b><table><tr><td><a href='#' id='clear' onclick='restart();'>&#8920;</a></td><td><a href='#' id='bwd' onclick='backward();'>&ll;</a></td><td><a href='#' id='fwd' onclick='forward();'>&gt;</a></td><td><a href='#' id='ffwd' onclick='fast_forward();'>&gg;</a></td></tr><tr><td colspan='4'><small><div id='clock'>00:00:00</div></small></td></tr></table></b></div>";
+            ele.innerHTML = "<div id='playblock'></b><table><tr><td><span class='fa fa-fast-backward' id='clear' onclick='restart();'></span></td><td><span class='fa fa-backward' id='bwd' onclick='backward();'></span></td><td><span class='fa fa-play' id='fwd' onclick='forward();'></span></td><td><span class='fa fa-forward' id='ffwd' onclick='fast_forward();'></span></td></tr><tr><td colspan='4'><small><div id='clock' onclick='set_clock();'>00:00:00</div></small></td></tr></table></b><input type='range' min='1' max='100' value='1' class='slider' id='playslider'></div>";
             ele.className = 'play';
             return this._container;
         },
@@ -165,16 +167,16 @@ var sidebar;
 function add_map_extra(map)
 {
     // add sidebar and a control to expand it
-    L.easyButton( '<span id="expandtab" style="font-size: 2.2em; line-height: 1;">&rAarr;</span>', function() {
+    L.easyButton( '<span id="expandtab" style="font-size: 2.0em; line-height: 1.0;"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-right-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.14 8.753l-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/></svg></span>', function() {
         if (sidebar.isVisible())
         {
             sidebar.hide();
-            $("#expandtab").html('&rAarr;');
+            $("#expandtab").html('<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-right-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.14 8.753l-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/></svg>');
         }
         else
         {
             sidebar.show();
-            $("#expandtab").html('&lAarr;');
+            $("#expandtab").html('<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-caret-left-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M3.86 8.753l5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z"/></svg>');
         }
     }).addTo(map);
 
@@ -381,7 +383,10 @@ function plot_task_route(map, ssr)
                 opacity: 1
             }).addTo(map);
 
-    map.fitBounds(pbounds);
+    if (count > 2)
+    {
+        map.fitBounds(pbounds);
+    }
 }
 function plot_task(tasPk, pplo, trackid)
 {

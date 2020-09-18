@@ -47,6 +47,12 @@ $(document).ready(function() {
                         "<tr><td>Total Validity</td><td>" + json.compinfo.TotalValidity+ '</td></tr>');
             }
 
+            if (json.compinfo.forVersion == 'airgain-count' || json.compinfo.forVersion == 'airgain')
+            {
+                $('#formula tbody').append(
+                        '<tr><td><a href="waypoint_map.html?regPk=' + json.compinfo.regPk + '" class="btn btn-secondary btn-sm">Waypoints</a></td></tr>');
+            }
+
             // remove empty cols
             for ( var i=1; i<=numCols; i++ ) 
             {
