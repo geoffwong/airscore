@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Fixed Total Validity (FTV)</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="microajax.minified.js"></script>
+    <script src="url.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li class="nav-item active"> 
+                <a class="nav-link" href="#">Overall</a> 
+                <span class="sr-only">(current)</span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+<h1 class="mt-3">Fixed Total Validity (FTV)</h1>
+Fixed Total Validity (FTV) is a way of scoring a percentage 
+of "your best flying" in a competition. It is similar to selecting
+your best X rounds out of a total of Y rounds. But it allows a pilot
+to include low validity rounds they have won, which would may otherwise 
+be discarded in round by round scoring.
+
+For FTV, there are two separate concepts that are important for each 
+task:
+<ol>
+<li> the <i>validity</i> (GAP task quality) of the task 
+<li> how well a pilot flew on each task as a percentage: <i>pilot score / validity</i>
+</ol>
+In order to generate a score for a pilot we must work out what the
+overall validity score for the competition will be.
+We do this by summing the validity of each task for the competition and 
+multiplying by the given FTV percentage, this is the <i>competition validity</i>. This also gives us the maximum score a 
+pilot may have: <i>sum(task validity) * FTV% * 1000</i>. This value defines the 
+maximum amount of validity that is included in a pilot's score. This is a similar concept 
+to the number of rounds you might score, but instead of counting each round 
+as "1" we count rounds between 0-1 and sum these up.
+<p>
+To determine a pilot's score we sum up their best scores, to do this:
+<ol>
+<li> A pilot's scores are ordered by how well they flew (see (2) above) on each task.
+<li> Scores are then selected from this list until the sum of the validity of the tasks included (not the scores!) for a pilot equals the competition validity. note: this may result in a percentage of a task being included in order to match the competition validity.
+<li> The scores of the tasks included for a particular pilot are then summed to get their overall score.
+</ol>
+<p>
+The net effect of this scoring is that a pilot who flies well on bad days can include more of these bad days (low validity) in their total score than a pilot who only flies well on good days (high validity) and still get the same overall score. 
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="js/enums.js"></script>
+    <script type="text/javascript" src="js/pop_comp_overall.js?1"></script>
+    <script type="text/javascript" src="js/overall_class_filter.js?1"></script>
+</body>
+</html>
+

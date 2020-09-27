@@ -82,11 +82,15 @@ L.Map.addInitHook(function () {
 
 function add_label(map, pos, txt, classn, size, anchor)
 {
-    if (!size)
-    {
-        var width = (txt.length+1) * 7;
-        size = [ width, 19 ];
-    }
+    var tstdiv = document.getElementById("txttest");
+    tstdiv.innerHTML = txt;
+
+    //if (!size)
+    //{
+        //var width = (txt.length+2) * 7;
+        //size = [ width, 19 ];
+    //}
+    size = [ tstdiv.clientWidth+5, tstdiv.clientHeight ];
     if (!anchor)
     {
         anchor = [-1, -1];
@@ -193,12 +197,13 @@ function add_play_controls(map)
     // add a replay control panel
     var pkey = L.control.play({ position: 'bottomright' }).addTo(map);
     pkey.show();
-
+    return pkey;
 }
 function add_panel(map, locn, ovhtml, classn)
 {
     panel = L.control.panel({ position: locn }).addTo(map);
     panel.show(ovhtml, classn);
+    return panel;
 }
 
 function merge_tracks(tasPk, traPk, incPk)
@@ -298,7 +303,7 @@ function plot_task_route(map, ssr)
         lasLon = ssr[row]["rwpLongDecimal"];
         sLat = ssr[row]["ssrLatDecimal"];
         sLon = ssr[row]["ssrLongDecimal"];
-        cname = "" + count + "*" + ssr[row]["rwpName"];
+        cname = count + ".&nbsp;" + ssr[row]["rwpName"];
         crad = ssr[row]["tawRadius"];
         shape = ssr[row]["tawShape"];
 

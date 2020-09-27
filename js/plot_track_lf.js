@@ -53,7 +53,9 @@ function plot_track(jstr)
     line = Array();
     segments = Array();
     trklog = Array();
-    color = (onscreen.length % 7)+1;
+    onlen = Object.keys(onscreen).length
+    color = (onlen % 7)+1;
+    console.log("len=" + onlen + " base color="+color);
 
 	if (track[0][0] < time_bounds['first'])
 	{
@@ -288,6 +290,10 @@ function plot_track_header(body)
     {
         ihtml = ihtml + body["comment"] + "<br>\n";
     }
+    onlen = Object.keys(onscreen).length
+    color = (onlen % 7)+1;
+    strcol = sprintf("#%02x%02x%02x",200*((color&0x4)>>2),200*((color&0x2)>>1),200*(color&0x1)), 
+    ihtml = ihtml + '<hr style="border-color: '+strcol+'; border-width:3px; margin: 0px; padding: 0px;">';
     ihtml = ihtml + "</div>";
     add_panel(map, "topright", ihtml, 'map_panel');
 }

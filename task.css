@@ -1,17 +1,39 @@
 .pagination {
 	margin-bottom: 15px;
-	}
+}
+#txttest {
+    position: absolute;
+    visibility: hidden;
+    font-size:11px;
+    font-weight:bold;
+    height: auto;
+    width: auto;
+    white-space: nowrap; 
+}
 .waypoint {
     background: #ffffff;
-    opacity:0.6;
+    opacity:0.8;
     color:#000000;
     font-size:11px;
     font-weight:bold;
-    margin:0px;
+    margin:0px 1px 0px 1px;
     padding:0px;
     width:100%;
+    border-radius: 0px 3px 3px 3px;
     border:1px #000000 solid;
     }
+.waypoint:before {
+  content: ' ';
+  width: 0;
+  opacity:1;
+  height: 0;
+  border-style: solid;
+  border-width: 0px 0px 5px 5px;
+  border-color: transparent transparent transparent #000000;
+  left: 0;
+  top: 0;
+  position: absolute;
+}
 .missedwpt {
     background: #cc0000;
     opacity:0.6;
@@ -64,7 +86,8 @@
 .map_panel {
     border:solid #AAA 2px;
     border-radius: 5px;
-    background-color:rgba(255, 255, 255, .6);
+    background-color:rgba(255, 255, 255, .8);
+    color:black;
     font-family:Arial, Helvetica, Bold, sans-serif;
     font-size:12px;
     text-align:left;
