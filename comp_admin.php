@@ -47,7 +47,7 @@ if (reqexists('add'))
         $regarr['forMinDistance'] = 5.0;
         $regarr['forNomTime'] = 90;
         $regarr['forNomGoal'] = 30.0;
-        $regarr['forGoalSSPenalty'] = 1.0;
+        $regarr['forGoalSSpenalty'] = 1.0;
         $regarr['forLinearDist'] = 0.5;
         $regarr['forDiffDist'] = 3.0;
         $regarr['forDiffRamp'] = 'flexible';

@@ -203,7 +203,7 @@ function formula_card(info)
     }
     if (tc < allkeys.length-1)
     {
-        add_td($('#formula2 tbody'), allkeys[tc+1], values[tc+1]);
+        add_td($('#formula2 tbody'), allkeys[tc], values[tc]);
         tc++;
     }
     if (tc < allkeys.length)

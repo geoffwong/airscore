@@ -22,34 +22,37 @@ if (!is_admin('admin',$usePk,$comPk))
 // Add/update the formula
 $regarr = [];
 $regarr['comPk'] = $comPk;
-$regarr['forClass'] = reqsval('formula');
-$regarr['forVersion'] = reqsval('version');
-$regarr['forNomDistance'] = reqfval('nomdist');
-$regarr['forMinDistance'] = reqfval('mindist');
-$regarr['forNomTime'] = reqfval('nomtime');
-$regarr['forNomGoal'] = reqfval('nomgoal');
-$regarr['forNomLaunch'] = reqfval('nomlaunch');
-$regarr['forGoalSSPenalty'] = reqfval('sspenalty');
-$regarr['forLinearDist'] = reqfval('lineardist');
-$regarr['forDiffDist'] = reqfval('diffdist');
-$regarr['forDiffRamp'] = reqsval('difframp');
-$regarr['forDiffCalc'] = reqsval('diffcalc');
-$regarr['forDistMeasure'] = reqsval('distmeasure');
-$regarr['forArrival'] = reqsval('arrivalmethod');
-if (array_key_exists('weightstart', $_REQUEST))
+$regarr['forPk'] = $forPk;
+$regarr['forClass'] = reqsval('Formula');
+$regarr['forVersion'] = reqsval('Version');
+$regarr['forNomDistance'] = reqfval('NomDistance');
+$regarr['forMinDistance'] = reqfval('MinDistance');
+$regarr['forNomTime'] = reqfval('NomTime');
+$regarr['forNomGoal'] = reqfval('NomGoal');
+$regarr['forNomLaunch'] = reqfval('NomLaunch');
+$regarr['forGoalSSpenalty'] = reqfval('GoalSSpenalty');
+$regarr['forLinearDist'] = reqfval('LinearDist');
+$regarr['forDiffDist'] = reqfval('DiffDist');
+$regarr['forDiffRamp'] = reqsval('DiffRamp');
+$regarr['forDiffCalc'] = reqsval('DiffCalc');
+$regarr['forDistMeasure'] = reqsval('DistMeasure');
+$regarr['forArrival'] = reqsval('Arrival');
+if (array_key_exists('WeightStart', $_REQUEST))
 {
-        $regarr['forWeightStart'] = reqfval('weightstart');
-        $regarr['forWeightArrival'] = reqfval('weightarrival');
-        $regarr['forWeightSpeed'] = reqfval('weightspeed');
+    $regarr['forWeightStart'] = reqfval('WeightStart');
+    $regarr['forWeightArrival'] = reqfval('WeightArrival');
+    $regarr['forWeightSpeed'] = reqfval('WeightSpeed');
 }
-$regarr['forStoppedGlideBonus'] = reqfval('glidebonus');
-$clause = "comPk=$comPk";
+$regarr['forStoppedGlideBonus'] = reqfval('StoppedGlideBonus');
+$clause = "forPk=$forPk";
 
 $forPk = insertup($link, 'tblFormula', 'forPk', $clause,  $regarr);
 $sql = "update tblCompetition set forPk=$forPk where comPk=$comPk";
 $result = mysql_query($sql,$link);
 
 $res['result'] = "ok";
+//$res['regarr'] = $regarr;
+//$res['clause'] = $clause;
 print json_encode($res);
 ?>
 

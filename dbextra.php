@@ -35,7 +35,7 @@ function insertnullup($link,$table,$key,$clause,$map)
         // update fields
         foreach ($map as $k => $val)
         {
-            if ($map[$k] != '')
+            if (!($map[$k] === ''))
             {
                 $ref[$k] = $val;
             }
@@ -97,7 +97,7 @@ function insertup($link,$table,$key,$clause,$map)
         // update fields
         foreach ($map as $k => $val)
         {
-            if ($map[$k] != '')
+            if (!($map[$k] === ''))
             {
                 $ref[$k] = $val;
             }

@@ -16,7 +16,7 @@ $usePk = auth('system');
 $link = db_connect();
 $query = "select comName from tblCompetition where comPk=$comPk";
 $result = mysql_query($query, $link) or die('Task add failed: ' . mysql_error());
-$comName = mysql_result($result,0);
+$comName = mysql_result($result,0,0);
 
 echo "<p><h2><a href=\"comp_result.php?comPk=$comPk\">Competition - $comName</a></h2></p>";
 
@@ -43,13 +43,13 @@ if (array_key_exists('add', $_REQUEST))
         exit(1);
     }
 
-    $query = "select * from tblTask where tasDate='$Date' and comPk=$comPk";
-    $result = mysql_query($query, $link) or die('Task check failed: ' . mysql_error());
-    if (mysql_num_rows($result) > 0)
-    {
-        echo "Unable to add task with duplicate date: $Date<br>";
-        exit(1);
-    }
+    #$query = "select * from tblTask where tasDate='$Date' and comPk=$comPk";
+    #$result = mysql_query($query, $link) or die('Task check failed: ' . mysql_error());
+    #if (mysql_num_rows($result) > 0)
+    #{
+    #    echo "Unable to add task with duplicate date: $Date<br>";
+    #    exit(1);
+    #}
 
     $query = "insert into tblTask (comPk, tasName, tasDate, tasTaskStart, tasFinishTime, tasStartTime, tasStartCloseTime, tasSSInterval, tasTaskType, regPk, tasDeparture, tasArrival) values ($comPk, '$Name', '$Date', '$Date $TaskStart', '$Date $TaskFinish', '$Date $StartOpen', '$Date $StartClose', $Interval, '$TaskType', $regPk, '$depart', '$arrival')";
     $result = mysql_query($query, $link) or die('Task add failed: ' . mysql_error());
@@ -134,8 +134,9 @@ if (array_key_exists('update', $_REQUEST))
     $teamover = reqsval('teamover');
     $compclass = reqsval('compclass');
     $rentry = reqsval('entry');
+    $regPk = reqival('region');
 
-    $query = "update tblCompetition set comName='$comname', comLocation='$location', comDateFrom='$datefrom', comDateTo='$dateto', comMeetDirName='$director', comTimeOffset=$timeoffset, comType='$comptype', comCode='$comcode', comOverallScore='$overallscore', comOverallParam=$overallparam, comTeamScoring='$teamscoring', comTeamSize=$teamsize, comTeamOver='$teamover', comClass='$compclass', comEntryRestrict='$rentry' where comPk=$comPk";
+    $query = "update tblCompetition set comName='$comname', comLocation='$location', comDateFrom='$datefrom', comDateTo='$dateto', comMeetDirName='$director', comTimeOffset=$timeoffset, comType='$comptype', comCode='$comcode', comOverallScore='$overallscore', comOverallParam=$overallparam, comTeamScoring='$teamscoring', comTeamSize=$teamsize, comTeamOver='$teamover', comClass='$compclass', comEntryRestrict='$rentry', regPk=$regPk where comPk=$comPk";
 
     # FIX: re-optimise tracks if change from Free to OLC and vice versa
 
@@ -154,7 +155,7 @@ if (array_key_exists('upformula', $_REQUEST))
     $regarr['forNomTime'] = reqfval('nomtime');
     $regarr['forNomGoal'] = reqfval('nomgoal');
     $regarr['forNomLaunch'] = reqfval('nomlaunch');
-    $regarr['forGoalSSPenalty'] = reqfval('sspenalty');
+    $regarr['forGoalSSpenalty'] = reqfval('sspenalty');
     $regarr['forLinearDist'] = reqfval('lineardist');
     $regarr['forDiffDist'] = reqfval('diffdist');
     $regarr['forDiffRamp'] = reqsval('difframp');
@@ -193,7 +194,7 @@ $forPk = 0;
 $ctype = '';
 $sql = "SELECT T.* FROM tblCompetition T where T.comPk=$comPk";
 $result = mysql_query($sql,$link);
-$row = mysql_fetch_array($result);
+$row = mysql_fetch_array($result, MYSQL_ASSOC);
 if ($row)
 {
     echo "<form action=\"competition.php?comPk=$comPk\" name=\"comedit\" method=\"post\">";
@@ -215,16 +216,27 @@ if ($row)
     $entry = $row['comEntryRestrict'];
     $cclass = $row['comClass'];
     $clocked = $row['comLocked'];
+    $regPk = $row['regPk'];
+
+    $regarr = [];
+    $sql = "SELECT * FROM tblRegion R order by regDescription";
+    $result = mysql_query($sql,$link);
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+        $regDesc = $row['regDescription'];
+        $regarr["$regDesc"] = $row['regPk'];
+    }
 
     $out = ftable(
-        array(
-            array('Name:', fin('comname', $cname, 14), 'Type:', fselect('comptype', $ctype, array('OLC', 'RACE', 'Free', 'Route', 'Team-RACE', 'RACE-handicap')), 'Class:', fselect('compclass', $cclass, array('PG','HG','mixed'))),
-            array('Date From:', fin('datefrom', $cdfrom, 10), 'Date To:', fin('dateto', $cdto, 10), 'Pilot Entry:', fselect('entry', $entry, array('open', 'registered'))),
-            array('Director:', fin('director', $cdirector, 14), 'Location:', fin('location', $clocation, 10)),
-            array('Abbrev:', fin('code', $ccode, 10), 'Time Offset:', fin('timeoffset', $ctimeoffset, 10)),
-            array('Scoring:', fselect('overallscore', $overallscore, array('all', 'ftv', 'round', 'round-perc' )), 'Score param:', fin('overallparam', $overallparam, 10)),
-            array('Team Scoring:', fselect('teamscoring', $teamscoring, array('aggregate', 'team-gap', 'handicap')), 'Team Over:', fselect('teamover', $teamover, array('best', 'selected')), 'Team Size:', fin('teamsize', $teamsize, 4))
-        ), '', '', ''
+        [
+            ['Name:', fin('comname', $cname, 14), 'Type:', fselect('comptype', $ctype, array('OLC', 'RACE', 'Free', 'Route', 'Team-RACE', 'RACE-handicap')), 'Class:', fselect('compclass', $cclass, array('PG','HG','mixed'))],
+            ['Date From:', fin('datefrom', $cdfrom, 10), 'Date To:', fin('dateto', $cdto, 10), 'Pilot Entry:', fselect('entry', $entry, array('open', 'registered'))],
+            ['Director:', fin('director', $cdirector, 14), 'Location:', fin('location', $clocation, 10)],
+            ['Abbrev:', fin('code', $ccode, 10), 'Time Offset:', fin('timeoffset', $ctimeoffset, 10)],
+            ['Scoring:', fselect('overallscore', $overallscore, array('all', 'ftv', 'round', 'round-perc' )), 'Score param:', fin('overallparam', $overallparam, 10)],
+            ['Team Scoring:', fselect('teamscoring', $teamscoring, array('aggregate', 'team-gap', 'handicap')), 'Team Over:', fselect('teamover', $teamover, array('best', 'selected')), 'Team Size:', fin('teamsize', $teamsize, 4)],
+            ['Waypoints:', fselect('region', $regPk, $regarr) ]
+        ], '', '', ''
     );
 
     echo $out;
@@ -236,7 +248,7 @@ if ($row)
 $sql = "select U.*, A.* FROM tblCompAuth A, tblUser U where U.usePk=A.usePk and A.comPk=$comPk";
 $result = mysql_query($sql,$link);
 $admin = [];
-while ($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $admin[] = $row['useLogin'];
 }
@@ -247,7 +259,7 @@ echo 'Add Administrator: ';
 $sql = "select U.usePk as user, U.*, A.* FROM tblUser U left outer join tblCompAuth A on A.usePk=U.usePk where A.comPk is null or A.comPk<>$comPk group by U.useLogin order by U.useLogin";
 $admin = [];
 $result = mysql_query($sql,$link);
-while ($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $admin[$row['useLogin']] = intval($row['user']);
 }
@@ -264,7 +276,7 @@ if (in_array($ctype, $has_formula))
 {
     $sql = "SELECT F.* FROM tblFormula F where F.comPk=$comPk";
     $result = mysql_query($sql,$link);
-    $row = mysql_fetch_array($result);
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
     if ($row)
     {
         $class = $row['forClass'];
@@ -314,7 +326,7 @@ $count = 1;
 $sql = "SELECT T.*, traPk as Tadded FROM tblTask T left outer join tblComTaskTrack CTT on CTT.tasPk=T.tasPk where T.comPk=$comPk group by T.tasPk order by T.tasDate";
 $result = mysql_query($sql,$link);
 
-while($row = mysql_fetch_array($result))
+while($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $tasPk = $row['tasPk'];
     $tasDate = $row['tasDate'];
@@ -346,7 +358,7 @@ echo "</ol>";
 $sql = "SELECT * FROM tblRegion R";
 $result = mysql_query($sql,$link);
 $regions = [];
-while ($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $regPk = $row['regPk'];
     $regDesc = $row['regDescription'];
@@ -358,7 +370,7 @@ $result = mysql_query($sql,$link);
 $defregion = '';
 if (mysql_num_rows($result) > 0)
 {
-    $row = mysql_fetch_array($result);
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
     $defregion = $row['regPk'];
 }
 
