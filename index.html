@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>AirScore Competitions</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+    <link href="navbar.css?v=1" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="microajax.minified.js"></script>
+    <script src="utils.js"></script>
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top" data-spy="affix">
+      <div class="container">
+        <a class="navbar-brand" href="#">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active"> <a class="nav-link" href="comp_overview.html">Competitions</a> 
+                <span class="sr-only">(current)</span>
+                </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="pilot_overview.html">Pilots</a> </li>
+            <li class="nav-item"><a class="nav-link" href="submit_track.html">Submit</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container" id="main">
+    <br>
+    <table id="competitions" class="row-border stripe compact mb-1" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>Competition</th>
+            <th>Location</th>
+            <th></th>
+            <th>Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Tasks</th>
+        </tr>
+    </thead>
+    </table>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <!-- script src="https://rawgit.com/bassjobsen/affix/master/assets/js/affix.js"></script -->
+    <!-- script type="text/javascript" src="navbar.js"></script -->
+    <script type="text/javascript" src="js/pop_comps.js"></script>
+</body>
+</html>
+
