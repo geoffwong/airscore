@@ -18,7 +18,7 @@
 
     <!-- JS -->
     <script src="microajax.minified.js"></script>
-    <script src="utils.js"></script>
+    <script src="js/utils.js"></script>
   </head>
 
   <body>
@@ -31,7 +31,7 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
+          <ul class="navbar-nav ml-auto" id="tasknav">
             <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
             <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
             <li class="nav-item">
@@ -48,6 +48,55 @@
       </div>
     </nav>
 
+	<div class="modal fade" id="resultmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Manual Update</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="updateresult" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+			<div class="form-row">
+			  <label for="date-from" class="col-2 1ol-form-label">Result</label>
+			    <div class="col-10" id="resulttype">
+                <select name="result" id="result" class="form-control"></select>
+			    </div>
+			</div>
+		    <div class="form-row">
+			  	<label for="taskname" class="col-2 col-form-label">Glider</label>
+                <div class="col-10"><input class="form-control" type="text" value="" id="glider"></div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="regiondiv" class="col-2 col-form-label">DHV</label>
+			    <div class="col-10" id="regiondiv">
+                <select name="region" id="region" class="form-control"></select>
+			    </div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="taskname" class="col-2 col-form-label">Distance</label>
+                <div class="col-10"><input class="form-control" type="text" value="" id="penalty"></div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="taskname" class="col-2 col-form-label">Penalty</label>
+                <div class="col-10"><input class="form-control" type="text" value="" id="penalty"></div>
+		    </div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="create_task();">Update</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+        
+      </div>
+
+    </div>
+	</div>
     <div class="container-fluid">
     <div class="row mt-1 mb-2">
         <div class="col comp_header" id="comp_header">
@@ -97,7 +146,7 @@
     </table>
     </div>
     </div>
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-sm">
         <table class="table table-sm form_param" id="formula1">
         <thead class="thead-light small" id="formula_hd">
@@ -130,6 +179,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="js/enums.js"></script>
     <script type="text/javascript" src="js/pop_task.js"></script>
     <script type="text/javascript" src="js/class_filter.js"></script>
 </body>

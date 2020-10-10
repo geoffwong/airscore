@@ -15,10 +15,11 @@
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <!-- JS -->
     <script src="microajax.minified.js"></script>
-    <script src="url.js"></script>
+    <script src="js/url.js"></script>
   </head>
 
   <body>
@@ -45,11 +46,128 @@
       </div>
     </nav>
 
+    <!-- The Modal -->
+	<div class="modal fade" id="airspacemodal" tabindex="-1" role="dialog" aria-labelledby="airspaceModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Add Airspace</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createairspace" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row" id="route">
+			  	<label for="date-from" class="col-2 col-form-label">Name</label>
+			    <div class="col-10">
+			 		<input class="form-control" type="text" value="" id="airspaceid">
+			    </div>
+		    </div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="add_airspace();">Add</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+
+    </div>
+	</div>
+
+	<div class="modal fade" id="waypointmodal" tabindex="-1" role="dialog" aria-labelledby="waypointModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Add Waypoint</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createwaypoint" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row">
+			  	<label for="date-from" class="col-3 col-form-label">Waypoint</label>
+			    <div class="col-9 mb-1">
+                    <select name="waypoint" id="waypoint" class="form-control" placeholder="Waypoint"></select>
+			    </div>
+		    </div>
+		    <div class="form-row mb-1">
+			  	<label for="wpttype" class="col-2 col-form-label">Type</label>
+			    <div class="col-4">
+                    <select name="wpttype" id="wpttype" class="form-control" placeholder="waypoint"></select>
+			    </div>
+			  	<label for="wpthow" class="col-2 col-form-label">How</label>
+			    <div class="col-4">
+                    <select name="wpthow" id="wpthow" class="form-control" placeholder="entry"></select>
+			    </div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="wptshape" class="col-2 col-form-label">Shape</label>
+			    <div class="col-4">
+                    <select name="wptshape" id="wptshape" class="form-control" placeholder="circle"></select>
+			    </div>
+			  	<label for="date-from" class="col-2 col-form-label">Size</label>
+			    <div class="col-4">
+                    <input type="text" class="form-control mb-2" id="wptsize" placeholder="Size in metres">
+			    </div>
+		    </div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="add_waypoint();">Add</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+
+    </div>
+	</div>
+
+    <!-- Delete Modal -->
+	<div class="modal fade" id="delmodal" tabindex="-1" role="dialog" aria-labelledby="deleteModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Delete Task</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createairspace" action="javascript:void(0);" method="post">
+			<center>Confirm Task Deletion?</center>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="delete_task();">Delete</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+	</div>
+
+    <!-- Main Page -->
     <div class="container">
     <div class="row mt-3">
-        <div class="col-8"><h2>Task Details</h2></div>
+        <div class="col-12">
+        <button id="delbut" class="btn btn-danger btn-sm float-left" data-toggle="modal" data-target="#delmodal">Delete</button>
+        <button id="scorebut" class="btn btn-secondary btn-sm float-right" onclick="score_task();">Score</button>
+        </div>
+    </div>
+    <div class="row mt-1">
+        <div class="col-8">
+        <h2>Task Details</h2>
+        </div>
         <div class="col-4">
-            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_task();">Save</button>
+            <button class="btn btn-primary btn-sm float-right ml-1" id="savetask" onclick="save_task();">Save<div id="savespin"></div></button>
             <button class="btn btn-secondary btn-sm float-right" onclick="reset_task();">Reset</button>
         </div>
     </div>
@@ -68,12 +186,12 @@
     <div class="row mt-5">
         <div class="col-4"><h2>Waypoints</h2></div>
         <div class="col-8">
-            <button class="btn btn-primary btn-sm float-right ml-1" onclick="update_waypoints();">Update</button>
-            <button class="btn btn-primary btn-sm float-right ml-1" onclick="add_waypoints();">Add</button>
+            <button class="btn btn-primary btn-sm float-right ml-1" id="savewpts" onclick="save_waypoints();">Save<div id="wptspin" class="fa"></div></button>
+            <button class="btn btn-primary btn-sm float-right ml-1" data-toggle="modal" data-target="#waypointmodal">Add</button>
         </div>
     </div>
     <div class="row" id="waypoints">
-        <table class="table table-sm form_param" id="waypointstbl">
+        <table class="table table form_param" id="waypointstbl">
         <thead class="thead-light small" id="waypointstbl_hd">
             <tr><th>Waypoint</th><th>Type</th><th>How</th><th>Shape</th><th>Size</th><th>Distance</th><th></th></tr>
         </thead>
@@ -83,10 +201,11 @@
     <div class="row mt-5">
         <div class="col-4"><h2>Airspace</h2></div>
         <div class="col-8">
-            <button class="btn btn-primary btn-sm float-right ml-1" onclick="add_waypoints();">Check</button>
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="check_airspace();">Check<div id="airspin" class="fa"></div></button>
+            <button class="btn btn-primary btn-sm float-right ml-1" data-toggle="modal" data-target="#airspacemodal">Add</button>
         </div>
     </div>
-    <div class="row">
+    <div class="row mb-4">
         <table class="table table-sm form_param" id="airspace">
         <thead class="thead-light small">
             <tr><th>Airspace</th><th>Type</th><th>Low</th><th>High</th></tr>
@@ -98,6 +217,8 @@
 
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
+    <script src="vendor/jquery.ui.touch-punch.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="js/enums.js"></script>

@@ -128,7 +128,7 @@ function add_map_row(comPk, trackinfo, count)
     var body = document.createElement('div');
     body.innerHTML = '<br><h3 id=\"task_hd\">'+trackinfo.title+'</h3><h4>'+trackinfo.detail.date+' UTC</h4>' +
                     '<br><table class="taskinfo">' +
-                    '<tr><td>Pilot:</td><td>' + trackinfo.detail.name +  '</td></tr>' + 
+                    '<tr><td>Pilot:</td><td><a href="pilot.html?pilPk=' + trackinfo.detail.pilPk + '">' + trackinfo.detail.name +  '</a></td></tr>' + 
                     '<tr><td>Glider:</td><td>' + trackinfo.detail.glider + '</td></tr>' + 
                     '<tr><td>XC Distance:</td><td>' + trackinfo.detail.dist + ' km</td></tr>' + 
                     '<tr><td>Duration:</td><td>' + trackinfo.detail.duration + '</td></tr></table><br>';
@@ -154,8 +154,16 @@ function plot_all_tracks(comPk)
 
         // setup comp info
         var ele = $('#comp_name');
-        ele.html(comp_info.comp.comName + " - <small>" + comp_info.comp.comLocation + "</small>");
-        ele.append($('<div class="row"><div class="col-md-6"><h5>'+comp_info.comp.comDateFrom + ' - ' + comp_info.comp.comDateTo + '</h5></div>'));
+        if (comp_info.comp.comClass == "HG")
+        {
+            ele.addClass("bannerhg");
+        }
+        else
+        {
+            ele.addClass("banner");
+        }
+        ele.html(comp_info.comp.comName);
+        ele.append($('<div class="row"><div class="col-md-6 ml-1"><h4><b>'+ comp_info.comp.comLocation + '</b>&nbsp;<small>' + comp_info.comp.comDateFrom + ' - ' + comp_info.comp.comDateTo + '</small></h4></div>'));
         if (comp_info.comp.regPk)
         {
             ele.append($('<div class="row"><div class="col-md-6"><a href="waypoint_map.html?regPk=' + comp_info.comp.regPk + '" class="btn btn-secondary">Waypoints</a></div></div>'));

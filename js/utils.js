@@ -185,6 +185,22 @@ function format_seconds(tm)
 
     return sprintf("%02d:%02d:%02d", h, m, s);
 }
+function clock2seconds(tm)
+{
+    var offset = 0;
+    var hhmmss = tm.split(':');
+
+    offset = parseInt(hhmmss[0]) * 3600;
+    if (hhmmss.length > 1)
+    {
+        offset += parseInt(hhmmss[1]) * 60;
+    }
+    if (hhmmss.length > 2)
+    {
+        offset += parseInt(hhmmss[2]);
+    }
+    return offset;
+}
 function today()
 {
     var today = new Date();

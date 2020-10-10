@@ -23,7 +23,12 @@ $(document).ready(function() {
             var numCols = $("th", table).length;
 
             // comp info
+            var bg = "url('flags/"+json.info.pilNationCode.toLowerCase()+"') no-repeat left top";
+            console.log("bg="+bg);
+            $("#pilnation").css("background", bg);
+            $("#pilnation").css("text-shadow", "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000");
             $('#pilot_name').text(json.info.pilFirstName);
+            $('#pilot_nation').text(json.info.pilNationCode);
             $('#pilot_nation').text(json.info.pilNationCode);
         
             // waypoints

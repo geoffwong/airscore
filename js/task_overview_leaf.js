@@ -48,8 +48,16 @@ function plot_all_tasks(comPk)
 
         // setup comp info
         var ele = $('#comp_name');
-        ele.html(comp_tasks.comp.comName + " - <small>" + comp_tasks.comp.comLocation + "</small>");
-        ele.append($('<div class="row"><div class="col-md-6"><h5>'+comp_tasks.comp.comDateFrom + ' - ' + comp_tasks.comp.comDateTo + '</h5></div>'));
+        if (comp_tasks.comp.comClass == "HG")
+        {
+            ele.addClass("bannerhg");
+        }
+        else
+        {
+            ele.addClass("banner");
+        }
+        ele.html(comp_tasks.comp.comName);
+        ele.append($('<div class="row"><div class="col-md-6 ml-1"><h4><b>'+ comp_tasks.comp.comLocation + '</b>&nbsp;<small>' + comp_tasks.comp.comDateFrom + ' - ' + comp_tasks.comp.comDateTo + '</small></h4></div>'));
         if (comp_tasks.comp.regPk)
         {
             ele.append($('<div class="row"><div class="col-md-6"><a href="waypoint_map.html?regPk=' + comp_tasks.comp.regPk + '" class="btn btn-secondary">Waypoints</a></div></div>'));
