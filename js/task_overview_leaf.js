@@ -27,9 +27,9 @@ function add_map_row(comPk, task, count)
                     '<tr><td>Day Quality:</td><td>' + task.tasQuality + '</td></tr></table><br>';
 
     body.innerHTML = body.innerHTML + '<a class="btn btn-primary" href="task_result.html?comPk='+comPk+'&tasPk='+task.tasPk+'");">Task Scores</a>';
-    body.innerHTML = body.innerHTML + '<a class="btn btn-primary" href="http://aerialtechnologies.com.au/para3d/CesiumViewer/index.html?taskid='+task.tasPk+'");">View Flights in 3D</a>';
+    body.innerHTML = body.innerHTML + '<a class="btn btn-success ml-1" href="http://aerialtechnologies.com.au/para3d/CesiumViewer/index.html?taskid='+task.tasPk+'");">3D Flights</a>';
 
-    body.innerHTML = body.innerHTML + '&nbsp;<a class="btn btn-secondary mr-1" href="download_task.php?comPk='+comPk+'&tasPk='+task.tasPk+'");">XCTrack</a>';
+    body.innerHTML = body.innerHTML + '<a class="btn btn-secondary ml-1" href="download_task.php?comPk='+comPk+'&tasPk='+task.tasPk+'");">XCTrack</a>';
     
     colmd5.appendChild(body);
 
