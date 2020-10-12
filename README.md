@@ -88,7 +88,7 @@ What do the perl scripts do:
 * optimise_flight.pl - do an OLC optimisation on a flight
 * short_route.pl - compute the shortest-route through a task
 * task_score.pl - score a task
-* task_up.pl - re-verify all tracks assocaited with a task, and re-score it
+* task_up.pl - re-verify all tracks associated with a task, and re-score it
 * team_score.pl - team scoring stuff
-* track_verify_sr.pl - verify an indivudal track against a task
+* track_verify_sr.pl - verify an individual track against a task
 
