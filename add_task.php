@@ -28,7 +28,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
     $regid = [];
     foreach ($region as $key => $row)
     {
-        $regid[trim($row['rwpName'])] = $key;
+        $regid[strtolower(trim($row['rwpName']))] = $key;
     }
     //$regids = var_export($regid,true);
     error_log("region $regPk");
@@ -65,7 +65,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
     $wtype = "'waypoint'";
     foreach ($waypoints as $wpt)
     {
-        $rwpPk = $regid[trim($wpt['waypoint']['name'])];
+        $rwpPk = $regid[strtolower(trim($wpt['waypoint']['name']))];
         $radius = $wpt['radius'];
         if ($wtype == "'endspeed'")
         {

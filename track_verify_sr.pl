@@ -434,7 +434,7 @@ sub validate_task
         # Work out leadout coeff / maxdist if we've moved on
         if ($debug)
         {
-            print "newdist=$newdist maxdist=$maxdist time=", ($coord->{'time'} - $startss), " distrem=", ($essdist - $maxdist), " ncoeff=$coeff\n";
+            print "newdist=$newdist maxdist=$maxdist wmade=$wmade time=", ($coord->{'time'} - $startss), " distrem=", ($essdist - $maxdist), " ncoeff=$coeff\n";
         }
         if ($newdist > $maxdist)
         {
@@ -862,14 +862,17 @@ sub validate_task
     elsif ($wcount < $allpoints)
     {
         # we didn't make it into goal
-        my $remainingss;
+        my $remainingss = 0;
         my $cwclosest;
 
         $dist_flown = $maxdist; # distance_flown($waypoints, $wmade, $closestcoord);
-        $remainingss = $essdist - $dist_flown + $startssdist;
+        if (!defined($endss))
+        {
+            $remainingss = $essdist - $dist_flown + $startssdist;
+        }
 
         # add rest of (distance_short * $task->{'sfinish'}) to coeff
-        print "Incomplete ESS wcount=$wcount dist=$dist_flown remainingss=$remainingss: ", $remainingss*($task->{'sfinish'}-$startss), "\n";
+        print "Didn't make goal endss=$endss count=$wcount dist=$dist_flown remainingss=$remainingss: ", $remainingss*($task->{'sfinish'}-$startss), "\n";
         print "Closest to $wcount, distance=", distance($closestcoord, $waypoints->[$closestwpt]), "\n";
         if (!defined($endss))
         {

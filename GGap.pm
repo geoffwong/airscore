@@ -45,6 +45,10 @@ sub day_quality
     }
 
     $x = $taskt->{'launched'}/($taskt->{'pilots'}*$formula->{'nomlaunch'});
+    if ($x > 1)
+    {
+        $x = 1;
+    }
     $launch  = 0.027*$x + 2.917*$x*$x - 1.944*$x*$x*$x;
     if ($launch > 1) 
     {
@@ -295,7 +299,7 @@ sub points_allocation
     # Get all pilots and process each of them 
     # pity it can't be done as a single update ...
     $dbh->do('set @x=0;');
-    my $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarPk, traPk, tarDistance, tarSS, tarES, tarPenalty, tarResultType, tarLeadingCoeff, tarGoal, tarLastAltitude from tblTaskResult where tasPk=$tasPk and tarResultType <> 'abs' order by tarDistance desc, tarES");
+    my $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarPk, traPk, tarDistance, tarSS, tarES, tarPenalty, tarResultType, tarLeadingCoeff, tarGoal, tarLastAltitude, tarLastTime from tblTaskResult where tasPk=$tasPk and tarResultType <> 'abs' order by tarDistance desc, tarES");
     $sth->execute();
     my $ref;
     while ($ref = $sth->fetchrow_hashref()) 
@@ -308,6 +312,7 @@ sub points_allocation
         $taskres{'penalty'} = $ref->{'tarPenalty'};
         $taskres{'distance'} = $ref->{'tarDistance'};
         $taskres{'stopalt'} = $ref->{'tarLastAltitude'};
+        $taskres{'stoptime'} = $ref->{'tarLastTime'};
         # set pilot to min distance if they're below that ..
         if ($taskres{'stopalt'} > 0)
         {
@@ -369,7 +374,7 @@ sub points_allocation
         $sub->execute();
         while ($sref = $sub->fetchrow_hashref()) 
         {
-            #print "sref=",, $sref->{'tmTime'}, "\n";
+            # print "sref=",, $sref->{'tmTime'}, "\n";
             push @$kt, $sref->{'tmTime'};
         }
 
@@ -387,9 +392,6 @@ sub points_allocation
 #    }
 
     # Score each pilot now 
-    my $kmarr;
-    $kmarr = $taskt->{'kmmarker'};
-    @tmarker = @$kmarr;
     for my $pil ( @pilots )
     {
         my $Pdist;
@@ -426,10 +428,18 @@ sub points_allocation
         # Penalty for not making goal ..
         if ($pil->{'goal'} == 0)
         {
-            # Oz comps ...
             if ($task->{'sstopped'} == 0)
             {
+                # Lose your speed points if task not stopped
                 $Pspeed = 0;
+            }
+            else
+            {
+                # Lose speed points if landed
+                if ($pil->{'stoptime'} < $task->{'sstopped'})
+                {
+                    $Pspeed = 0;
+                }
             }
             $Parrival = 0;
         }

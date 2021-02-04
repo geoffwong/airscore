@@ -392,8 +392,8 @@ create table tblPilot
     pilPk           integer not null primary key auto_increment,
     pilFirstName    varchar(40) not null,
     pilLastName     varchar(40) not null,
-    pilHGFA         integer not null,
-    pilCIVL         integer not null,
+    pilHGFA         varchar(32) not null unique,
+    pilCIVL         integer not null unique,
     pilSex          enum("M", "F") not null,
     pilValidTo      date,
     pilAddress      varchar(128),
@@ -411,7 +411,9 @@ create table tblPilot
     pilEmergencyPhone varchar(24),
     pilPhoto        varchar(128),
     pilGlider       varchar(32),
-    gliGliderClass  enum('1','1/2','2','2/3','competition','floater','kingpost','open','rigid') default 'competition'
+    gliGliderClass  enum('1','1/2','2','2/3','competition','floater','kingpost','open','rigid') default 'competition',
+    index indHGFA (pilHGFA),
+    index indCIVL (pilCIVL)
 );
 
 drop table if exists tblCompPilot;

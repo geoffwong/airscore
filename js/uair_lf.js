@@ -1,4 +1,4 @@
-var onscreen = Array();
+var aironscreen = Array();
 var all_airspace;;
 var airspaceid;
 
@@ -48,7 +48,7 @@ function plot_air(airspace)
                 fillOpacity:0.2,
             }).addTo(map);
 
-        if (onscreen.length == 0 && count == 1)
+        if (aironscreen.length == 0 && count == 1)
         {
             map.setView(pos, 13);
         }
@@ -61,7 +61,7 @@ function plot_air(airspace)
         add_label(map, pos, cname, "waypoint");
         bounds.extend(pos);
 
-        onscreen[airspaceid] = track;
+        aironscreen[airspaceid] = track;
         return track;
     }
 
@@ -84,7 +84,7 @@ function plot_air(airspace)
         shape = airspace.airShape;
         connect = track[row][1];
 
-        if (onscreen.length == 0 && count == 1)
+        if (aironscreen.length == 0 && count == 1)
         {
             map.setView(new L.LatLng(lasLat, lasLon), 9);
         }

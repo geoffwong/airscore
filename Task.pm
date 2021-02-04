@@ -185,7 +185,8 @@ sub precompute_waypoint_dist
     $dist = 0.0;
     $wptdistcache->[0] = 0.0;
     #print Dumper($waypoints);
-    for my $i (0 .. $wcount-2)
+    $goal_point = $wcount - 1;
+    for my $i (0 .. $goal_point-1)
     {
         $s1{'lat'} = $waypoints->[$i]->{'short_lat'};
         $s1{'long'} = $waypoints->[$i]->{'short_long'};
@@ -197,19 +198,20 @@ sub precompute_waypoint_dist
         {
             $dist = $dist + $exdist;
         }
-        elsif ($waypoints->[$i]->{'how'} eq 'exit' && $waypoints->[$i+1]->{'how'} eq 'exit')
+        elsif ($waypoints->[$i]->{'how'} eq 'exit' and $waypoints->[$i+1]->{'how'} eq 'exit')
         {
             # Check centres?
             #print Dumper($waypoints->[$i]);
             #print Dumper($waypoints->[$i+1]);
-            if ($i > 0 && (ddequal($waypoints->[$i], $waypoints->[$i-1]) && $waypoints->[$i-1]->{'how'} eq 'exit'))
+            if ($i > 0 && (ddequal($waypoints->[$i], $waypoints->[$i+1]) and $waypoints->[$i+1]->{'how'} eq 'exit'))
             {
-                $dist = $dist + $waypoints->[$i]->{'radius'} - $waypoints->[$i-1]->{'radius'};
+                $dist = $dist + $waypoints->[$i+1]->{'radius'} - $waypoints->[$i]->{'radius'};
             }
             else
             {
-                $dist = $dist + $waypoints->[$i]->{'radius'};
+                $dist = $dist + $waypoints->[$i+1]->{'radius'};
             }
+            if ($debug) { print "same centre: $i dist=$dist\n"; }
         }
         $wptdistcache->[$i+1] = $dist;
         if ($debug) { print "$i: cumdist=$dist\n"; }
@@ -227,17 +229,15 @@ sub precompute_waypoint_dist
     $total_distance = $dist;
 
     $remainingdistcache = [];
-    for my $i (0 .. $wcount-2)
+    for my $i (0 .. $goal_point-1)
     {
         $remdist = $dist - $wptdistcache->[$i];
         $remainingdistcache->[$i] = $remdist;
-        #if ($debug) 
-        { print "$i: remdist=$remdist\n"; }
+        if ($debug) { print "$i: remdist=$remdist\n"; }
     }
-    $remainingdistcache->[$wcount-1] = 0.0;
-    $goal_point = $wcount - 1;
+    $remainingdistcache->[$goal_point] = 0.0;
 
-    if ($debug) { print "precompute dist=$dist\n"; }
+    if ($debug) { print "precompute dist=$dist\n"; print Dumper($remainingdistcache); }
 }
 
 sub remaining_task_dist
@@ -245,29 +245,71 @@ sub remaining_task_dist
     my $remdist = 0;
     my ($waypoints, $wmade, $coord) = @_;
     my $nextwpt = $waypoints->[$wmade];
+    my $lastwpt = $waypoints->[$wmade-1];
     my $nearwpt;
     my %s1;
     my %s2;
+    my %se;
     my $radius = 0;
+
+    $remdist = $remainingdistcache->[$wmade+1];
+
+    if (($nextwpt->{'how'} eq 'exit') and ($waypoints->[$goal_point]->{'how'} eq 'exit'))
+    {
+        my $boob = 1;
+        for my $wm ($wmade .. $goal_point)
+        {
+            if (($waypoints->[$wm]->{'lat'} != $waypoints->[$goal_point]->{'lat'}) or ($waypoints->[$wm]->{'long'} != $waypoints->[$goal_point]->{'long'}))
+            {
+                $boob = 0;
+                last;
+            }
+
+        }
+
+        # it's a task all around one waypoint
+        if ($boob)
+        {
+            $s1{'lat'} = $lastwpt->{'lat'};
+            $s1{'long'} = $lastwpt->{'long'};
+            my $cdist = qckdist2($coord, \%s1);
+            # @todo: fix this?
+            return $waypoints->[$goal_point]->{'radius'} - $cdist;
+        }
+    }
+
 
     if ($nextwpt->{'type'} eq 'goal')
     {
         # Special goal case
-        #print "goal remdist\n";
-        $s1{'lat'} = $nextwpt->{'lat'};
-        $s1{'long'} = $nextwpt->{'long'};
-        my $rdist = qckdist2($coord, \%s1);
-        if ($nextwpt->{'shape'} ne 'line')
+        if (($nextwpt->{'how'} eq 'exit')
+            and (($nextwpt->{'lat'} == $lastwpt->{'lat'}) and ($nextwpt->{'long'} == $lastwpt->{'long'})))
         {
+            # Exit goal from same waypoint (ugh)
+            $s1{'lat'} = $lastwpt->{'lat'};
+            $s1{'long'} = $lastwpt->{'long'};
+            my $rdist = qckdist2($coord, \%s1);
             $radius = $nextwpt->{'radius'};
+            $remdist = $radius - $rdist;
         }
-        $remdist = $rdist - $radius;
+        else
+        {
+            $se{'lat'} = $nextwpt->{'lat'};
+            $se{'long'} = $nextwpt->{'long'};
+            my $rdist = qckdist2($coord, \%se);
+            $remdist = $rdist;
+            if ($nextwpt->{'shape'} ne 'line')
+            {
+                $radius = $nextwpt->{'radius'};
+                $remdist = $remdist - $radius;
+            }
+        }
         return $remdist;
     }
 
-    $remdist = $remainingdistcache->[$wmade+1];
     # Special case for entry cylinder on goal
-    if (($nextwpt->{'how'} eq 'entry') and ($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'}) and ($nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'}))
+    if (($nextwpt->{'how'} eq 'entry') 
+        and ($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'}) and ($nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'}))
     {
         #print "wpt centre = goal remdist\n";
         $s1{'lat'} = $nextwpt->{'lat'};
@@ -279,7 +321,7 @@ sub remaining_task_dist
             $s1{'lat'} = $waypoints->[$goal_point]->{'lat'};
             $s1{'long'} = $waypoints->[$goal_point]->{'long'};
             my $rdist = qckdist2($coord, \%s1);
-            # print "    ### (Task.pm)entry/entry wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n";
+            if ($debug) { print "    ### (Task.pm)entry/entry wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n"; }
             $remdist = $rdist - $radius;
             return $remdist;
         }
@@ -316,7 +358,7 @@ sub remaining_task_dist
     $s2{'long'} = $waypoints->[$wmade+1]->{'short_long'};
 
     my $rdist = qckdist2($coord, \%s1) + qckdist2(\%s1, \%s2);
-    #print "    ### (Task.pm)remaining_task_dist wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n";
+    if ($debug) { print "    ### (Task.pm)remaining_task_dist wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n"; }
     $remdist = $remdist + $rdist - $radius;
 
     return $remdist;
@@ -430,7 +472,7 @@ sub distance_flown
     {
         $altdist = 0;
     }
-    # print "    ### distance_flown=$altdist ($total_distance-$rem)\n";
+    if ($debug) { print "    ### distance_flown=$altdist ($total_distance-$rem)\n"; }
     return $altdist;
 }
 

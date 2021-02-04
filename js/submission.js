@@ -92,6 +92,7 @@ function add_tasks(tasks)
 
 function update_classes(com_class)
 {
+    //console.log('com_class='+com_class);
     if (com_class == 'PG')
     {
         var pg = { novice: '1', fun: '1/2', sports: '2', serial: '2/3', competition: 'competition' };
@@ -110,6 +111,16 @@ function update_classes(com_class)
         });
         $('#dhv').val('open');
     }
+    else
+    {
+        var hg =  { novice: '1', fun: '1/2', sports: '2', serial: '2/3', 'CCC': 'competition',
+              floater: 'floater', kingpost: 'kingpost', 'HG-open': 'open', rigid: 'rigid' };
+        $('#dhv option').remove();
+        $.each(hg, function (key, val) {
+            $('#dhv').append("<option value=\""+val+"\">" + key + "</option>");
+        });
+        $('#dhv').val('2/3');
+    }
 }
 
 $("#compsel").change(function () {
@@ -119,6 +130,14 @@ $("#compsel").change(function () {
         {
             add_tasks(comp_json[i].tasks);
             update_classes(comp_json[i].comClass);
+            if (comp_json[i].comType == "OLC" || comp_json[i].comType == "Route")
+            {
+                $("#pilotquality").hide();
+            }
+            else
+            {
+                $("#pilotquality").show();
+            }
         }
 
     }
@@ -156,9 +175,9 @@ $(document).ready(function() {
                             text: task[0].comName
                         }));
                 add_tasks(task[0].tasks);
-                if (task[0].comClass == "HG")
+                if (task[0].comClass != "PG")
                 {
-                    update_classes("HG");
+                    update_classes(task[0].comClass);
                 }
                 if (task[0].comType == "OLC" || task[0].comType == "Route")
                 {
