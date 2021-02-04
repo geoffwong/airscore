@@ -1,4 +1,4 @@
-var onscreen = Array();
+var onscreen = {};
 var time_bounds = Array();
 var current = -1;
 var pause = 1;
@@ -46,6 +46,7 @@ function plot_track(jstr)
     body = resp.track;
     points = resp.points;
     plot_track_header(body);
+    trackid = body["trackid"];
     track = body["track"];
     initials = body["initials"];
     pngclass = body["class"];
@@ -55,7 +56,7 @@ function plot_track(jstr)
     trklog = Array();
     onlen = Object.keys(onscreen).length
     color = (onlen % 7)+1;
-    console.log("len=" + onlen + " base color="+color);
+    console.log("len=" + onlen + " base_color="+color);
 
 	if (track[0][0] < time_bounds['first'])
 	{
@@ -126,11 +127,13 @@ function plot_track(jstr)
     //map.addOverlay(polyline);
     //segments.push(polyline);
     document.getElementById("foo").value = trackid;
-    onscreen[trackid] = Array();
+    onscreen[trackid] = Object();
     onscreen[trackid]["track"] = trklog;
     onscreen[trackid]["segments"] = segments;
     onscreen[trackid]["initials"] = initials;
     onscreen[trackid]["class"] = pngclass;
+    console.log("plot_track: glider="+trackid);
+    console.log(onscreen);
     
     if (!body.tasPk)
     {
@@ -152,6 +155,7 @@ function do_add_track()
 {
     var e = document.getElementById("tracks");
     trackid = e.options[e.selectedIndex].value;
+    console.log("trackid="+trackid);
     var comPk = url_parameter('comPk');
     if (!onscreen[trackid])
     {
@@ -375,7 +379,7 @@ function plot_glider(glider,lat,lon,alt)
 {
     // FIX: plot a point ...
     var mark;
-    var html;
+    var ihtml;
     var off;
 
     //var para = L.icon({
@@ -387,21 +391,20 @@ function plot_glider(glider,lat,lon,alt)
     //L.marker([50.505, 30.57], {icon: myIcon}).addTo(map);
 
     // load image ...
-    html = "<div id=\"" + 'gl' + glider + "\"><center>" + onscreen[glider]["initials"] + "<br><img src=\"images/" + onscreen[glider]["class"] + (onscreen[glider]["ic"]%7) + ".png\"></img><br>"+Math.floor(alt/10)+"</center></div>";
+    ihtml = "<div id=\"" + 'gl' + glider + "\"><center>" + onscreen[glider]["initials"] + "<br><img src=\"images/" + onscreen[glider]["class"] + (onscreen[glider]["ic"]%7) + ".png\"></img><br>"+Math.floor(alt/10)+"</center></div>";
 
     //if (alt > 999) { off = new google.maps.Size(-8,16); } else { off = new google.maps.Size(-12,16); }
+    //console.log("#gl"+glider+" alt="+alt);
 
-    if (!onscreen[glider]["icon"])
+    if (onscreen[glider]["icon"])
     {
-        var pos = new L.LatLng(lat,lon);
-        mark = add_label(map, pos, html, "animate", [26,48], [13,38]);   //off, 100
-        onscreen[glider]["icon"] = mark;
+        onscreen[glider]["icon"].remove();
     }
-    else
-    {
-        $("#gl" + glider).html(html);
-        onscreen[glider]["icon"].setLatLng(new L.LatLng(lat,lon));
-    }
+    var pos = new L.LatLng(lat,lon);
+    mark = add_label(map, pos, ihtml, "animate", [26,48], [13,38]);   //off, 100
+    onscreen[glider]["icon"] = mark;
+    //onscreen[glider]["icon"].setLatLng(new L.LatLng(lat,lon));
+    //$("#gl" + glider).html(ihtml);
 }
 function animate_update()
 {
@@ -571,7 +574,7 @@ function clear_map()
     }
 
     // clear it ..
-    onscreen = Array();
+    onscreen = Object();
 }
 function set_clock()
 {

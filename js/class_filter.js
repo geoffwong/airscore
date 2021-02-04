@@ -10,7 +10,7 @@ $.fn.dataTable.ext.search.push(
             return true;
         }
 
-        if (data[4] <= flyclass)
+        if (data[5] <= flyclass)
         {
             return true;
         }

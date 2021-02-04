@@ -18,7 +18,7 @@ $(document).ready(function() {
             //
             $('#ladder_name').text(json.ladder.ladNationCode + ' ' + json.ladder.ladName);
             $('#ladder_header').append('<h5>' + json.ladder.ladStart + ' - ' + json.ladder.ladEnd + '</h5>');
-            $('#ladder_header').append('<h5>Validity: ' + json.ladder.totValidity + '</h5>');
+            $('#ladder_header').append('<h5>Max Score: ' + json.ladder.maxScore + '</h5>');
 
             // ladder info
             $.each( json.inc, function( key, value ) {

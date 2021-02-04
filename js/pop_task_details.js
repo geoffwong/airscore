@@ -20,9 +20,31 @@ function deleted_task(json)
     alert(json.error);
 }
 
+function scored_task(json)
+{
+    $('#scorespin').removeClass('fa-circle-o-notch');
+    $('#scorespin').removeClass('fa-spin');
+    console.log(json);
+    if (json.result == 'ok')
+    {
+        var comPk = json.comPk;
+        var tasPk = json.tasPk;
+        window.location.replace("task_result.html?comPk="+comPk+"&tasPk="+tasPk);
+        return;
+    }
+
+    if (json.result == 'unauthorised')
+    {
+        alert('Unauthorised to delete task');
+        return;
+    }
+
+    alert(json.error);
+}
+
 function updated_compinfo(result)
 {
-    $('#savespin').removeClass('fa-spinner');
+    $('#savespin').removeClass('fa-circle-o-notch');
     $('#savespin').removeClass('fa-spin');
     console.log(result);
 }
@@ -86,6 +108,18 @@ function save_task()
     $('#savespin').addClass('fa-circle-o-notch');
     $('#savespin').addClass('fa-spin');
     $.post("update_task.php", options, updated_compinfo);
+}
+
+function score_task()
+{
+    var id = url_parameter('comPk');
+    var taskid = task_details.keys.tasPk;
+    var options = { comPk : id, tasPk : taskid };
+    console.log(options);
+
+    $('#scorespin').addClass('fa-circle-o-notch');
+    $('#scorespin').addClass('fa-spin');
+    $.post("score_task.php", options, scored_task);
 }
 
 function delete_task()

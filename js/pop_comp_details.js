@@ -64,17 +64,35 @@ function save_compinfo()
     $('#subspin').addClass('fa-spin');
 
   	$rows1.each(function () {
-    	var $td = $(this).find('td');
-		console.log($td.eq(0).text() + "="+ $td.eq(1).text());
-        options[$td.eq(0).text()] = $td.eq(1).text();
+    	var td = $(this).find('td');
+		//console.log($td.eq(0).text() + "="+ $td.eq(1).text());
+		var sel = td.eq(1).find('span');
+		if (sel.length > 0)
+		{
+			console.log(sel.eq(0).attr('key'));
+        	options[td.eq(0).text()] = sel.eq(0).attr('key');
+		}
+		else
+		{
+        	options[td.eq(0).text()] = td.eq(1).text();
+		}
 	});
 
   	$rows2.each(function () {
-    	var $td = $(this).find('td');
-		console.log($td.eq(0).text() + "=" + $td.eq(1).text());
-        options[$td.eq(0).text()] = $td.eq(1).text();
+    	var td = $(this).find('td');
+		//console.log($td.eq(0).text() + "=" + $td.eq(1).value());
+		var sel = td.eq(1).find('select');
+		if (sel.length > 0)
+		{
+        	options[td.eq(0).text()] = sel.val();
+		}
+		else
+		{
+        	options[td.eq(0).text()] = td.eq(1).text();
+		}
 	});
 
+	console.log(options);
 	$.post("update_compinfo.php", options, updated_compinfo);
 }
 
@@ -154,11 +172,96 @@ function reset_formula()
     $('#formula3 tbody').html('');
     formula_card(comp_details.formula);
 }
-function comp_card(div, info)
+function kvoptions(name, value)
+{
+    var res = '';
+    var nc;
+
+    for (var key in all_enums[name]) 
+	{
+        if (value == key)
+        {
+            res += '<option value="' + all_enums[name][key] + '" selected>' + key + '</option>';
+        }
+        else
+        {
+            res += '<option value="' + all_enums[name][key] + '">' + key + '</option>';
+        }
+    }
+    return res;
+}
+function kvspan(txt,val)
+{
+	return '<span key="'+val+'">'+txt+'</span>';
+}
+function td_kv_blur(event)
+{
+    var src = event.srcElement;
+    var val = src.options[src.selectedIndex].value;
+    var txt = src.options[src.selectedIndex].text;
+	console.log("blur text="+txt);
+	console.log("blur val="+val);
+    src.parentElement.innerHTML = kvspan(txt,val);
+}
+function kvselectable(name, value)
+{
+    if (all_enums.hasOwnProperty(name))
+    {
+        var res = '<select id="' + name +'" class="form-control form-control-sm" placeholder=".form-control-sm" onblur="td_kv_blur(event);">';
+        res += kvoptions(name,value);
+        res += '</select>';
+        return res;
+    }
+    else
+    {
+		console.log("unknown all_nums key="+name);
+        return undefined;
+    }
+}
+function td_edit_select(event,item)
+{
+    if (event.srcElement.nodeName == 'TD')
+    {
+        var val = event.srcElement.innerText;
+        var sel = kvselectable(item,val);
+        event.srcElement.innerHTML = sel;
+    }
+}
+function add_td_select(div, field, selarr, val)
+{
+    if (!all_enums.hasOwnProperty(field))
+	{
+		all_enums[field] = selarr;
+	}
+	var span = kvspan(val,all_enums[field][val]);
+    div.append('<tr><td><b>'+field+"</b></td><td onclick=\"td_edit_select(event,'"+field+"');\">"+span+'</td></tr>');
+}
+function comp_card(div, info, regions)
 {
     // some GAP parameters
+    var next = '#compinfo1 tbody';
     allkeys = Object.keys(info);
     values = Object.values(info);
+    var trim = -1;
+    var regPk = 0;
+
+    for (var tc = 0; tc < allkeys.length; tc++)
+    {
+        console.log(allkeys[tc]);
+        if (allkeys[tc] == 'comRegion')
+        {
+            trim = tc;
+            regPk = values[tc];
+            console.log('Region='+regPk);
+        }
+    }
+
+    if (trim != -1)
+    {
+        allkeys.splice(trim,1);
+        values.splice(trim,1);
+    }
+
     for (var tc = 0; tc < allkeys.length-1; tc+=2)
     {
         //$('#compinfo1 tbody').append('<tr><td><b>'+allkeys[tc].substr(3)+'</b></td><td contenteditable="true">'+values[tc]+'</td></tr>');
@@ -170,6 +273,15 @@ function comp_card(div, info)
     {
         add_td($('#compinfo1 tbody'), allkeys[tc], values[tc]);
         tc++;
+        next = '#compinfo2 tbody';
+    }
+    // create a drop down for regions
+    for (var key in regions) 
+    {
+        if (regions[key] == regPk)
+        {
+            add_td_select($(next), 'Region', regions, key);
+        }
     }
 }
 
@@ -243,18 +355,18 @@ function region_modal(info,regPk)
 
     for (var key in info) {
       array.push({
-        key: key,
-        value: info[key]
+        key: info[key],
+        value: key
       });
     }
 
     var sorted = array.sort(function(a, b) {
-        return (a.value > b.value) ? 1 : ((b.value > a.value) ? -1 : 0)
+        return (a.value.toLowerCase() > b.value.toLowerCase()) ? 1 : ((b.value.toLowerCase() > a.value.toLowerCase()) ? -1 : 0)
     });	
 
     for (nc = 0; nc < sorted.length; nc++)
     {
-        console.log("key="+sorted[nc].key+" value="+sorted[nc].value);
+        //console.log("key="+sorted[nc].key+" value="+sorted[nc].value);
         if (regPk == sorted[nc].value)
         {
             //$("#region").append('<option value="' + sorted[nc].key + '" selected>' + sorted[nc].value + '</option>');
@@ -292,7 +404,7 @@ $(document).ready(function() {
             comp_details = json;
 
             // comp info
-            comp_card(header, json.compinfo);
+            comp_card(header, json.compinfo, json.regions);
 
             scoring_card(header, json.scoring);
         

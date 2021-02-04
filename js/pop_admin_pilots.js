@@ -13,6 +13,8 @@ function clear_pilot()
     $("input[name='last']").val('');
     $("input[name='nation']").val('');
     $("input[name='hgfa']").val('');
+    $("input[name='flightweight']").val('');
+    $("input[name='glidersize']").val('');
     $("input[name='civl']").val('');
     $("input[name='gender']").val('');
     $('#control').html('Add');
@@ -31,17 +33,19 @@ function addup_pilot()
     var fname = $("input[name='first']").val();
     var lname = $("input[name='last']").val();
     var nation = $("input[name='nation']").val();
+    var flightweight = $("input[name='flightweight']").val();
+    var glidersize = $("input[name='glidersize']").val();
     var hgfa = $("input[name='hgfa']").val();
     var civl = $("input[name='civl']").val();
     var sex = $("#gender option:selected").val();
     if (parseInt(id) > 0)
     {
         console.log(sex);
-        $.post("update_pilot.php", { 'update' : id, 'fname' : fname, 'lname' :  lname, 'nation' :  nation, 'hgfa' : hgfa, 'civl' : civl, 'sex' : sex }, update_table);
+        $.post("update_pilot.php", { 'update' : id, 'fname' : fname, 'lname' :  lname, 'nation' :  nation, 'hgfa' : hgfa, 'civl' : civl, 'sex' : sex, 'flightweight' : flightweight, 'glidersize' : glidersize }, update_table);
     }
     else
     {
-        $.post("update_pilot.php", { 'add' : 1, 'fname' : fname, 'lname' :  lname, 'nation' :  nation, 'hgfa' : hgfa, 'civl' : civl, 'sex' : sex }, update_table);
+        $.post("update_pilot.php", { 'add' : 1, 'fname' : fname, 'lname' :  lname, 'nation' :  nation, 'hgfa' : hgfa, 'civl' : civl, 'sex' : sex, 'flightweight' : flightweight, 'glidersize' : glidersize }, update_table);
     }
 }
 function delete_pilot()
@@ -83,6 +87,8 @@ $(document).ready(function() {
             $("input[name='first']").val(data[3]);
             $("input[name='last']").val(data[4]);
             $("input[name='nation']").val(data[6]);
+            $("input[name='flightweight']").val(data[7]);
+            $("input[name='glidersize']").val(data[8]);
             $("input[name='hgfa']").val(data[1]);
             $("input[name='civl']").val(data[2]);
             $("input[name='gender']").val(data[5]);

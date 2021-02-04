@@ -58,5 +58,30 @@ $(document).ready(function() {
             cells[6].innerHTML = '<b><a href="#/" onclick="confirm_del_track(this,'+data[0]+');">&cross;</a></b>';
         }
     });
+
+/*
+    $('#tracks tbody').on('click', 'tr', function () {
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+        }
+        else {
+            var table=$('#tracks').DataTable();
+            var data = table.row(this).data();
+            table.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            $('#control').html('Update');
+            $('#clear').show();
+            $('#delete').show();
+            $("input[name='pilotid']").val(data[0]);
+            $("input[name='first']").val(data[3]);
+            $("input[name='last']").val(data[4]);
+            $("input[name='dhv']").val(data[6]);
+            $("input[name='glider']").val(data[1]);
+            $("input[name='safety']").val(data[2]);
+            $("input[name='conditions']").val(data[5]);
+            $("#trackmodal").modal("show");
+        }
+    } );
+*/
 });
 

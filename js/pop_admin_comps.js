@@ -1,15 +1,49 @@
-create_comp()
+function create_comp()
 {
     var options = { };
-    options.name = $('#compname').val();
+    options.comname = $('#compname').val();
     options.dateto = $('#dateto').val();
     options.datefrom = $('#datefrom').val();
-    console.log(options);
+
+    $.post('add_comp.php', options, function (res) {
+        console.log(res);
+
+        var comPk = res.comPk;
+        var url;
+        console.log(res);
+        if (res.result == "unauthorised")
+        {
+            authorise();
+            return;
+        }
+        if (!comPk || res.result != "ok")
+        {
+            alert(res.result + ": " + res.error);
+            return;
+        }
+        url = 'competition.html?comPk=' + comPk;
+        console.log(url);
+        window.location.replace(url);
+    });
 }
 $(document).ready(function() {
-    var url = new URL('http://highcloud.net/xc/get_admin_comps.php');
+    $("#datefrom").val(new Date());
+    $("#dateto").val(new Date());
     $('#competitions').dataTable({
-        ajax: 'get_admin_comps.php',
+        ajax: {
+            url: 'get_admin_comps.php',
+            dataSrc: function (json) {
+                    if (json.result == 'unauthorised')
+                    {
+                        authorise();
+                        return;
+                    }
+                    else
+                    {
+                        return json.data;
+                    }
+                }
+            },
         paging: true,
         order: [[ 4, 'desc' ]],
         lengthMenu: [ 15, 30, 60, 1000 ],

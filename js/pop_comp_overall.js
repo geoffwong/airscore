@@ -39,12 +39,19 @@ $(document).ready(function() {
             $('#formula tbody').append(
                         "<tr><td>Director</td><td>" + json.compinfo.comMeetDirName + '</td></tr>' +
                         "<tr><td>Location</td><td>" + json.compinfo.comLocation + '</td></tr>' +
-                        "<tr><td>Formula</td><td>" + json.compinfo.forClass + ' ' + json.compinfo.forVersion + '</td></tr>' +
-                        "<tr><td>Overall Scoring</td><td>" + json.compinfo.comOverallScore + ' (' + json.compinfo.comOverallParam + ')</td></tr>');
+                        "<tr><td>Formula</td><td>" + json.compinfo.forClass + ' ' + json.compinfo.forVersion + '</td></tr>');
+
             if (json.compinfo.comOverallScore == 'ftv')
             {
                 $('#formula tbody').append(
+                    '<tr><td>Overall Scoring</td><td><a href="ftv.html">ftv</a>(' + json.compinfo.comOverallParam + ')</td></tr>');
+                $('#formula tbody').append(
                         "<tr><td>Total Validity</td><td>" + json.compinfo.TotalValidity+ '</td></tr>');
+            }
+            else
+            {
+                $('#formula tbody').append(
+                    "<tr><td>Overall Scoring</td><td>" + json.compinfo.comOverallScore + ' (' + json.compinfo.comOverallParam + ')</td></tr>');
             }
 
             if (json.compinfo.forVersion == 'airgain-count' || json.compinfo.forVersion == 'airgain')

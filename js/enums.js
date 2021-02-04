@@ -27,26 +27,30 @@ function is_selectable(name)
 {
     return all_enums.hasOwnProperty(name);
 }
-
+function options(name, value)
+{
+    var res = '';
+    var nc;
+    for (nc = 0; nc < all_enums[name].length; nc++)
+    {
+        if (value == all_enums[name][nc])
+        {
+            res += '<option value="' + all_enums[name][nc] + '" selected>' + all_enums[name][nc] + '</option>';
+        }
+        else
+        {
+            res += '<option value="' + all_enums[name][nc] + '">' + all_enums[name][nc] + '</option>';
+        }
+    }
+    return res;
+}
 function selectable(name, value)
 {
     if (all_enums.hasOwnProperty(name))
     {
-        var nc;
         var res = '<select id="' + name +'" class="form-control form-control-sm" placeholder=".form-control-sm" onblur="td_blur(event);">';
-        for (nc = 0; nc < all_enums[name].length; nc++)
-        {
-            if (value == all_enums[name][nc])
-            {
-                res += '<option value="' + all_enums[name][nc] + '" selected>' + all_enums[name][nc] + '</option>';
-            }
-            else
-            {
-                res += '<option value="' + all_enums[name][nc] + '">' + all_enums[name][nc] + '</option>';
-            }
-        }
+        res += options(name,value);
         res += '</select>';
-
         return res;
     }
     else
@@ -56,9 +60,12 @@ function selectable(name, value)
 }
 function td_edit(event,item)
 {
-    var sel = selectable(item);
-    var val = event.srcElement.innerText;
-    event.srcElement.innerHTML = sel;
+    if (event.srcElement.nodeName == 'TD')
+    {
+        var val = event.srcElement.innerText;
+        var sel = selectable(item,val);
+        event.srcElement.innerHTML = sel;
+    }
 }
 function td_blur(event)
 {
@@ -81,7 +88,7 @@ function create_td(key, val)
 {
     if (is_selectable(key))
     {
-        return "<td onclick=\"td_edit('"+key+"');\">"+val+'</td>';
+        return "<td onclick=\"td_edit(event,'"+key+"');\">"+val+'</td>';
     }
     else
     {
@@ -95,7 +102,7 @@ function update_classes(com_class)
     {
         var pg = { Novice: 'A', Fun: 'B', Sports: 'C', Serial: 'D', Competition: 'CCC' };
         $('#dhv option').remove();
-        $('#dhv').append("<option value=\"\" selectd>Open</option>");
+        $('#dhv').append("<option value=\"\" selected>Open</option>");
         $.each(pg, function (key, val) {
             $('#dhv').append("<option value=\""+val+"\">" + key + "</option>");
         });
@@ -103,13 +110,25 @@ function update_classes(com_class)
     }
     else if (com_class == 'HG')
     {
-        var hg = { Floater: 'A', Kingpost: 'B', Rigid: 'C' };
+        var hg = { Floater: 'F', Kingpost: 'G', Rigid: 'I' };
         $('#dhv option').remove();
-        $('#dhv').append("<option value=\"\" selectd>Open</option>");
+        $('#dhv').append("<option value=\"\" selected>Open</option>");
         $.each(hg, function (key, val) {
             $('#dhv').append("<option value=\""+val+"\">" + key + "</option>");
         });
         $('#dhv').val('');
     }
+    else
+    {
+        var hg =  { novice: 'A', fun: 'B', sports: 'C', serial: 'D', CCC: 'E',
+              floater: 'F', kingpost: 'G', 'HG-open': 'H', rigid: 'I' };
+        $('#dhv option').remove();
+        $('#dhv').append("<option value=\"\" selected>Open</option>");
+        $.each(hg, function (key, val) {
+            $('#dhv').append("<option value=\""+val+"\">" + key + "</option>");
+        });
+        $('#dhv').val('');
+    }
+
 }
 

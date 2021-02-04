@@ -393,7 +393,7 @@ function plot_task_route(map, ssr)
         map.fitBounds(pbounds);
     }
 }
-function plot_task(tasPk, pplo, trackid)
+function plot_task(tasPk, pplo, ttrackid)
 {
     microAjax("get_short.php?tasPk="+tasPk, 
       function (data) {
@@ -417,9 +417,9 @@ function plot_task(tasPk, pplo, trackid)
         {
             plot_pilots_lo(tasPk);
         }
-        if (trackid > 0 && is_admin())
+        if (ttrackid > 0 && is_admin())
         {
-            add_award_task(tasPk, trackid);
+            add_award_task(tasPk, ttrackid);
         }
     });
 }

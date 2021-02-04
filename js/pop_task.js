@@ -1,8 +1,70 @@
+function result_done(data)
+{
+    console.log(data);
+    var table = $('#task_result').DataTable();
+    table.ajax.reload();
+    $('#reloadspin').hide();
+}
+function delete_result()
+{
+    var tasPk = url_parameter("tasPk");
+    var comPk = url_parameter("comPk");
+    var tarpk = $("input[name='tarpk']").val();
 
+    $('#reloadspin').show();
+    $.post("delete_task_result.php", { 'tasPk' : tasPk, 'comPk' : comPk, 'tarpk' : tarpk }, result_done);
+}
+function add_result()
+{
+    $('#addition').show();
+    $("#resultmodal").modal("show");
+    $('#tarpk').val('');
+}
+function update_result()
+{
+    var tasPk = url_parameter("tasPk");
+    var comPk = url_parameter("comPk");
+    var hgfa = $("input[name='hgfa']").val();
+
+    var tarpk = $("input[name='tarpk']").val();
+    var glider = $("input[name='glider']").val();
+
+    var dist = $("input[name='distance']").val();
+    var penalty = $("input[name='penalty']").val();
+
+    var result = $("#resulttype option:checked").val();
+    var enrating = $("#enrating option:checked").val();
+
+    console.log('tarpk='+tarpk+' glider='+glider+'dist='+dist+' penalty='+penalty+' result='+result+' enrating='+enrating+' hgfa='+hgfa);
+    $('#reloadspin').show();
+    $.post("update_task_result.php", { 'tasPk' : tasPk, 'comPk' : comPk, 'tarpk' : tarpk, 'glider' : glider, 'dist' :  dist, 'penalty' :  penalty, 'result' : result, 'enrating' : enrating, 'hgfa' : hgfa }, result_done);
+}
+function populate_modal(data)
+{
+    console.log('tarpk='+data[1]);
+    $('#tarpk').val(data[1]);
+    $('#addition').hide();
+    $('#restitle').html(data[2]);
+    if (data[10] == "dnf" || data[10] == "abs")
+    {
+        $('#resulttype select').val(data[10]);
+        $('#distance').val('');
+    }
+    else
+    {
+        $('#resulttype select').val('lo');
+        $('#distance').val(data[10]);
+    }
+    $('#enrating select').val(data[5]);
+    $('#glider').val(data[4]);
+    $('#penalty').val(data[15]);
+    $("#resultmodal").modal("show");
+}
 $(document).ready(function() {
     var url = new URL('http://highcloud.net/xc/get_task_result.php' + window.location.search);
     var comPk = url.searchParams.get("comPk");
     var tasPk = url.searchParams.get("tasPk");
+    $('#reloadspin').hide();
     $('#task_result').dataTable({
         ajax: 'get_task_result.php?comPk='+comPk+'&tasPk='+tasPk,
         paging: false,
@@ -11,12 +73,12 @@ $(document).ready(function() {
         "dom": 'lrtip',
         "columnDefs": [
             {
-                "targets": [ 4 ],
+                "targets": [ 1, 5 ],
                 "visible": false
             },
             {
-                "targets": [ 3 ],
-                "orderData": [ 4, 0 ]
+                "targets": [ 4 ],
+                "orderData": [ 5, 1 ]
             }
         ],
         "initComplete": function(settings, json) 
@@ -28,7 +90,7 @@ $(document).ready(function() {
             // comp info
             $('#comp_name').text(json.task.comp_name + " - " + json.task.task_name);
             $('#task_date').text(json.task.date + ' ' + json.task.task_type);
-            $('#comp_header').append('<b>Start: ' + json.task.start + ' End: ' + json.task.end + '</b><br>');
+            $('#startend').html('<b>Start: ' + json.task.start + ' End: ' + json.task.end + '</b><br>');
             if (json.task.stopped)
             {
                 $('#comp_header').append('<b>Stopped: ' + json.task.stopped + '</b><br>');
@@ -87,5 +149,14 @@ $(document).ready(function() {
             }
         }
     });
+	if (getCookie('XCauth').length > 0)
+	{
+    	$('#task_result tbody').on('click', 'tr', function () {
+            var table=$('#task_result').DataTable();
+        	var data = table.row( this ).data();
+            populate_modal(data);
+    	} );
+    	$('#comp_header').append('<a class="btn btn-light" onclick="add_result();">Add Result</a>');
+	}
 });
 
