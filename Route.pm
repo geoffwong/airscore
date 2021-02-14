@@ -73,7 +73,7 @@ my $pi = atan2(1,1) * 4;
 
 my $dbh;
 my $sth;
-my $debug = 0;
+my $debug = 1;
 
 
 # Check if waypoints short positions are at the same location
@@ -158,9 +158,15 @@ sub find_closest
     if (!defined($P3))
     {
         # End of line case ..
-        if ($debug) { print "Route: EOL case\n"; }
         $O = $C1 - $C2;
         $vl = $O->length();
+        if ($debug) 
+        { 
+            print "Route: EOL case ($vl)\n"; 
+            print Dumper($C1);
+            print Dumper($C2);
+            print Dumper($O);
+        }
         if ($vl > 0.01)
         {
             $O = ($P2->{'radius'} / $vl) * $O;
@@ -257,8 +263,8 @@ sub find_closest
     $N = $C1 + ($u * ($C3 - $C1));
     $CL = $N;
     $PR = cartesian2polar($CL);
-    if (($u >= 0 && $u <= 1)
-        && (distance($PR, $P2) <= $P2->{'radius'}))
+    if (($u >= 0 and $u <= 1)
+        and (distance($PR, $P2) <= $P2->{'radius'}))
     {
         my $theta;
         my $db;
@@ -268,7 +274,7 @@ sub find_closest
         if ($debug) { print "180 deg connect: u=$u radius=", $P2->{'radius'}, "\n"; }
 #        return $P2;
     
-#        if ($P2->{'how'} eq 'exit' && $u == 0)
+#        if ($P2->{'how'} eq 'exit' and $u == 0)
 #        {
 #            $O = vvminus($C3, $C2);
 #            $vl = vector_length($O);
@@ -384,12 +390,12 @@ sub iterate_short_route
     for (my $i = 0; $i < $num-2; $i++)
     {
         if ($debug) { print "iterate_short_route: $i: ", $orig->[$i]->{'name'}, "\n"; }
-        if (0 && ddequal($orig->[$i+1], $orig->[$i+2]) && ($i < $num-3))
+        if (0 and ddequal($orig->[$i+1], $orig->[$i+2]) and ($i < $num-3))
         {
             my $dirn;
             # should find the intersection of the circle/radius of $i+1 & $i+2
             my $j = $i+2;
-            while (ddequal($newcl, $orig->[$j]) && $j < $num-1)
+            while (ddequal($newcl, $orig->[$j]) and $j < $num-1)
             {
                 # Target task .. hopefully there's a way out.
                 $j++;
@@ -463,6 +469,24 @@ sub find_shortest_route
     # Work out shortest route!
     push @it1, $wpts->[0];
     $newcl = $wpts->[0];
+
+    # check for boob task
+    my $boob = 1;
+    for ($i = 0; $i < $num-1; $i++)
+    {
+        if (!ddequal($wpts->[$i], $wpts->[$i+1]))
+        {
+            $boob = 0;
+            last;
+        }
+    }
+
+    #if ($boob == 1)
+    #{
+    #    if ($startssdist < 1 and ($waypoints->[$i]->{'how'} eq 'exit'))
+    #    return $closearr;
+    #}
+
     for ($i = 0; $i < $num-2; $i++)
     {
         if ($debug) { print "From pass-1: $i: ", $wpts->[$i]->{'name'}, "\n"; }
@@ -472,13 +496,20 @@ sub find_shortest_route
             my $dirn;
             # should find the intersection of the circle/radius of $i+1 & $i+2
             my $j = $i+2;
-            while (ddequal($newcl, $wpts->[$j]) && $j < $num-1)
+            while (ddequal($newcl, $wpts->[$j]) and $j < $num-1)
             {
                 # Target task .. hopefully there's a way out.
                 $j++;
             }
-            $dirn = $wpts->[$j];
-            $newcl = find_closest($newcl, $wpts->[$i+1], undef, undef, $dirn);
+            if ($j == $num-1)
+            {
+                $newcl = find_closest($newcl, undef, $wpts->[$j-1], undef, undef);
+            }
+            else
+            {
+                $dirn = $wpts->[$j];
+                $newcl = find_closest($newcl, $wpts->[$i+1], undef, undef, $dirn);
+            }
         }
         else
         {
@@ -524,6 +555,25 @@ sub store_short_route
     {
         $dist = distance($wpts->[$i], $wpts->[$i+1]);
         $cdist = distance($closearr->[$i], $closearr->[$i+1]);
+        if (($cdist == 0) and ddequal($wpts->[$i], $wpts->[$i+1]))
+        {
+            print("wpt:$i to wpt:", $i+1, " have same centre\n");
+            if ($wpts->[$i+1]->{'how'} == 'exit')
+            {
+                if ($i >= 1)
+                {
+                    $cdist = $wpts->[$i+1]->{'radius'} - $wpts->[$i]->{'radius'}; 
+                }
+                else
+                {
+                    $cdist = $wpts->[$i+1]->{'radius'};
+                }
+            }
+            else
+            {
+                $cdist = $wpts->[$i]->{'radius'} - $wpts->[$i+1]->{'radius'}; 
+            }
+        }
         print "Dist wpt:$i to wpt:", $i+1, " dist=$dist short_dist=$cdist\n";
         $sth = $dbh->do("insert into tblShortestRoute (tasPk,tawPk,ssrLatDecimal,ssrLongDecimal,ssrCumulativeDist,ssrNumber) values (?,?,?,?,?,?)",
             undef,$tasPk,$wpts->[$i]->{'key'}, $closearr->[$i]->{'dlat'}, $closearr->[$i]->{'dlong'}, $totdist,  $wpts->[$i]->{'number'});
@@ -584,14 +634,15 @@ sub task_distance
         {
             $margin = 5.0;
         }
-        $waypoints->[$i]->{'margin'} = $margin;
+        # $waypoints->[$i]->{'margin'} = $margin;
 
+        print "wpt $i: $cwdist\n";
         if (( $waypoints->[$i]->{'type'} eq 'start') or 
              ($waypoints->[$i]->{'type'} eq 'speed') )
         {
             $spt = $i;
             $startssdist = $cwdist;
-            if ($startssdist < 1 && ($waypoints->[$i]->{'how'} eq 'exit'))
+            if ($startssdist < 1 and ($waypoints->[$i]->{'how'} eq 'exit'))
             {
                 $startssdist += $waypoints->[$i]->{'radius'};
             }
@@ -599,11 +650,15 @@ sub task_distance
         if ($waypoints->[$i]->{'type'} eq 'endspeed') 
         {
             $ept = $i;
+            #if ($waypoints->[$i]->{'how'} eq 'exit')
+            #{
+            #    $cwdist += $waypoints->[$i]->{'radius'};
+            #    if (ddequal($waypoints->[$i], $waypoints->[$i-1]))
+            #    {
+            #        $cwdist -= $waypoints->[$i-1]->{'radius'};
+            #    }
+            #}
             $endssdist = $cwdist;
-            if ($waypoints->[$i]->{'how'} eq 'exit')
-            {
-                $endssdist += $waypoints->[$i]->{'radius'};
-            }
         }
         if ($waypoints->[$i]->{'type'} eq 'goal') 
         {
@@ -611,21 +666,23 @@ sub task_distance
         }
         if ($i < $allpoints-1)
         {
-            if (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'exit') && ($waypoints->[$i]->{'type'} eq 'start'))
+            #if (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'exit') and ($waypoints->[$i]->{'type'} eq 'start'))
+            if (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'exit')) 
             {
                 $cwdist = $cwdist + $waypoints->[$i+1]->{'radius'};
-                #if ($waypoints->[$i]->{'type'} ne 'start')
-                #{
-                #    $cwdist = $cwdist - $waypoints->[$i]->{'radius'};
-                #}
+                if ($waypoints->[$i]->{'type'} ne 'start')
+                {
+                    $cwdist = $cwdist - $waypoints->[$i]->{'radius'};
+                }
             }
             else
             {
                 $cwdist = $cwdist + short_dist($waypoints->[$i], $waypoints->[$i+1]);
             }
         }
-        print "wpt $i: $cwdist\n";
     }
+
+    # Catch-alls for poorly defined task
     if (!defined($gpt))
     {
         $gpt = $allpoints;
@@ -644,7 +701,6 @@ sub task_distance
     }
 
     $ssdist = $endssdist - $startssdist;
-
     return ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $cwdist);
 }
 

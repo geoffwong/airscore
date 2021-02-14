@@ -23,7 +23,7 @@ if (!is_admin('admin',$usePk,$comPk))
 $regarr = [];
 $regarr['comPk'] = $comPk;
 $regarr['forPk'] = $forPk;
-$regarr['forClass'] = reqsval('Formula');
+$regarr['forClass'] = reqsval('Class');
 $regarr['forVersion'] = reqsval('Version');
 $regarr['forNomDistance'] = reqfval('NomDistance');
 $regarr['forMinDistance'] = reqfval('MinDistance');
