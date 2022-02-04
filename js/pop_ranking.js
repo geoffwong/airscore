@@ -5,14 +5,14 @@ $(document).ready(function() {
         paging: true,
         //"columnDefs" : [ { 'type' : 'numeric' }, 0, 0, 0, 0, { 'type' : 'numeric' } ],
         order: [[5, 'desc'], [ 0, 'asc' ]],
-        lengthMenu: [ 20, 50, 100, 1000 ],
+        lengthMenu: [ 50, 100, 1000 ],
         searching: true,
         info: false,
          "dom": '<"#search"f>rt<"bottom"lip><"clear">',
 
         "initComplete": function(settings, json) 
         {
-            var table= $('#ladders');
+            var table= $('#ranking');
             var rows = $("tr", table).length-1;
             var numCols = $("th", table).length+1;
             

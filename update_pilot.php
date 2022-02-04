@@ -17,8 +17,10 @@ if (reqexists('add'))
     $fname = reqsval('fname');
     $sex = reqsval('sex');
     $nat = reqsval('nation');
-    $query = "insert into tblPilot (pilHGFA, pilCIVL, pilLastName, pilFirstName, pilSex, pilNationCode) value ($fai,$civl,'$lname','$fname','$sex','$nat')";
-    $result = mysql_query($query) or die('Pilot insert failed: ' . mysql_error());
+    $weight = reqival('flightweight');
+    $gsize = reqsval('glidersize');
+    $query = "insert into tblPilot (pilHGFA, pilCIVL, pilLastName, pilFirstName, pilSex, pilNationCode, pilFlightWeight, pilGliderSize) value ($fai,$civl,'$lname','$fname','$sex','$nat', $weight, '$gsize')";
+    $result = mysql_query($query) or json_die('Pilot insert failed: ' . mysql_error());
 }
 
 if (reqexists('bulkadd'))
@@ -42,8 +44,10 @@ if (reqexists('update'))
     $fname = reqsval("fname");
     $sex = reqsval("sex");
     $nat = reqsval("nation");
-    $query = "update tblPilot set pilHGFA=$fai, pilCIVL=$civl, pilLastName='$lname', pilFirstName='$fname', pilSex='$sex', pilNationCode='$nat' where pilPk=$id";
-    $result = mysql_query($query) or die('Pilot update failed: ' . mysql_error());
+    $weight = reqival('flightweight');
+    $gsize = reqsval('glidersize');
+    $query = "update tblPilot set pilHGFA=$fai, pilCIVL=$civl, pilLastName='$lname', pilFirstName='$fname', pilSex='$sex', pilNationCode='$nat', pilFlightWeight=$weight, pilGliderSize='$gsize' where pilPk=$id";
+    $result = mysql_query($query) or json_die('Pilot update failed: ' . mysql_error());
 }
 
 if (reqexists('delete'))
@@ -52,13 +56,13 @@ if (reqexists('delete'))
     $id = reqival('delete');
     // Need to ensure pilot isn't in track table ..
     $query = "select * from tblTrack where pilPk=$id";
-    $result = mysql_query($query) or die('Pilot track check failed: ' . mysql_error());
+    $result = mysql_query($query) or json_die('Pilot track check failed: ' . mysql_error());
     if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         return;
     }
     $query = "delete from tblPilot where pilPk=$id";
-    $result = mysql_query($query) or die('Config update failed: ' . mysql_error());
+    $result = mysql_query($query) or json_die('Config update failed: ' . mysql_error());
 }
 
 echo "{ \"result\" : \"OK\" }";

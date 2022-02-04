@@ -93,6 +93,15 @@ function ladder_result($ladPk, $ladder, $restrict, $altval)
     $nat = $ladder['ladNationCode'];
     $ladParam = $ladder['ladParam'];
 
+    if ($end == "" or $end == "null")
+    {
+        $end = "CURDATE()";
+    }
+    else
+    {
+        $end = "'$end'";
+    }
+
     $topnat = [];
     $sql = "select T.tasPk, max(T.tarScore) as topNat 
             from tblTaskResult T, tblTrack TL, tblPilot P
@@ -105,15 +114,13 @@ function ladder_result($ladPk, $ladder, $restrict, $altval)
     }
 
     // Select from the main database of results
+    //TR.tarScore * LC.lcValue * power(L.ladDepreciation, TIMESTAMPDIFF(YEAR, '$end', CURDATE())) * TK.tasQuality as ladScore,
     $sql = "select 0 as extPk, TR.tarScore,
         TP.pilPk, TP.pilLastName, TP.pilFirstName, TP.pilNationCode, TP.pilHGFA, TP.pilSex,
         TK.tasPk, TK.tasName, TK.tasDate, TK.tasQuality, 
         C.comName, C.comDateTo, LC.lcValue, 
-        case when date_sub('$end', INTERVAL 365 DAY) > C.comDateTo 
-        then (TR.tarScore * LC.lcValue * L.ladDepreciation * TK.tasQuality) 
-        else (TR.tarScore * LC.lcValue * TK.tasQuality) end as ladScore, 
-        (TR.tarScore * LC.lcValue * (case when date_sub('$end', INTERVAL 365 DAY) > C.comDateTo 
-            then L.ladDepreciation else 1.0 end) / (TK.tasQuality * LC.lcValue)) as validity
+        TR.tarScore * LC.lcValue * power(L.ladDepreciation, TIMESTAMPDIFF(YEAR, C.comDateTo, $end)) * TK.tasQuality as ladScore,
+        (TR.tarScore * LC.lcValue * power(L.ladDepreciation, TIMESTAMPDIFF(YEAR, C.comDateTo, $end)) / (TK.tasQuality * LC.lcValue)) as validity
 from    tblLadderComp LC 
         join tblLadder L on L.ladPk=LC.ladPk
         join tblCompetition C on LC.comPk=C.comPk
@@ -121,7 +128,8 @@ from    tblLadderComp LC
         join tblTaskResult TR on TR.tasPk=TK.tasPk
         join tblTrack TT on TT.traPk=TR.traPk
         join tblPilot TP on TP.pilPk=TT.pilPk
-WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
+WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < $end
+        $restrict
     and TP.pilNationCode=L.ladNationCode 
     order by TP.pilPk, C.comPk, (TR.tarScore * LC.lcValue * TK.tasQuality) desc";
 
@@ -141,7 +149,7 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
         join tblLadder L on L.ladPk=LC.ladPk and LC.lcValue=450
         join tblCompetition C on LC.comPk=C.comPk
         join tblTask TK on C.comPk=TK.comPk
-        WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'";
+        WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < $end";
 
         $result = mysql_query($sql) or json_die('Total quality query failed: ' . mysql_error());
         $param = mysql_result($result,0,0) * $ladParam / 100 ;
@@ -161,21 +169,18 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
         $sql = "select TK.extPk, TK.extURL as tasPk,
         TP.pilPk, TP.pilLastName, TP.pilFirstName, TP.pilNationCode, TP.pilHGFA, TP.pilSex,
         TK.tasName, TK.tasQuality, TK.comName, TK.comDateTo, TK.lcValue, TK.tasTopScore,
-        case when date_sub('$end', INTERVAL 365 DAY) > TK.comDateTo 
-        then (ER.etrScore * TK.lcValue * TK.extDepreciation * TK.tasQuality) 
-        else (ER.etrScore * TK.lcValue * TK.tasQuality) end as ladScore, 
-        (ER.etrScore * TK.lcValue * (case when date_sub('$end', INTERVAL 365 DAY) > TK.comDateTo 
-            then TK.extDepreciation else 1.0 end) / (TK.tasQuality * TK.lcValue)) as validity
+        ER.etrScore * TK.lcValue * power(TK.extDepreciation, TIMESTAMPDIFF(YEAR, TK.comDateTo, $end)) * TK.tasQuality as ladScore,
+        (ER.etrScore * TK.lcValue * power(TK.extDepreciation, TIMESTAMPDIFF(YEAR, TK.comDateTo, $end)) / (TK.tasQuality * TK.lcValue)) as validity
         from tblExtTask TK
         join tblExtResult ER on ER.extPk=TK.extPk
         join tblPilot TP on TP.pilPk=ER.pilPk
-        WHERE TK.extClass='$class' and TK.comDateTo > '$start' and TK.comDateTo < '$end'
+        WHERE TK.extClass='$class' and TK.comDateTo > '$start' and TK.comDateTo < $end
         $restrict
         order by TP.pilPk, TK.extPk, (ER.etrScore * TK.lcValue * TK.tasQuality) desc";
         $result = mysql_query($sql) or json_die('Ladder query failed: ' . mysql_error());
         while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
         {
-            $res = add_result($results, $row, $row['tasTopScore'], $how, $ladPk);
+            $xres = add_result($results, $row, $row['tasTopScore'], $how, $ladPk);
         }
 
         $filtered = filter_results($ladPk, $how, $param, $param * $ladder['ladIncExternal'] / 100, $results);
@@ -188,6 +193,7 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
     $res = [];
     $res['filtered'] = $filtered;
     $res['validity'] = $param;
+    $res['sql'] = $filtered;
 
     return $res;
 }
@@ -201,7 +207,7 @@ function filter_results($ladPk, $how, $param, $extpar, $results)
         krsort($arr['scores'], SORT_NUMERIC);
 
         $pilscore = 0;
-        if ($how != 'ftv')
+        if ($how == 'fixed' || $how == 'comp')
         {
             # Max rounds scoring
             $count = 0;
@@ -373,7 +379,6 @@ function datatable_clean($sorted)
 
 $ladPk = reqival('ladPk');
 $start = reqival('start');
-$class = reqsval('class');
 $altval = reqival('validity');
 error_log("altval=$altval");
 if ($start < 0)
@@ -490,9 +495,9 @@ if ($ladPk > 0)
 {
     //output_ladder($ladPk, $ladder, $fdhv, $class);
     $sorted = ladder_result($ladPk, $ladder, $fdhv, $altval);
-    if ($ladder['ladClass'] = 'PG' and $ladder['ladIncExternal'] != 0)
+    if ($ladder['ladClass'] == 'PG' and $ladder['ladIncExternal'] != 0)
     {
-        $maxscore = $sorted['validity'] * 0.475;
+        $maxscore = $sorted['validity'] * 0.466;
     }
     else
     {
@@ -502,6 +507,8 @@ if ($ladPk > 0)
 
     $ladder['totValidity'] = round($sorted['validity'],0);
     $ladder['maxScore'] = round($maxscore,0);
+    $ladder['class'] = $fdhv;
+    $ladder['sql'] = $sorted['sql'];
     $included = included_comps($link, $ladPk);
     $clean = datatable_clean($sorted['filtered'], $ladPk);
 }

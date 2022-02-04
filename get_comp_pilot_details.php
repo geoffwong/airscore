@@ -31,7 +31,7 @@ function get_pilot_info($link, $pilPk)
     }
 
     // get AAA race performance (last 5 years)
-    $sql = "select avg(tarPlace) as AvgPlace, min(tarPlace) as BestPlace, count(*) as TotalTasks, count(IF(TR.tarGoal > 0, 1, NULL)) as InGoal, avg(IF(TR.tarGoal > 0, tarSpeed, NULL)) as GoalSpeed from tblComTaskTrack CTT, (select comPk, lcValue from tblLadderComp group by comPk) LC, tblTrack T, tblTaskResult TR where CTT.traPk=T.traPk and LC.comPk=CTT.comPk and LC.lcValue=450 and TR.traPk=T.traPk and TR.tasPk=CTT.tasPk and T.traDate > date_sub(now(), interval 5 year) and T.pilPk=$pilPk";
+    $sql = "select avg(tarPlace) as AvgPlace, min(tarPlace) as BestPlace, count(*) as TotalTasks, count(IF(TR.tarGoal > 0, 1, NULL)) as InGoal, avg(IF(TR.tarGoal > 0, tarSpeed, NULL)) as GoalSpeed from tblComTaskTrack CTT, (select comPk, lcValue from tblLadderComp group by comPk) LC, tblTrack T, tblTaskResult TR where CTT.traPk=T.traPk and LC.comPk=CTT.comPk and LC.lcValue>=360 and TR.tarResultType not in ('abs', 'dnf') and TR.traPk=T.traPk and TR.tasPk=CTT.tasPk and T.traDate > date_sub(now(), interval 5 year) and T.pilPk=$pilPk";
     $result = mysql_query($sql,$link) or json_die('get_pilot_info (2) failed: ' . mysql_error());
 
     if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
@@ -63,12 +63,13 @@ function get_pilot_tracks($link, $pilPk, $ladPk)
     $sql = "select 0 as extPk, TR.tarScore,
         TP.pilPk, L.ladIncExternal, L.ladStart, L.ladEnd,
         TK.tasPk, TK.tasName, TK.tasDate, TK.tasQuality, 
-        C.comName, C.comDateTo, LC.lcValue, 
-        case when date_sub(L.ladEnd, INTERVAL 365 DAY) > C.comDateTo 
-        then (TR.tarScore * LC.lcValue * 0.90 * TK.tasQuality) 
-        else (TR.tarScore * LC.lcValue * TK.tasQuality) end as ladScore, 
-        (TR.tarScore * LC.lcValue * (case when date_sub(L.ladEnd, INTERVAL 365 DAY) > C.comDateTo 
-            then 0.90 else 1.0 end) / (TK.tasQuality * LC.lcValue)) as validity
+        C.comName, C.comDateTo, LC.lcValue, TR.tarScore,
+        power(L.ladDepreciation,  TIMESTAMPDIFF(YEAR, C.comDateTo, 
+            case when L.ladEnd is not null then L.ladEnd else CURDATE() end)) 
+            * TR.tarScore * LC.lcValue * TK.tasQuality as ladScore,
+        (TR.tarScore * LC.lcValue * power(L.ladDepreciation,
+                TIMESTAMPDIFF(YEAR, C.comDateTo, case when L.ladEnd is not null then L.ladEnd else CURDATE() end)) 
+                    / (TK.tasQuality * LC.lcValue)) as validity
 from    tblLadderComp LC 
         join tblLadder L on L.ladPk=LC.ladPk
         join tblCompetition C on LC.comPk=C.comPk
@@ -76,7 +77,9 @@ from    tblLadderComp LC
         join tblTaskResult TR on TR.tasPk=TK.tasPk
         join tblTrack TT on TT.traPk=TR.traPk
         join tblPilot TP on TP.pilPk=TT.pilPk
-    where LC.ladPk=$ladPk and TK.tasDate > L.ladStart and TK.tasDate < L.ladEnd and TP.pilPk=$pilPk
+    where LC.ladPk=$ladPk and TK.tasDate > L.ladStart 
+    and TK.tasDate < case when L.ladEnd is not null then L.ladEnd else CURDATE() end
+    and TP.pilPk=$pilPk
     and TP.pilNationCode=L.ladNationCode 
     order by TP.pilPk, C.comPk, (TR.tarScore * LC.lcValue * TK.tasQuality) desc";
 
@@ -94,6 +97,7 @@ from    tblLadderComp LC
         $nrow[] = $row['comName'] . ' - ' . $row['tasName'];
         $nrow[] =  $row['lcValue'];
         $nrow[] = round($row['tasQuality'], 2);
+        $nrow[] = round($row['tarScore'], 0);
         $nrow[] = round($topnat[$row['tasPk']], 0);
         $nrow[] = round($row['ladScore']/$topnat[$row['tasPk']], 0);
 		$incexternal = $row['ladIncExternal'];
@@ -109,7 +113,7 @@ from    tblLadderComp LC
     {
         $sql = "select TK.extPk, TK.extURL as tasPk,
         TP.pilPk, TP.pilLastName, TP.pilFirstName, TP.pilNationCode, TP.pilHGFA, TP.pilSex,
-        TK.tasName, TK.tasQuality, TK.comName, TK.comDateTo, TK.lcValue, TK.tasTopScore,
+        TK.tasName, TK.tasQuality, TK.comName, TK.comDateTo, TK.lcValue, ER.etrScore, TK.tasTopScore,
         case when date_sub('$end', INTERVAL 365 DAY) > TK.comDateTo 
         then (ER.etrScore * TK.lcValue * 0.90 * TK.tasQuality) 
         else (ER.etrScore * TK.lcValue * TK.tasQuality) end as ladScore, 
@@ -130,8 +134,16 @@ from    tblLadderComp LC
         	$nrow[] = $row['comName'] . ' - ' . $row['tasName'];
         	$nrow[] = $row['lcValue'];
         	$nrow[] = round($row['tasQuality'],2);
+	        $nrow[] = round($row['etrScore'], 0);
 	        $nrow[] = $row['tasTopScore'];
-        	$nrow[] = round($row['ladScore']/$row['tasTopScore'], 0);
+            if ($row['tasTopScore'] > 0)
+            {
+        	    $nrow[] = round($row['ladScore']/$row['tasTopScore'], 0);
+            }
+            else
+            {
+        	    $nrow[] = 0;
+            }
 
         	$tracks[] = $nrow;
         }
