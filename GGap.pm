@@ -316,9 +316,13 @@ sub points_allocation
         # set pilot to min distance if they're below that ..
         if ($taskres{'stopalt'} > 0)
         {
-            $taskres{'distance'} = $taskres{'distance'} + $formula->{'glidebonus'} * ($taskres{'stopalt'} - $task->{'goalalt'});
+            if ($taskres{'distance'} < $taskt->{'endssdistance'})
+            {
+                # only add bonus distance if < essdist - whole track counts if past ess on stop
+                $taskres{'distance'} = $taskres{'distance'} + $formula->{'glidebonus'} * ($taskres{'stopalt'} - $task->{'goalalt'});
+            }
         }
-        if ($taskres{'distance'} > $task->{'short_distance'})
+        if ($taskres{'distance'} > $task->{'short_distance'} and $task->{'type'} ne 'free')
         {
             $taskres{'distance'} = $task->{'short_distance'};
         }
@@ -342,11 +346,12 @@ sub points_allocation
         {
             my $habove = $taskres{'lastalt'} - $task->{'goalalt'};
             print "    habove: $habove (", $task->{'goalalt'}, ")\n";
-            if ($habove > 400)
+            # @fix: make LL, UL configurable .. changing too 100/101 for now
+            if ($habove > 101)
             {
-                $habove = 400;
+                $habove = 101;
             }
-            if ($habove > 50)
+            if ($habove > 100)
             {
                 print "    oldtime=", $taskres{'time'};
                 $hbess = 20.0*(($habove-50.0)**0.40);
@@ -428,19 +433,20 @@ sub points_allocation
         # Penalty for not making goal ..
         if ($pil->{'goal'} == 0)
         {
-            if ($task->{'sstopped'} == 0)
-            {
-                # Lose your speed points if task not stopped
-                $Pspeed = 0;
-            }
-            else
-            {
-                # Lose speed points if landed
-                if ($pil->{'stoptime'} < $task->{'sstopped'})
-                {
-                    $Pspeed = 0;
-                }
-            }
+#            if ($task->{'sstopped'} == 0)
+#            {
+#                # Lose your speed points if task not stopped
+#                $Pspeed = 0;
+#            }
+#            else
+#            {
+#                # Lose speed points if landed
+#                if ($pil->{'stoptime'} < $task->{'sstopped'})
+#                {
+#                    $Pspeed = 0;
+#                }
+#            }
+            $Pspeed = 0;
             $Parrival = 0;
         }
 

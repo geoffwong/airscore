@@ -110,7 +110,7 @@ function insertup($link,$table,$key,$clause,$map)
         $sql = "update $table set $fields where $clause";
         //echo $sql . "<br>";
         $result = mysql_query($sql,$link) 
-            or die ("insertup (update): $table ($clause) query failed: " . mysql_error());
+            or die ("insertup (update): ($sql) query failed: " . mysql_error());
         return $ref[$key];
     }
     else

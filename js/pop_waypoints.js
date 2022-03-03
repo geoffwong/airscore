@@ -1,17 +1,17 @@
 function added_waypoint(res)
 {
-    alert(res);
+    console.log(res);
 
     // notify success
     // update a marker to a label
-    row = JSON.parse(res);
-    if (row.result == 'added')
+    //row = JSON.parse(res);
+    if (res.result == 'added')
     {
-        var cname = row.rwpName;
-        var desc = row.rwpDescription;
-        var rwpPk = row.rwpPk;
+        var cname = res.rwpName;
+        var desc = res.rwpDescription;
+        var rwpPk = res.rwpPk;
 
-        gll = new L.LatLng(row.rwpLatDecimal, row.rwpLongDecimal);
+        gll = new L.LatLng(res.rwpLatDecimal, res.rwpLongDecimal);
         wpt = add_label(map, gll, cname, "waypoint", [ 60, 17 ]);
         L.Util.setOptions(wpt.options.icon, { 'id' : rwpPk, 'name' : cname, 'desc' : desc });
         // remove existing marker
@@ -75,11 +75,15 @@ function plot_region_wp(regPk)
     var end = 0;
     var lasLat;
     var lasLon;
+    var desc;
 
     var region = JSON.parse(data);
     track = region.waypoints;
     count = 1;
     bounds = new L.LatLngBounds();
+    desc = region.region[1];
+    $('#hding').text(desc);
+    console.log(desc);
     for (var row = 0; row < track.length; row++)
     {
         lasLat = track[row].lat;
