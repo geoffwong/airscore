@@ -100,7 +100,7 @@ function mysql_fetch_array($result, $how)
 function mysql_result($result, $rown, $col) 
 {
     $row = $result->fetch_array();
-    if (sizeof($row[$rown]) == 1 && $col == 0)
+    if ((sizeof($row[$rown]) == 1) && ($col == 0))
     {
         return $row[$rown];
     }

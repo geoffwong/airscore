@@ -132,7 +132,7 @@ function task_result($link, $comPk, &$tsinfo, $tasPk, $fdhv)
     
         //<th>Rank</th> <th>Pilot</th> <th>Nat</th> <th>Glider</th> <th>SS</th> <th>ES</th> <th>Time</th> <th id="altbonus">HBs</th> 
         // <th>Kms</th> <th id="leading">Lkm</th> <th>Spd</th> <th>Dst</th> <th>Pen</th> <th>Total</th>
-        $trrow = [fb($place), "<a href=\"tracklog_map.html?trackid=$traPk&comPk=$comPk&tasPk=$tasPk\">$name</a>", $nation ];
+        $trrow = [ fb($place), $tarPk, "<a href=\"tracklog_map.html?trackid=$traPk&comPk=$comPk&tasPk=$tasPk\">$name</a>", $nation ];
         $trrow[] = $glider;
         if ($dhv == 'competition')
         {
@@ -255,12 +255,12 @@ if ($row)
     $tasFinishTime = substr($row['tasFinishTime'],11);
     $tasDistance = round($row['tasDistance']/1000,2);
     $tasShortest = round($row['tasShortRouteDistance']/1000,2);
-    $tasQuality = round($row['tasQuality'],2);
+    $tasQuality = round($row['tasQuality'],3);
     $tasComment = $row['tasComment'];
-    $tasDistQuality = round($row['tasDistQuality'],2);
-    $tasTimeQuality = round($row['tasTimeQuality'],2);
-    $tasLaunchQuality = round($row['tasLaunchQuality'],2);
-    $tasStopQuality = round($row['tasStopQuality'],2);
+    $tasDistQuality = round($row['tasDistQuality'],3);
+    $tasTimeQuality = round($row['tasTimeQuality'],3);
+    $tasLaunchQuality = round($row['tasLaunchQuality'],3);
+    $tasStopQuality = round($row['tasStopQuality'],3);
     $tasArrival = $row['tasArrival'];
     $tasHeightBonus = $row['tasHeightBonus'];
     $tasStoppedTime = substr($row['tasStoppedTime'],11);

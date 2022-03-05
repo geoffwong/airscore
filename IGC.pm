@@ -715,13 +715,13 @@ sub trim_flight
     $count = 0;
     $coord = shift @$full;
     $next = shift @$full; 
-    while (defined($next) && $coord->{'fix'} ne 'A')
+    while (defined($next) && ($coord->{'fix'} ne 'A'))
     {
         #if ($debug) { print "no fix at start\n"; }
         $coord = $next;
         $next = shift @$full; 
     }
-    while (defined($next) && is_flying($coord, $next) > 0)
+    while (defined($next) && (is_flying($coord, $next) > 0))
     {
         #if ($debug) { print "trim at start\n"; }
         $coord = $next;
@@ -751,9 +751,9 @@ sub trim_flight
                 # Only use good fixes ..
                 next;
             }
-            if ($last->{'time'} - $full->[$i-1]->{'time'} < 15)
+            if ($last->{'time'} - $full->[$i-1]->{'time'} < 10)
             {
-                # Only check points every 15 seconds or so ...
+                # Only check points every 10 seconds or so ...
                 next;
             }
             $isf = is_flying($full->[$i-1], $last);
@@ -772,14 +772,14 @@ sub trim_flight
                 $count = 0;
             }
 
+            $last = $full->[$i-1];
+            $lasti = $i-1;
             if ($count > 8)
             {
                 # only "not" flying after 3?
                 if ($debug) { print "Not flying: counted out at $i\n"; }
                 last;
             }
-            $last = $full->[$i-1];
-            $lasti = $i-1;
         }
         $timdif = $full->[$max-1]->{'time'} - $full->[$lasti]->{'time'};
         if (($timdif < $goodchunk) and ($i > 1))

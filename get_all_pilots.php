@@ -12,7 +12,7 @@ function get_all_pilots($link)
 {
     $sql = "select P.pilPk, P.pilFirstName, P.pilLastName, P.pilNationCode, P.pilSex, min(T.traDate) as DateFrom, max(T.traDate) as DateTo, count(T.traPk) as numTracks from tblPilot P, tblTrack T where T.pilPk=P.pilPk group by P.pilPk order by P.pilFirstName";
 
-    $result = mysql_query($sql,$link) or die('get_all_pilots failed: ' . mysql_error());
+    $result = mysql_query($sql,$link) or json_die('get_all_pilots failed: ' . mysql_error());
 
     $pilots = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))

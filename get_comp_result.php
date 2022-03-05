@@ -236,13 +236,13 @@ if (array_key_exists('class', $_REQUEST))
     $cval = intval($_REQUEST['class']);
     if ($comClass == "HG")
     {
-        $carr = array ( "'floater'", "'kingpost'", "'open'", "'rigid'"       );
-        $cstr = array ( "Floater", "Kingpost", "Open", "Rigid", "Women", "Seniors", "Juniors" );
+        $carr = [ "'floater'", "'kingpost'", "'open'", "'rigid'"       ];
+        $cstr = [ "Floater", "Kingpost", "Open", "Rigid", "Women", "Seniors", "Juniors" ];
     }
     else
     {
-        $carr = array ( "'1/2'", "'2'", "'2/3'", "'competition'"       );
-        $cstr = array ( "Fun", "Sport", "Serial", "Open", "Women", "Seniors", "Juniors" );
+        $carr = [ "'1/2'", "'2'", "'2/3'", "'competition'"       ];
+        $cstr = [ "Fun", "Sport", "Serial", "Open", "Women", "Seniors", "Juniors" ];
     }
     $classstr = "<b>" . $cstr[intval($_REQUEST['class'])] . "</b> - ";
     if ($cval == 4)

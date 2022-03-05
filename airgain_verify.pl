@@ -198,22 +198,23 @@ sub read_airgain_existing
 
 sub store_olc_airgain
 {
-    my ($track,$res) = @_;
+    my ($comPk, $track,$res) = @_;
     my ($tasPk,$traPk,$dist,$score,$turnpoints,$comment);
     my @arr;
+    my $accum = $res->{'waypoints'};
 
     $traPk = $track->{'traPk'};
     $score = $res->{'score'};
-    $turnpoints = $res->{'waypoints_made'};
+    $turnpoints = keys %$accum;
 
     print("traPk=$traPk score=$score\n");
     $dbh->do("update tblTrack set traScore=? where traPk=?", undef, $score, $traPk);
-    if ($score > 0)
+    $dbh->do("update tblComTaskTrack set cttScore=? where traPk=? and comPk=?", undef, $score, $traPk, $comPk);
+    if ($turnpoints > 0)
     {
         $dbh->do("delete from tblAirgainWaypoint where traPk=?", undef, $traPk);
 
         my $query = qq{insert into tblAirgainWaypoint (traPk, rwpPk) values };
-        my $accum = $res->{'waypoints'};
         #print Dumper($accum);
 
         for my $k (keys %$accum)
@@ -348,7 +349,7 @@ else
     $info->{'score'} = $score;
 
     # Store somewhere (no task)
-    store_olc_airgain($flight,$info);
+    store_olc_airgain($comPk, $flight, $info);
 }
 
 

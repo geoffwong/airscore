@@ -1,10 +1,11 @@
 function create_comp()
 {
     var options = { };
-    options.comname = $('#compname').val();
+    options.compname = $('#compname').val();
     options.dateto = $('#dateto').val();
     options.datefrom = $('#datefrom').val();
 
+    console.log(options);
     $.post('add_comp.php', options, function (res) {
         console.log(res);
 
@@ -14,6 +15,7 @@ function create_comp()
         if (res.result == "unauthorised")
         {
             authorise();
+            alert("Unauthorised");
             return;
         }
         if (!comPk || res.result != "ok")

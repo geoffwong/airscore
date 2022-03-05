@@ -9,6 +9,7 @@ require_once 'xcdb.php';
 $usePk = check_auth('system');
 $link = db_connect();
 $regPk = reqival('regPk');
+$comPk = reqival('comPk');
 
 function region_waypoints($link, $regPk)
 {
@@ -42,6 +43,14 @@ function region_waypoints($link, $regPk)
     $waypoints['waypoints'] = $waylist;
 
     return $waypoints;
+}
+
+if (!$regPk && $comPk > 0)
+{
+    $sql = "select regPk from tblCompetition where comPk=$comPk";
+    $result = mysql_query($sql,$link) or die("Region key query failed");
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    $regPk = $row['regPk'];
 }
 
 $waypoints = region_waypoints($link, $regPk);

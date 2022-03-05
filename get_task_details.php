@@ -22,7 +22,7 @@ function nice_date($today, $date)
 function get_task_setup($link, $tasPk)
 {
 	$query = "select T.tasPk, T.tasName, T.tasDate, T.regPk, T.tasTaskType, T.tasStoppedTime, T.tasTaskStart, T.tasFinishTime, T.tasStartTime, T.tasStartCloseTime, T.tasSSInterval, T.tasDeparture, T.tasArrival, T.tasHeightBonus, T.tasComment from tblTask T where T.tasPk=$tasPk";
-	$result = mysql_query($query,$link) or die("Unable to select task information: " . mysql_error());
+	$result = mysql_query($query,$link) or json_die("Unable to select task information: " . mysql_error());
     if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 	{
         $tasDate = $row['tasDate'];
@@ -40,7 +40,7 @@ $tasPk = reqival('tasPk');
 
 $taskinfo = get_task_setup($link, $tasPk);
 $waypoints = get_taskwaypoints($link, $tasPk);
-$region = get_region($link, $taskinfo['regPk']);
+$region = get_region($link, $taskinfo['regPk'], 0);
 
 $keys = [];
 $keys['tasPk'] = $taskinfo['tasPk'];

@@ -135,6 +135,10 @@ function plot_track(jstr)
     console.log("plot_track: glider="+trackid);
     console.log(onscreen);
     
+    if (body.tasPk && track.length < 3)
+    {
+        map.fitBounds(bounds);
+    }
     if (!body.tasPk)
     {
         if (points.length > 0)

@@ -10,8 +10,8 @@ $link = db_connect();
 
 function get_admin_pilots($link)
 {
-    $sql = "select P.pilPk, P.pilHGFA, P.pilCIVL, P.pilFirstName, P.pilLastName, P.pilSex, P.pilNationCode, P.pilSex from tblPilot P order by P.pilFirstName";
-    $result = mysql_query($sql,$link) or die('get_admin_pilots failed: ' . mysql_error());
+    $sql = "select P.pilPk, P.pilHGFA, P.pilCIVL, P.pilFirstName, P.pilLastName, P.pilSex, P.pilNationCode, P.pilSex, P.pilFlightWeight, P.pilGliderSize from tblPilot P order by P.pilFirstName";
+    $result = mysql_query($sql,$link) or json_die('get_admin_pilots failed: ' . mysql_error());
 
     $pilots = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))

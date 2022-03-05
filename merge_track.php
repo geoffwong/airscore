@@ -14,7 +14,7 @@ $incPk = intval($_REQUEST['incPk']);
 if ($comPk == 0)
 {
     $sql = "select comPk from tblTask where tasPk=$tasPk";
-    $result = mysql_query($sql, $link) or die("can't find associated competition");
+    $result = mysql_query($sql, $link) or json_die("can't find associated competition");
     $comPk = mysql_result($result,0,0);
 }
 
@@ -31,10 +31,10 @@ if (!$isadmin)
 #select $traPk, trlLatDecimal, trlLongDecimal, trlAltitude, trlTime* from tblTrackLog where traPk in $incPk";
 
 $sql = "update tblTrackLog set traPk=$traPk where traPk=$incPk";
-$result = mysql_query($sql, $link) or die("can't merge track");
+$result = mysql_query($sql, $link) or json_die("can't merge track");
 
 $sql = "delete from tblTrack where traPk=$incPk";
-$result = mysql_query($sql, $link) or die("can't delete merged track");
+$result = mysql_query($sql, $link) or json_die("can't delete merged track");
 
 // Re-verify
 $out = '';

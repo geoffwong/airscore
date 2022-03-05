@@ -12,7 +12,7 @@ function get_all_comps($link)
 {
     $sql = "select C.comPk, C.comName, C.comLocation, C.comClass, C.comSanction, C.comType, C.comDateFrom, C.comDateTo, count(T.tasPk) as numTasks from tblCompetition C left outer join tblTask T on T.comPk=C.comPk where C.comName not like '%test%' and C.comDateTo > '0000-00-00' group by C.comPk order by C.comDateTo desc";
 
-    $result = mysql_query($sql,$link) or die('get_all_tasks failed: ' . mysql_error());
+    $result = mysql_query($sql,$link) or die('get_all_comps failed: ' . mysql_error());
 
     $comps = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
@@ -21,6 +21,10 @@ function get_all_comps($link)
         if ($row['comType'] == 'RACE' || $row['comType'] == 'Route')
         {
             $row['comName'] = "<a href=\"task_overview.html?comPk=$id\">" . $row['comName'] . '</a>';
+        }
+        elseif ($row['comType'] == 'OLC')
+        {
+            $row['comName'] = "<a href=\"olc_overview.html?comPk=$id\">" . $row['comName'] . '</a>';
         }
         else
         {

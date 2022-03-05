@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -I/home/geoff/bin
 #
 # pilot# igc task
 #
@@ -78,7 +78,7 @@ else
         # split lastname(s) and select from database .. pick one?
         my @arr = split(/ /, $pilot, 2);
         my $lastname = $arr[1];
-        my $sth = $TrackLib::dbh->prepare("select pilPk from tblPilot where pilLastName=$lastname");
+        my $sth = $TrackLib::dbh->prepare("select pilPk from tblPilot where pilLastName='$lastname'");
         $sth->execute();
         my $res = $sth->fetchrow_array();
         if ($sth->rows() == 1)

@@ -29,7 +29,7 @@ function get_airspace($airPk)
         $aend = $row['awpAngleEnd'];
     
         #$ret[] = array( 'class' => $class, 'latitude' => $lasLat, 'longitude' => $lasLon, 'base' => $base, 'tops' => $tops, 'shape' => $shape, 'radius' => $radius );
-        $ret[] = array( $class, $lasLat, $lasLon, $base, $tops, $shape, $radius, $connect, $astart, $aend );
+        $ret[] = [ $class, $lasLat, $lasLon, $base, $tops, $shape, $radius, $connect, $astart, $aend ];
     }
     
     mysql_close($link);

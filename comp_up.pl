@@ -36,7 +36,7 @@ sub track_update
     my $retv;
 
     # Now check for pre-submitted tracks ..
-    my $sth = $dbh->prepare("select traPk from tblComTaskTrack where comPk=$comPk");
+    my $sth = $dbh->prepare("select traPk from tblComTaskTrack where comPk=$comPk order by traPk");
     $sth->execute();
 
     my $tracks = ();

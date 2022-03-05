@@ -42,7 +42,7 @@ function ranking_result($ladPk, $ladder, $restrict, $altval, $comPk)
 
     if ($comPk)
     {
-        $sql = "select R.*, P.* from tblRankingResult R, tblPilot P where R.ranPk=$ladPk and P.pilPk=R.pilPk and P.pilNationCode='$nat' and P.pilPk in (select P.pilPk from tblComTaskTrack CTT, tblTrack T, tblPilot P where CTT.traPk=T.traPk and P.pilPk=T.pilPk and CTT.comPk=$comPk group by pilPk) order by R.rrPosition";
+        $sql = "select R.*, P.* from tblRankingResult R, tblPilot P where R.ranPk=$ladPk and P.pilPk=R.pilPk and P.pilPk in (select P.pilPk from tblComTaskTrack CTT, tblTrack T, tblPilot P where CTT.traPk=T.traPk and P.pilPk=T.pilPk and CTT.comPk=$comPk group by pilPk) order by R.rrPosition";
     }
     else
     {

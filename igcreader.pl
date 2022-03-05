@@ -102,7 +102,7 @@ if ($IGC::debug) { print "num coords=$numc\n"; }
 # Trim off silly points ...
 if ($notrim == 0)
 {
-    $flight = trim_flight($flight, $pilPk);
+    $flight = trim_flight($flight);
 }
 
 # Is it a duplicate (and other checks)?
@@ -131,9 +131,13 @@ if ($flight->{'duration'} == 0)
 }
 
 # glider?
-if (!defined($flight->{'glider'}))
+if (!defined($flight->{'header'}->{'glider'}))
 {
     $flight->{'glider'} = 'unknown';
+}
+else
+{
+    $flight->{'glider'} = $flight->{'header'}->{'glider'};
 }
 
 if ($earlyexit == 1)
@@ -141,10 +145,16 @@ if ($earlyexit == 1)
     exit 1;
 }
 
+# if ($pilPk == 0) - guess from name / gid?
+# select pilPk based on gid
+# if ($pilPk == 0) - split lastname(s) and select from database .. pick one?
+
 # store the trimmed track ...
 $traPk = store_track($flight, $pilPk);
 
 # stored track pk
+# print pilot=
+# print gid=
 print "traPk=$traPk\n";
 
 

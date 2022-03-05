@@ -12,7 +12,7 @@ $link = db_connect();
 function get_all_regions($link)
 {
     $sql = "SELECT * from tblAirspaceRegion R order by R.argRegion";
-    $result = mysql_query($sql,$link);
+    $result = mysql_query($sql,$link) or json_die("get_all_regions() failed:" . mysql_error());
     $regions = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {

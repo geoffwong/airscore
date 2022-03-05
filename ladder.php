@@ -103,22 +103,22 @@ function ladder_result($ladPk, $ladder, $restrict)
         TK.tasPk, TK.tasName, TK.tasDate, TK.tasQuality, 
         C.comName, C.comDateTo, LC.lcValue, 
         case when date_sub('$end', INTERVAL 365 DAY) > C.comDateTo 
-        then (TR.tarScore * LC.lcValue * 0.90 * TK.tasQuality) 
+        then (TR.tarScore * LC.lcValue * L.ladDepreciation * TK.tasQuality) 
         else (TR.tarScore * LC.lcValue * TK.tasQuality) end as ladScore, 
         (TR.tarScore * LC.lcValue * (case when date_sub('$end', INTERVAL 365 DAY) > C.comDateTo 
-            then 0.90 else 1.0 end) / (TK.tasQuality * LC.lcValue)) as validity
+            then  L.ladDepreciation else 1.0 end) / (TK.tasQuality * LC.lcValue)) as validity
 from    tblLadderComp LC 
         join tblLadder L on L.ladPk=LC.ladPk
         join tblCompetition C on LC.comPk=C.comPk
         join tblTask TK on C.comPk=TK.comPk
         join tblTaskResult TR on TR.tasPk=TK.tasPk
-        join tblTrack TT on TT.traPk=TR.traPk
+        join tblTrack TT on TT.traPk=TR.traPk 
         join tblPilot TP on TP.pilPk=TT.pilPk
 WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
     and TP.pilNationCode=L.ladNationCode $restrict
     order by TP.pilPk, C.comPk, (TR.tarScore * LC.lcValue * TK.tasQuality) desc";
 
-    $result = mysql_query($sql) or die('Ladder query failed: ' . mysql_error());
+    $result = mysql_query($sql) or die('Ladder result query failed: ' . mysql_error());
     $results = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
@@ -138,21 +138,21 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < '$end'
     // Add external task results (to 1/3 of validity)
     if ($ladder['ladIncExternal'] > 0)
     {
+        $dep = $ladder['ladDepreciation'];
         $sql = "select TK.extPk, TK.extURL as tasPk,
         TP.pilPk, TP.pilLastName, TP.pilFirstName, TP.pilNationCode, TP.pilHGFA, TP.pilSex,
         TK.tasName, TK.tasQuality, TK.comName, TK.comDateTo, TK.lcValue, TK.tasTopScore,
         case when date_sub('$end', INTERVAL 365 DAY) > TK.comDateTo 
-        then (ER.etrScore * TK.lcValue * 0.90 * TK.tasQuality) 
+        then (ER.etrScore * TK.lcValue * TK.extDepreciation * TK.tasQuality) 
         else (ER.etrScore * TK.lcValue * TK.tasQuality) end as ladScore, 
         (ER.etrScore * TK.lcValue * (case when date_sub('$end', INTERVAL 365 DAY) > TK.comDateTo 
-            then 0.90 else 1.0 end) / (TK.tasQuality * TK.lcValue)) as validity
+            then  $dep else 1.0 end) / (TK.tasQuality * TK.lcValue)) as validity
         from tblExtTask TK
         join tblExtResult ER on ER.extPk=TK.extPk
         join tblPilot TP on TP.pilPk=ER.pilPk
         WHERE TK.extClass='$class' and TK.comDateTo > '$start' and TK.comDateTo < '$end'
-        $restrict
         order by TP.pilPk, TK.extPk, (ER.etrScore * TK.lcValue * TK.tasQuality) desc";
-        $result = mysql_query($sql) or die('Ladder query failed: ' . mysql_error());
+        $result = mysql_query($sql) or die('Ladder ext query failed: ' . mysql_error());
         while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
         {
             $res = add_result($results, $row, $row['tasTopScore'], $how);

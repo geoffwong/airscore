@@ -17,6 +17,7 @@ $extra = 0;
 
 $result = [];
 $body = get_track_body($link, $trackid, $interval);
+$body['trackid'] = $trackid;
 $result['track'] = $body;
 if ($body['tasPk'] == 0)
 {

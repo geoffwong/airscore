@@ -182,7 +182,14 @@ sub task_totals
     }
 
     # FIX: lead out coeff - first departure in goal and adjust min coeff 
-    $sth = $dbh->prepare("select min(tarLeadingCoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarLeadingCoeff is not NULL and tarLeadingCoeff > 0");
+    if ($ess > 0)
+    {
+        $sth = $dbh->prepare("select min(tarLeadingCoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarES > 0 and tarLeadingCoeff is not NULL and tarLeadingCoeff > 0");
+    }
+    else
+    {
+        $sth = $dbh->prepare("select min(tarLeadingCoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarLeadingCoeff is not NULL and tarLeadingCoeff > 0");
+    }
     $sth->execute();
     $mincoeff = 0;
     if ($ref = $sth->fetchrow_hashref())
@@ -718,7 +725,8 @@ sub pilot_speed
 
     if ($Ptime > 0)
     {
-        $Pspeed = $Aspeed * (1-(($Ptime-$Tmin)/3600/sqrt($Tmin/3600))**(2/3));
+        # $Pspeed = $Aspeed * (1-(($Ptime-$Tmin)/3600/sqrt($Tmin/3600))**(2/3)); # pre 2020
+        $Pspeed = $Aspeed * (1-(($Ptime-$Tmin)/3600/sqrt($Tmin/3600))**(5/6));
     }
     else
     {
@@ -804,11 +812,13 @@ sub ordered_results
     my @pilots;
     my $ref;
     my $sth;
+    my $lastES = -1;
+    my $lastPlace = -1;
 
     # Get all pilots and process each of them 
     # pity it can't be done as a single update ...
     $dbh->do('set @x=0;');
-    $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarPk, traPk, tarDistance, tarSS, tarES, tarPenalty, tarResultType, tarLeadingCoeff, tarGoal, tarLastAltitude from tblTaskResult where tasPk=$tasPk and tarResultType <> 'abs' order by case when (tarES=0 or tarES is null) then 99999999 else tarES end, tarDistance desc");
+    $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarPk, traPk, tarDistance, tarSS, tarES, tarPenalty, tarResultType, tarLeadingCoeff, tarGoal, tarLastAltitude, tarLastTime from tblTaskResult where tasPk=$tasPk and tarResultType <> 'abs' order by case when (tarES=0 or tarES is null) then 99999999 else tarES end, tarDistance desc");
     $sth->execute();
     while ($ref = $sth->fetchrow_hashref()) 
     {
@@ -820,9 +830,11 @@ sub ordered_results
         $taskres{'penalty'} = $ref->{'tarPenalty'};
         $taskres{'distance'} = $ref->{'tarDistance'};
         $taskres{'stopalt'} = $ref->{'tarLastAltitude'};
+        $taskres{'stoptime'} = $ref->{'tarLastTime'};
         # set pilot to min distance if they're below that ..
         # print "sstopped=", $task->{'sstopped'}, " stopalt=", $taskres{'stopalt'}, " glidebonus=", $formula->{'glidebonus'}, "\n";
-        if ($task->{'sstopped'} > 0 and $taskres{'stopalt'} > 0 and $formula->{'glidebonus'} > 0)
+
+        if ($task->{'sstopped'} > 0 and $taskres{'stopalt'} > 0 and $formula->{'glidebonus'} > 0 and $taskres{'distance'} < $taskt{'endssdistance'})
         {
             print "Stopped height bonus: ", $formula->{'glidebonus'} * $taskres{'stopalt'}, "\n";
             if ($taskres{'stopalt'} > $task->{'goalalt'})
@@ -842,7 +854,16 @@ sub ordered_results
         $taskres{'startSS'} = $ref->{'tarSS'};
         $taskres{'endSS'} = $ref->{'tarES'};
         $taskres{'timeafter'} = $ref->{'tarES'} - $Tfarr;
-        $taskres{'place'} = $ref->{'Place'};
+        if ($ref->{'tarES'} == $lastES)
+        {
+            $taskres{'place'} = $lastPlace;
+        }
+        else
+        {
+            $taskres{'place'} = $ref->{'Place'};
+            $lastES = $ref->{'tarES'};
+            $lastPlace = $ref->{'Place'};
+        }
         $taskres{'time'} = $taskres{'endSS'} - $taskres{'startSS'};
         $taskres{'goal'} = $ref->{'tarGoal'};
         if ($taskres{'time'} < 0)
@@ -864,14 +885,20 @@ sub ordered_results
                 # $remainingss * ($task->{'sfinish'}-$coord->{'time'})
                 if ($taskt->{'lastarrival'} > 0)
                 {
-                    $taskres{'coeff'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * ($task->{'endssdistance'} - $ref->{'tarDistance'}) / 1800 / $task->{'ssdistance'} ;
+                    $taskres{'coeff'} = $ref->{'tarLeadingCoeff'} + ($task->{'sfinish'} - $taskt->{'lastarrival'}) * ($task->{'endssdistance'} - $ref->{'tarDistance'}) / 1800 / $task->{'ssdistance'} ;
+                    if ($taskres{'coeff'} < 0)
+                    {
+                        print " WARNING: negative leading coeff: ", $taskres{'coeff'}, " for ", $taskres{'traPk'}, "\n";
+                        $taskres{'coeff'} = 0;
+                    }
                 }
             
                 print " to: ", $taskres{'coeff'}, "\n";
                 # adjust mincoeff?
-                if ($taskres{'coeff'} < $task->{'mincoeff'})
+                if ($taskres{'coeff'} > 0 and $taskres{'coeff'} < $task->{'mincoeff'})
                 {
                     $task->{'mincoeff'} = $taskres{'coeff'};
+                    print " NEW minimum coeff: ", $taskres{'mincoeff'}, "\n";
                 }
             }
         }
@@ -984,6 +1011,22 @@ sub points_allocation
         {
             $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
             $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
+
+#            if ($task->{'sstopped'} == 0)
+#            {
+#                # Lose your speed points if task not stopped
+#                $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
+#                $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
+#            }
+#            else
+#            {
+#                # Lose speed points if landed
+#                if ($pil->{'stoptime'} == 0)
+#                {
+#                    $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
+#                    $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
+#                }
+#            }
         }
 
         # Sanity

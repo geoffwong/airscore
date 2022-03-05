@@ -7,72 +7,78 @@ require_once 'authorisation.php';
 require_once 'dbextra.php';
 
 
-function add_comp($link)
+function add_comp($link, $usePk)
 {
-    $comname = reqsval('comname');
+    $comname = reqsval('compname');
     $datefrom = reqsval('datefrom');
     $dateto = reqsval('dateto');
 
     if ($comname == '')
     {
-   		$res['result'] = 'error';
-   		$res['reason'] = 'Can\'t create a competition with no name';    
-   		print json_encode($res);
-   		return;
+        return -1;
     }
-    else
-    {
-        $query = "insert into tblCompetition (comName, comDateFrom, comDateTo) values ('$comname','$datefrom', '$dateto')";
-    
-        $result = mysql_query($query, $link) or die('Competition addition failed: ' . mysql_error());
-        $comPk = mysql_insert_id();
+    $query = "insert into tblCompetition (comName, comDateFrom, comDateTo, regPk) values ('$comname','$datefrom', '$dateto', 1)";
 
-        $regarr = [];
-        $regarr['comPk'] = $comPk;
-        $regarr['forClass'] = 'gap';
-        $regarr['forVersion'] = '2007';
-        $regarr['forNomDistance'] = 35.0;
-        $regarr['forMinDistance'] = 5.0;
-        $regarr['forNomTime'] = 90;
-        $regarr['forNomGoal'] = 30.0;
-        $regarr['forGoalSSPenalty'] = 1.0;
-        $regarr['forLinearDist'] = 0.5;
-        $regarr['forDiffDist'] = 3.0;
-        $regarr['forDiffRamp'] = 'flexible';
-        $regarr['forDiffCalc'] = 'lo';
-        $regarr['forDistMeasure'] = 'average';
-        if (reqexists('weightstart'))
-        {
-            $regarr['forWeightStart'] = 0.125;
-            $regarr['forWeightArrival'] = 0.175;
-            $regarr['forWeightSpeed'] = 0.7;
-        }
-        $clause = "comPk=$comPk";
-        $forPk = insertup($link, 'tblFormula', 'forPk', $clause,  $regarr);
+    $result = mysql_query($query, $link) or json_die('Competition addition failed: ' . mysql_error());
+    $comPk = mysql_insert_id();
 
-        $query = "update tblCompetition set forPk=$forPk where $clause";
-        $result = mysql_query($query, $link) or die('Competition formula update failed: ' . mysql_error());
-    
-        $query = "insert into tblCompAuth values ($usePk, $comPk, 'admin')";
-        $result = mysql_query($query, $link) or die('CompAuth addition failed: ' . mysql_error());
-    }
+    $regarr = [];
+    $regarr['comPk'] = $comPk;
+    $regarr['forClass'] = 'gap';
+    $regarr['forVersion'] = '2018';
+    $regarr['forNomDistance'] = 35.0;
+    $regarr['forMinDistance'] = 5.0;
+    $regarr['forNomTime'] = 90;
+    $regarr['forNomGoal'] = 30.0;
+    $regarr['forGoalSSPenalty'] = 1.0;
+    $regarr['forLinearDist'] = 0.5;
+    $regarr['forDiffDist'] = 3.0;
+    $regarr['forDiffRamp'] = 'flexible';
+    $regarr['forDiffCalc'] = 'lo';
+    $regarr['forDistMeasure'] = 'average';
+    $regarr['forWeightStart'] = 0.125;
+    $regarr['forWeightArrival'] = 0.175;
+    $regarr['forWeightSpeed'] = 0.7;
+    $clause = "comPk=$comPk";
+
+    $forPk = insertup($link, 'tblFormula', 'forPk', $clause,  $regarr);
+
+    $query = "update tblCompetition set forPk=$forPk where $clause";
+    $result = mysql_query($query, $link) or json_die('Competition formula update failed: ' . mysql_error());
+
+    $query = "insert into tblCompAuth values ($usePk, $comPk, 'admin')";
+    $result = mysql_query($query, $link) or json_die('CompAuth addition failed: ' . mysql_error());
+
+    return $comPk;
 }
 
 $usePk = auth('system');
 $link = db_connect();
 $res = [];
-$comPk = reqival('comPk');
+#$comPk = -1;
+#if (!is_admin('admin',$usePk,$comPk))
 
-if (!is_admin('admin',$usePk,$comPk))
+$usePk = check_auth('system');
+if ($usePk == 0)
 {
    $res['result'] = 'unauthorised';
    print json_encode($res);
    return;
 }
 
-add_comp($link);
+$comPk = add_comp($link, $usePk);
+
+if ($comPk == -1)
+{
+	$res['result'] = 'error';
+	$res['error'] = 'Can\'t create a competition with no name';    
+	print json_encode($res);
+	return;
+}
 
 $res['result'] = 'ok';
+$res['comPk'] = $comPk;
+
 print json_encode($res);
 ?>
 

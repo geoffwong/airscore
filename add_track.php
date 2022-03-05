@@ -18,14 +18,22 @@ function upload_track($hgfa, $file, $comid, $tasPk)
     {
         if ($out)
         {
-            $res['result'] = "failed";
-            $res['output'] = $out;
+            if (!(strpos($out[0], 'Duplicate') === false))
+            {
+                $res['result'] = "duplicate";
+                $res['output'] = $out[0];
+            }
+            else
+            {
+                $res['result'] = "failed";
+                $res['output'] = serialize($out);
+            }
             print json_encode($res);
             exit(0);
         }
         else
         {
-            $res['result'] = "duplicate";
+            $res['result'] = "failed";
             print json_encode($res);
             exit(0);
         }
@@ -44,19 +52,19 @@ function upload_track($hgfa, $file, $comid, $tasPk)
     return $traPk;
 }
 
-function accept_track($until, $restrict)
+function accept_track($comPk, $until, $restrict)
 {
     //$file = addslashes($_REQUEST['userfile']);
     $hgfa = trim(reqsval('hgfanum'));
     $name = strtolower(trim(reqsval('lastname')));
     $route = reqival('route');
-    $comid = reqival('comid');
+
+    $member = 1;
 
     $link = db_connect();
-    $query = "select pilPk, pilHGFA from tblPilot where pilLastName='$name'";
-    $result = mysql_query($query) or die('Query failed: ' . mysql_error());
 
-    $member = 0;
+    $query = "select pilPk, pilHGFA from tblPilot where pilLastName='$name'";
+    $result = mysql_query($query) or json_die('Query failed: ' . mysql_error());
     while ($row=mysql_fetch_array($result, MYSQL_ASSOC))
     {
         if ($hgfa == $row['pilHGFA'])
@@ -66,6 +74,17 @@ function accept_track($until, $restrict)
         }
     }
 
+    if ($restrict == 'registered')
+    {
+        $query = "select * from tblRegistration where comPk=$comPk and pilPk=$pilPk";
+        $result = mysql_query($query) or json_die('registration error');
+        if (mysql_num_rows($result) == 0)
+        {
+            $member = 0;
+        }
+    }
+
+
     $gmtimenow = time() - (int)substr(date('O'),0,3)*60*60;
     if ($gmtimenow > ($until + 7*24*3600))
     {
@@ -74,10 +93,12 @@ function accept_track($until, $restrict)
         print json_encode($res);
         exit(0);
     }
+
     if ($member == 0)
     {
         $res = [];
         $res['result'] = "unregistered";
+        $res['command'] = $query;
         print json_encode($res);
         exit(0);
     }
@@ -91,7 +112,7 @@ function accept_track($until, $restrict)
 
     // Process the file
     //$maxPk = upload_track($_FILES['userfile']['tmp_name'], $pilPk, $comContact);
-    $maxPk = upload_track($hgfa, $_FILES['userfile']['tmp_name'], $comid, $route);
+    $maxPk = upload_track($hgfa, $_FILES['userfile']['tmp_name'], $comPk, $route);
 
     $tasPk = 'null';
     $tasType = '';
@@ -113,7 +134,7 @@ function accept_track($until, $restrict)
     {
         $query = "update tblTrack set traGlider='$glider', traDHV='$dhv', traSafety='$safety', traConditions='$quality' where traPk=$maxPk";
     }
-    $result = mysql_query($query) or die('Update tblTrack failed: ' . mysql_error());
+    $result = mysql_query($query) or json_die('Update tblTrack failed: ' . mysql_error());
 
     return $maxPk;
 }
@@ -141,7 +162,7 @@ if ($comPk < 2)
 
 $comUnixTo = time() - (int)substr(date('O'),0,3)*60*60;
 $query = "select *, unix_timestamp(date_sub(comDateTo, interval ComTimeOffset hour)) as comUnixTo  from tblCompetition where comPk=$comPk";
-$result = mysql_query($query) or die('Query failed: ' . mysql_error());
+$result = mysql_query($query, $link) or json_die('Query failed: ' . mysql_error());
 $comEntryRestrict = 'open';
 if ($row=mysql_fetch_array($result, MYSQL_ASSOC))
 {
@@ -153,19 +174,32 @@ if ($row=mysql_fetch_array($result, MYSQL_ASSOC))
 
 $freepin = 0;
 $query = "select * from tblTask where comPk=$comPk and tasTaskType='free-pin'";
-$result = mysql_query($query);
+$result = mysql_query($query, $link);
 if (mysql_num_rows($result) > 0)
 {
    $freepin = 1; 
 }
 
-$id = accept_track($comUnixTo, $comEntryRestrict);
+$id = accept_track($comPk, $comUnixTo, $comEntryRestrict);
+
+$query = "select tasPk from tblComTaskTrack where traPk=$id";
+$result = mysql_query($query, $link);
+if (mysql_num_rows($result) > 0)
+{
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    $tasPk = $row['tasPk'];
+}
 
 $res = [];
-$res['result'] = $id;
+$res['result'] = 'ok';
+$res['comPk'] = $comPk;
+$res['traPk'] = $id;
+if ($tasPk > 0)
+{
+    $res['tasPk'] = $tasPk;
+}
 
 print json_encode($res);
 //redirect("tracklog_map.html?trackid=$id&comPk=$comPk&ok=1");
-
 ?>
 
