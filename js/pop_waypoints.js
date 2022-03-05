@@ -17,6 +17,18 @@ function added_waypoint(res)
         // remove existing marker
     }
 }
+function deleted_waypoint(res)
+{
+    alert(res);
+
+    // notify success
+    // update a marker to a label
+    row = JSON.parse(res);
+    if (row.result == 'deleted')
+    {
+        // remove existing marker
+    }
+}
 function add_waypoint()
 {
     var regPk = url_parameter('regPk');
@@ -27,6 +39,12 @@ function add_waypoint()
     var lon = $('#lon').val();
     var alt = $('#alt').val();
     $.post("update_waypoint.php", { 'regPk': regPk, 'name' : id, 'desc': desc, 'lat' : lat, 'lon': lon, 'alt': alt }, added_waypoint);
+}
+function delete_waypoint()
+{
+    var regPk = url_parameter('regPk');
+    var rwpPk = $('#rwpPk').val();
+    $.post("update_waypoint.php", { 'regPk': regPk, 'rwpPk' : rwpPk, 'action' : 'delete' }, deleted_waypoint);
 }
 function create_waypoint_marker()
 {

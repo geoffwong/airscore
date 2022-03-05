@@ -55,13 +55,19 @@ function addup_waypoint($link, $regPk)
 function delete_waypoint($link, $regPk)
 {
     $delname = reqsval('name');
-    if ($delname != '')
+    $rwpPk = reqival('rwpPk');
+    $sql = "select * from tblTaskWaypoint where rwpPk=$rwpPk";
+    $result = mysql_query($sql,$link) or die("Failed to delete waypoint ($rwpPk): " . mysql_error());
+    if (mysql_num_rows($result) > 0)
     {
-        $sql = "delete from tblRegionWaypoint where regPk=$regPk and rwpName='$delname'";
-        $result = mysql_query($sql,$link) or die("Failed to delete waypoint ($delname): " . mysql_error());
+        $ret['result'] = 'failed';
+        return $ret;
     }
+    
+    $sql = "delete from tblRegionWaypoint where regPk=$regPk and rwpPk='$rwpPk'";
+    $result = mysql_query($sql,$link) or die("Failed to delete waypoint ($delname): " . mysql_error());
     $ret = [];
-    $ret['result'] = $res;
+    $ret['result'] = 'deleted';
     return $ret;
 }
 
