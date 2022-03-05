@@ -185,6 +185,15 @@ function accept_waypoints($region,$link)
     $name = 'waypoints';
 
      // add the region ..
+    $query = "select * from tblRegion where regDescription like '$region'";
+    $result = mysql_query($query, $link) or json_die('Find existing region failed: ' . mysql_error());
+    if (mysql_num_rows($result) > 0)
+    {
+        echo "<b>Region ($region) already exists with that name.<br>";
+        echo "</div></body></html>\n";
+        exit(0);
+	}
+
     $query = "insert into tblRegion (regDescription) values ('$region')";
     $result = mysql_query($query) or die('Query failed: ' . mysql_error());
     $regPk = mysql_insert_id();
@@ -241,6 +250,15 @@ if (reqexists('add'))
 if (reqexists('create'))
 {
     $region = reqsval('region');
+
+    $query = "select * from tblRegion where regDescription like '$region'";
+    $result = mysql_query($query, $link) or json_die('Find existing region failed: ' . mysql_error());
+    if (mysql_num_rows($result) > 0)
+    {
+        echo "<b>Region ($region) already exists with that name.<br>";
+        echo "</div></body></html>\n";
+        exit(0);
+	}
 
     $query = "insert into tblRegion (regDescription) values ('$region')";
     $result = mysql_query($query) or die('Create region failed: ' . mysql_error());

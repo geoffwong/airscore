@@ -45,11 +45,11 @@ if (reqexists('delete'))
         $query = "SELECT comPk FROM tblComTaskTrack where traPk=$id$comcl";
         $result = mysql_query($query, $link) or die('Cant get track info: ' . mysql_error());
     }
-    if (mysql_num_rows($result) == 0)
-    {
-        die("You cannot delete tracks for that competition (usePk=$usePk,comPk=$lco)<br>");
-        return;
-    }
+    #if (mysql_num_rows($result) == 0)
+    #{
+    #    die("You cannot delete tracks for that competition (usePk=$usePk,comPk=$lco)<br>");
+    #    return;
+    #}
     if ($comPk > 0)
     {
         $lco = $comPk;
@@ -165,7 +165,7 @@ else
         $fclause = "where P.pilLastName like '%$filter%'";
     }
 
-    $sql = "SELECT T.*, P.*, CTT.comPk from
+    $sql = "SELECT T.*, P.*, CTT.comPk, CTT.tasPk from
         tblTrack T
         left outer join tblPilot P on T.pilPk=P.pilPk
         left outer join tblComTaskTrack CTT on CTT.traPk=T.traPk
@@ -190,23 +190,31 @@ echo fin('filter','', 30);
 echo fis('Filter','Filter Surname', 10);
 echo "&nbsp;&nbsp;&nbsp";
 echo "<ol>";
-while ($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $id = $row['traPk'];
     $dist = round($row['traLength']/1000,2);
     $name = $row['pilFirstName'] . " " . $row['pilLastName'];
     $date = $row['traStart'];
     $cpk = 0;
+    $tpk = '';
     if (array_key_exists('comPk', $row))
     {
         $cpk = $row['comPk'];
+    }
+    if (array_key_exists('tasPk', $row))
+    {
+        if ($row['tasPk'])
+        {
+            $tpk = '&tasPk=' . $row['tasPk'];
+        }
     }
     if ($cpk == 0)
     {
         $cpk = $comPk;
     }
     echo "<li><button type=\"submit\" name=\"delete\" value=\"$id\">del</button>";
-    echo "<a href=\"tracklog_map.php?trackid=$id&comPk=$cpk\"> $dist kms by $name at $date.</a><br>\n";
+    echo "<a href=\"tracklog_map.html?trackid=$id&comPk=$cpk$tpk\"> $dist kms by $name at $date.</a><br>\n";
     # echo a delete button ...
 
     $count++;

@@ -14,6 +14,7 @@
     <link href="spacelab_bootstrap.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
     <link href="leaflet.css" rel="stylesheet">
+    <link href="navbar.css" rel="stylesheet">
 
     <script src="leaflet.js"></script>
     <script src="microajax.minified.js"></script>
@@ -27,7 +28,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
       <div class="container">
-        <a class="navbar-brand" href="#">airScore</a>
+        <a class="navbar-brand" href="/" id="airbrand">airScore</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -58,7 +59,7 @@
     <!-- Page Content -->
     <div id="txttest"></div>
     <div class="container" id="main">
-      <h1 class="my-4" id="comp_name"></h1>
+      <h1 class="my-4 ml-2" id="comp_name"></h1>
       <div class="row" id="row1"></div>
       <div class="row" id="row2"></div>
       <div class="row" id="row3"></div>

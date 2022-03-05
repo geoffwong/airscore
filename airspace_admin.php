@@ -30,6 +30,26 @@ function nautical_miles($km)
     return $km / 1852.0;
 }
 
+function unebearing($centre, $brng)
+{
+//    #$dLat = torad($p2->{'lat'}-$p1->{'lat'}).toRad();
+//    #print Dumper($p2);
+//    $dLon = torad($p2->{'lon'}-$p1->{'lon'});
+//    $lat1 = torad($p1->{'lat'});
+//    $lat2 = torad($p2->{'lat'});
+//
+//    $y = sin($dLon)*cos($lat2);
+//    $x = cos($lat1)*sin($lat2) - sin($lat1)*cos($lat2)*cos($dLon);
+//
+//    $brng = atan2($y, $x);
+//
+//    # convert back to degree?
+//    print "bearing=" . ($brng*180/$pi) . "\n";
+//
+//    return [ $p1, $p2 ];
+}
+
+
 if (reqexists('download'))
 {
     //AC Q
@@ -99,11 +119,27 @@ if (reqexists('download'))
             // do waypoints ...
             $subsql = "SELECT A.*, AW.* from tblAirspace A, tblAirspaceWaypoint AW where A.airPk=$airPk and AW.airPk=A.airPk order by AW.airOrder";
             $subresult = mysql_query($subsql,$link);
+            $first = 0;
             while ($subrow = mysql_fetch_array($subresult, MYSQL_ASSOC))
             {
                 $lat = $subrow['awpLatDecimal'];
                 $lon = $subrow['awpLongDecimal'];
-                echo "V X=" . dms($lat, "NS") . " " . dms($lon, "EW") . "\n";
+                if ($subrow['awpConnect'] == "line")
+                {
+                    echo "DP  " . dms($lat, "NS") . " " . dms($lon, "EW") . "\n";
+                }
+                elseif ($subrow['awpConnect'] == "arc+")
+                {
+                    echo "V D=+\n";
+                    echo "V X=" . dms($lat, "NS") . " " . dms($lon, "EW") . "\n";
+                    echo "DB  " . dms($lat, "NS") . " " . dms($lon, "EW") . "\n";
+                }
+                elseif ($subrow['awpConnect'] == "arc-")
+                {
+                    echo "V D=-\n";
+                    echo "V X=" . dms($lat, "NS") . " " . dms($lon, "EW") . "\n";
+                    echo "DB  " . dms($lat, "NS") . " " . dms($lon, "EW") . "\n";
+                }
             }
         }
     }

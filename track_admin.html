@@ -25,7 +25,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
       <div class="container">
-        <a class="navbar-brand" href="#">airScore</a>
+        <a class="navbar-brand" href="/">airScore</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -46,15 +46,44 @@
 	<div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h4 class="modal-title">Confirm Delete Track</h4>
+          <h4 class="modal-title">Update/Delete Track</h4>
           <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
         
         <div class="modal-body">
-            Confirm track deletion?
+         	<form id="updateresult" action="javascript:void(0);" method="post">
+            <div class="form-group">
+            <input type="hidden" name="trapk" id="trapk">
+            <input type="hidden" name="taspk" id="taspk">
+		    <div id="addition" class="form-row mb-1">
+			  	<label for="pilot" class="col-2 col-form-label">Pilot</label>
+		    </div>
+		    <div class="form-row">
+			  	<label for="taskname" class="col-2 col-form-label">Task</label>
+                <div class="col-10"><input name="glider" class="form-control" type="text" value="" id="glider"></div>
+		    </div>
+			<div class="form-row mt-1">
+			  <label for="date-from" class="col-2 col-form-label">Result</label>
+			  	<label for="enrating" class="col-2 col-form-label">Class</label>
+			    <div class="col-4" id="enrating">
+                <select name="enselect" class="form-control">
+                <option value='A'>A</option>
+                <option value='B'>B</option>
+                <option value='C'>C</option>
+                <option value='D'>D</option>
+                <option value='CCC'>CCC</option>
+                <option value='floater'>floater</option>
+                <option value='kingpost'>kingpost</option>
+                <option value='open'>open</option>
+                <option value='rigid'>rigid</option>
+                </select>
+			    </div>
+		    </div>
+			</form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="del_track();">Delete</button>
+          <!-- button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="update_track();">Update</button -->
           <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
         </div>
       </div>
@@ -73,6 +102,7 @@
         <tr>
             <th>ID</th>
             <th>Date</th>
+            <th>Task</th>
             <th>Class</th>
             <th>Pilot</th>
             <th>Duration</th>
@@ -89,7 +119,7 @@
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="js/login.js"></script>
-    <script src="js/pop_track_admin.js"></script>
+    <script src="js/pop_track_admin.js?v=1"></script>
 
   </body>
 </html>

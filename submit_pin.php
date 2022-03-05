@@ -87,7 +87,7 @@ if ($tasPk == 0)
 
 $sql = "SELECT * FROM tblRegion WHERE regPk=$regPk";
 $result = mysql_query($sql,$link);
-$row = mysql_fetch_array($result);
+$row = mysql_fetch_array($result, MYSQL_ASSOC);
 $rcentre = intval($row['regCentre']);
 $regdesc = $row['regDescription'];
 
@@ -191,7 +191,7 @@ if (reqexists('submitpin'))
     $result = mysql_query($query) or die('Pilot query failed: ' . mysql_error());
 
     $member = 0;
-    while ($row=mysql_fetch_array($result))
+    while ($row=mysql_fetch_array($result, MYSQL_ASSOC))
     {
         if ($hgfa == $row['pilHGFA'])
         {

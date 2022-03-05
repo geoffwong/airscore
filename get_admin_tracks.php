@@ -1,5 +1,7 @@
 <?php
-
+header('Cache-Control: public, must-revalidate');
+header('Expires: ' . gmdate(DATE_RFC2822, time() + 86400));
+header('Content-type: application/json; charset=utf-8');
 require_once 'authorisation.php';
 
 $comPk = reqival('comPk');
@@ -24,7 +26,7 @@ function get_tracks($link, $comPk, $limit)
         {
             #$sql = "SELECT T.*, P.* FROM tblTaskResult CTT left join tblTrack T on CTT.traPk=T.traPk left outer join tblPilot P on T.pilPk=P.pilPk where CTT.tasPk in (select tasPk from tblTask TK where TK.comPk=$comPk) order by T.traStart desc";
             $sql = "(
-                    SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, $comPk as comPk, CTT.tasPk 
+                    SELECT T.traPk, T.traStart, CTT.tasPk, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, $comPk as comPk 
                         from tblTrack T
                         left outer join tblTaskResult CTT on CTT.traPk=T.traPk 
                         left outer join tblPilot P on T.pilPk=P.pilPk 
@@ -32,7 +34,7 @@ function get_tracks($link, $comPk, $limit)
                 )
                 union
                 (
-                    SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk 
+                    SELECT T.traPk, T.traStart, CTT.tasPk, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk
                     FROM tblComTaskTrack CTT 
                         join tblTrack T on CTT.traPk=T.traPk 
                         left outer join tblPilot P on T.pilPk=P.pilPk 
@@ -42,7 +44,7 @@ function get_tracks($link, $comPk, $limit)
         }
         else
         {
-            $sql = "SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk
+            $sql = "SELECT T.traPk, T.traStart, CTT.tasPk, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk 
                 FROM tblComTaskTrack CTT 
                 join tblTrack T 
                     on CTT.traPk=T.traPk 
@@ -53,7 +55,7 @@ function get_tracks($link, $comPk, $limit)
     }
     else
     {
-        $sql = "SELECT T.traPk, T.traStart, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk, CTT.tasPk from
+        $sql = "SELECT T.traPk, T.traStart, CTT.tasPk, T.traDHV, P.pilFirstName, P.pilLastName, T.traDuration, T.traLength, CTT.comPk from
             tblTrack T
             left outer join tblPilot P on T.pilPk=P.pilPk
             left outer join tblComTaskTrack CTT on CTT.traPk=T.traPk
@@ -84,7 +86,6 @@ function get_tracks($link, $comPk, $limit)
         $row['traLength'] = round($row['traLength']/1000,1);
         $row['cross'] = 0;
         unset($row['comPk']);
-        unset($row['tasPk']);
         unset($row['pilLastName']);
         $all_tracks[] = array_values($row);
     }

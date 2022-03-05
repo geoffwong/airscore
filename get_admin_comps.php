@@ -8,6 +8,13 @@ require_once 'authorisation.php';
 $usePk = check_auth('system');
 $link = db_connect();
 
+if ($usePk == 0)
+{
+    $res['result'] = 'unauthorised';
+    print json_encode($res);
+    return;
+}
+
 function get_admin_comps($link, $usePk)
 {
     if (is_admin('admin', $usePk, -1))
@@ -16,10 +23,10 @@ function get_admin_comps($link, $usePk)
     }
     else
     {
-        $sql = "select C.comPk, C.comName, C.comLocation, C.comType, C.comClass, C.comDateFrom, C.comDateTo, count(T.tasPk) as numTasks FROM tblCompAuth A, tblCompetition C where (A.comPk=C.comPk and A.usePk=$usePk) or (C.comName like '%test%') group by C.comName order by C.comName like '%test%', C.comDateTo desc";
+        $sql = "select C.comPk, C.comName, C.comLocation, C.comType, C.comClass, C.comDateFrom, C.comDateTo, count(T.tasPk) as numTasks FROM tblCompAuth A left join tblCompetition C on (A.comPk=C.comPk and A.usePk=$usePk) or (C.comName like '%test%') left outer join tblTask T on T.comPk=C.comPk group by C.comPk order by C.comName like '%test%', C.comDateTo desc";
     }
 
-    $result = mysql_query($sql,$link) or die('get_all_tasks failed: ' . mysql_error());
+    $result = mysql_query($sql,$link) or json_die('get_all_tasks failed: ' . mysql_error());
 
     $comps = [];
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))

@@ -91,7 +91,7 @@ unset($compinfo['TotalValidity']);
 
 $regions = get_all_regions($link);
 //$compinfo['comWaypoints'] = $regions[$keys['regPk']];
-$compinfo['comWaypoints'] = $keys['regPk'];
+$compinfo['comRegion'] = $keys['regPk'];
 
 $data = [ 'keys' => $keys, 'compinfo' => $compinfo, 'taskinfo' => $taskinfo, 'formula' => $formula, 'scoring' => $scoring, 'regions' => $regions ];
 print json_encode($data);

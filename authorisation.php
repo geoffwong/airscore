@@ -296,4 +296,13 @@ function hhmmss($seconds)
     $timeinair = sprintf("%01d:%02d:%02d", $hh,$mm,$ss);
     return $timeinair;
 }
+function json_die($msg)
+{
+    error_log($msg);
+    $ret = [];
+    $res['result'] = 'error';
+    $res['error'] = $msg;
+    print json_encode($res);
+    exit(0);
+}
 ?>

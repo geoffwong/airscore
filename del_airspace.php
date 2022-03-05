@@ -13,6 +13,12 @@ function del_airspace($airPk)
 
     $query = "delete from tblAirspace where airPk=$airPk";
     $result = mysql_query($query, $link) or json_die('Airspace delete failed: ' . mysql_error());
+
+    $query = "delete from tblAirspaceWaypoint where airPk=$airPk";
+    $result = mysql_query($query, $link) or json_die('Airspace delete failed: ' . mysql_error());
+
+    $query = "delete from tblTaskAirspace where airPk=$airPk";
+    $result = mysql_query($query, $link) or json_die('Airspace delete failed: ' . mysql_error());
 }
 
 $authorised = check_auth('system');

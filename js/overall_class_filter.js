@@ -47,6 +47,21 @@ $(document).ready(function() {
         var table = $('#task_result').DataTable();
         var flyclass = $('#dhv option:selected').val();
         // console.log('flyclass='+flyclass);
+        if (flyclass == 'overall')
+        {
+            var url = 'comp_overall.html?' + window.location.search.substring(1);
+            console.log(url);
+            window.location.replace(url);
+            return;
+        }
+        else if (flyclass == 'Teams')
+        {
+            var url = 'team_overall.html?' + window.location.search.substring(1);
+            console.log(url);
+            window.location.replace(url);
+            return;
+        }
+
         table.search('').draw();
     } );
 } );

@@ -55,7 +55,7 @@ $(document).ready(function() {
         //"columnDefs": [ { "targets": [ 0 ], "visible": false } ],
         "createdRow": function( row, data, index, cells )
         {
-            cells[6].innerHTML = '<b><a href="#/" onclick="confirm_del_track(this,'+data[0]+');">&cross;</a></b>';
+            cells[7].innerHTML = '<b><a href="#/" onclick="confirm_del_track(this,'+data[0]+');">&cross;</a></b>';
         }
     });
 
