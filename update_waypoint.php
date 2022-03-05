@@ -22,7 +22,7 @@ function addup_waypoint($link, $regPk)
     if ($rwpPk > 0)
     {
         $sql = "select count(*) as count from tblTask where rwpPk=$rwpPk";
-        $result = mysql_query($sql,$link) or die("Failed to count waypoint ($rwpPk): " . mysql_error());
+        $result = mysql_query($sql,$link) or json_die("Failed to count waypoint ($rwpPk): " . mysql_error());
         $row = mysql_fetch_array($result, MYSQL_ASSOC);
         if ($row[count] > 0)
         {
@@ -42,6 +42,7 @@ function addup_waypoint($link, $regPk)
         }
         else
         {
+            unset($map['rwpPk']);
             $wptid = insertup($link,'tblRegionWaypoint','rwpPk',"rwpName='$name' and regPk=$regPk", $map);
 
             $res = $map;
@@ -57,7 +58,7 @@ function delete_waypoint($link, $regPk)
     $delname = reqsval('name');
     $rwpPk = reqival('rwpPk');
     $sql = "select * from tblTaskWaypoint where rwpPk=$rwpPk";
-    $result = mysql_query($sql,$link) or die("Failed to delete waypoint ($rwpPk): " . mysql_error());
+    $result = mysql_query($sql,$link) or json_die("Failed to delete waypoint ($rwpPk): " . mysql_error());
     if (mysql_num_rows($result) > 0)
     {
         $ret['result'] = 'failed';
@@ -65,7 +66,7 @@ function delete_waypoint($link, $regPk)
     }
     
     $sql = "delete from tblRegionWaypoint where regPk=$regPk and rwpPk='$rwpPk'";
-    $result = mysql_query($sql,$link) or die("Failed to delete waypoint ($delname): " . mysql_error());
+    $result = mysql_query($sql,$link) or json_die("Failed to delete waypoint ($delname): " . mysql_error());
     $ret = [];
     $ret['result'] = 'deleted';
     return $ret;
@@ -92,7 +93,5 @@ else
     $res['result'] = 'unauthorised';
 
 }
-
 print json_encode($res);
 ?>
-
