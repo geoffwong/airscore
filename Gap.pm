@@ -267,17 +267,28 @@ sub task_totals
         $kmmarker->[$ref->{'tmDistance'}] = $ref->{'FirstArrival'};
     }
 
+    my $maxlodist;
+    $sth = $dbh->prepare("select max(tarDistance+tarLastAltitude*$glidebonus) as MaxLoDist from tblTaskResult where tasPk=$tasPk and tarGoal=0");
+    $sth->execute();
+    if ($ref = $sth->fetchrow_hashref())
+    {
+        $maxlodist = 0 + $ref->{'MaxLoDist'};
+    }
+    if ($maxlodist < $mindist)
+    {
+        $maxlodist = $mindist;
+    }
 
     my $nlo = $launched - $goal;
-    my $lookahead = $formula->{'diffdist'};
+    my $lookahead = $formula->{'diffdist'} * 10;
     if (($formula->{'difframp'} eq 'flexible') and $nlo > 0)
     {
-        $lookahead = $self->round(30 * $maxdist / (1000 * $nlo));
+        $lookahead = $self->round(3 * $maxlodist / (100 * $nlo));
         if ($lookahead < 30)
         {
             $lookahead = 30;
         }
-        print("kmdiff $maxdist/$nlo lookahead=$lookahead\n");
+        print("kmdiff $maxlodist/$nlo maxlodist=$maxlodist lookahead=$lookahead\n");
     }
 
     # task quality 
@@ -457,6 +468,15 @@ sub points_weight
     $Aarrival = 1000 * $quality * (1-$distweight) * $formula->{'weightarrival'};
     $speedweight = $formula->{'weightspeed'};
 
+    if (substr($formula->{'version'},0,2) eq 'hg')
+    {
+        $Adistance = 1000 * (0.9-1.665*$x+1.713*$x*$x-0.587*$x*$x*$x) * $quality;
+        $Astart = 1000 * $quality * (1-$distweight) * 1.4/8;
+        $Aarrival = 1000 * $quality * (1-$distweight) * 1/8;
+        #$Aspeed = 1000 - $Adistance - $Astart - $Aarrival;
+        print("hg formula\n");
+    }
+
     if ($task->{'arrival'} eq 'off')
     {
         $Aarrival = 0;
@@ -492,7 +512,7 @@ sub calc_kmdiff
     my $Nlo;
     my $distspread;
     my $difdist;
-    my $debc = 0;
+    my $difsum = 0;
     my $lookahead = $taskt->{'lookahead'};
 
     $tasPk = $task->{'tasPk'};
@@ -509,45 +529,47 @@ sub calc_kmdiff
     {
         # populate kmdiff
         # At half the difficulty dist back they get all the points
-        $difdist = 0 + $ref->{'Distance'} - ($lookahead/2);
+        $difdist = 0 + $ref->{'Distance'} - ($lookahead);
         if ($difdist < 0) 
         {
             $difdist = 0;
         }
         $kmdiff->[$difdist] = 0 + $kmdiff->[$difdist] + $ref->{'Difficulty'};
-        $debc = $debc + $ref->{'Difficulty'};
+        $difsum = $difsum + $ref->{'Difficulty'};
+        print("difdist=$difdist ", $kmdiff->[$difdist], "\n");
         #print "dist($difdist): ", $ref->{'Distance'}, " diff: ", $kmdiff->[$difdist], "\n";
         #$kmdiff->[(0+$ref->{'Distance'})] = 0+$ref->{'Difficulty'};
     }
 
     # Then smooth it out (non-linearly) for the other half
     #print Dumper($kmdiff);
-    for my $it ( 0 .. ($lookahead/2))
-    {
-        $kmdiff = $self->spread($kmdiff);
-    }
+    #for my $it ( 0 .. ($lookahead/2))
+    #{
+    #    $kmdiff = $self->spread($kmdiff);
+    #}
     #print Dumper($kmdiff);
 
     # Determine cumulative distance difficulty 
     my $x = 0.0;
     for my $dif (0 .. scalar @$kmdiff-1)
     {
-        my $rdif;
+        my $relative;
 
-        $rdif = 0.0;
+        $relative = 0.0;
 
         $x = $x + $kmdiff->[$dif];
         # Use only landed-out pilots or all pilots for difficulty?
-        if ($formula->{'diffcalc'} eq 'lo' and $Nlo > 0)
+        if ($formula->{'diffcalc'} eq 'lo' and $difsum > 0)
         {
-            $rdif = $x/$Nlo;
+            $relative = $x/$difsum;
         }
         else
         {
-            $rdif = $x/$taskt->{'launched'};
+            $relative = $x/$taskt->{'launched'};
         }
-        $kmdiff->[$dif] = ($rdif);
+        $kmdiff->[$dif] = ($relative);
     }
+    #print Dumper($kmdiff);
     # print "debc=$debc x=$x (vs $Nlo)\n";
 
     return $kmdiff;
@@ -833,8 +855,7 @@ sub ordered_results
         $taskres{'stoptime'} = $ref->{'tarLastTime'};
         # set pilot to min distance if they're below that ..
         # print "sstopped=", $task->{'sstopped'}, " stopalt=", $taskres{'stopalt'}, " glidebonus=", $formula->{'glidebonus'}, "\n";
-
-        if ($task->{'sstopped'} > 0 and $taskres{'stopalt'} > 0 and $formula->{'glidebonus'} > 0 and $taskres{'distance'} < $taskt{'endssdistance'})
+        if ($task->{'sstopped'} > 0 and $taskres{'stopalt'} > 0 and $formula->{'glidebonus'} > 0)
         {
             print "Stopped height bonus: ", $formula->{'glidebonus'} * $taskres{'stopalt'}, "\n";
             if ($taskres{'stopalt'} > $task->{'goalalt'})
@@ -1009,24 +1030,22 @@ sub points_allocation
         # Penalty for not making goal ..
         if ($pil->{'goal'} == 0)
         {
-            $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
-            $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
 
-#            if ($task->{'sstopped'} == 0)
-#            {
-#                # Lose your speed points if task not stopped
-#                $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
-#                $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
-#            }
-#            else
-#            {
-#                # Lose speed points if landed
-#                if ($pil->{'stoptime'} == 0)
-#                {
-#                    $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
-#                    $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
-#                }
-#            }
+            if ($task->{'sstopped'} == 0)
+            {
+                # Lose your speed points if task not stopped
+                $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
+                $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
+            }
+            else
+            {
+                # Lose speed points if landed
+                if ($pil->{'stoptime'} == 0)
+                {
+                    $Pspeed = $Pspeed - $Pspeed * $formula->{'sspenalty'};
+                    $Parrival = $Parrival - $Parrival * $formula->{'sspenalty'}; 
+                }
+            }
         }
 
         # Sanity
