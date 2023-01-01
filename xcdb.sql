@@ -184,11 +184,11 @@ create table tblGlider
     gliCells        integer,
     gliSize         varchar(3),
     gliClass        enum('PG', 'HG') default 'PG',
-	gliProjectedArea float,
-	gliFlatArea 	float,
-	gliProjectedSpan float,
-	gliFlatSpan 	float,
-	gliMaxChord 	float,
+    gliProjectedArea float,
+    gliFlatArea     float,
+    gliProjectedSpan float,
+    gliFlatSpan     float,
+    gliMaxChord     float,
     gliDHV          enum('A','B','C','D','CCC','floater','kingpost','open','rigid') default 'CCC'
     -- class?
 );

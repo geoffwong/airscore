@@ -3,7 +3,7 @@
 
 
 A bunch of scripts and php pages to handle IGC files and store them into a mysql database, determine track distance, 
-do paragliding GAP RACE scoring, OLC-style scoring, etc. It also presents tracks on Google Maps for further viewing.
+do paragliding GAP RACE scoring, OLC-style scoring, etc. It also presents tracks on Leaflet JS Maps for further viewing.
 
 The basic philosophy is to provide the scoring tools as a set of simple executable (perl scripts)
 that can be wrapped with any GUI. At this stage I've only provided a basic PHP/Google Maps  interface. 
@@ -32,7 +32,7 @@ described in the file "Copying".
 
 If this is not present please download from www.gnu.org.
 
-Geoff Wong, 2007-2016
+Geoff Wong, 2007-2023
 geoff.wong@gmail.com
 
 
