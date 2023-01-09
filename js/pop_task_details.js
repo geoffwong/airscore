@@ -227,11 +227,10 @@ function waypoints_card(div, info, region)
 
 function airspace_card(info)
 {
-    var comPk = url_parameter('comPk');
     for (var tc = 0; tc < info.length; tc++)
     {
-         $('#airspace tbody').append("<tr><td><a href=\"task.html?comPk="+comPk+'&tasPk='+info[tc].tasPk+"\">" + info[tc].tasDate + '</a></td><td>' + info[tc].tasName + '</td><td>' + info[tc].tasDistance + 
-            '<td>' + info[tc].tasStartTime.substr(11,8) + ' - ' + info[tc].tasFinishTime.substr(11,8) + '</td></tr>');
+         $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+info[tc].airPk+"\">" + info[tc].airName + '</a></td><td>' + info[tc].airClass + '</td><td>' + info[tc].airBase + 
+            '<td>' + info[tc].airTops + '</td></tr>');
     }
 }
 
@@ -274,7 +273,7 @@ $(document).ready(function() {
             populate_waypoints(json.region);
         
             //airspace
-            //airspace_card(json.taskinfo);
+            airspace_card(json.airspace);
     });
 });
 

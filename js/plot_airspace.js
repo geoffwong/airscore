@@ -12,6 +12,7 @@ String.prototype.format = function()
     var args = arguments;
     return this.replace(pattern, function(capture){ return args[capture.match(/\d+/)]; });
 }
+
 function download_airspace()
 {
     var argPk = url_parameter('argPk');
@@ -35,32 +36,43 @@ $("#airspace")
 
 $(document).ready(function() {
     var regPk = url_parameter("regPk");
+    var airPk = url_parameter("airPk");
     var mapdiv = document.getElementById("map");
     mapdiv.setAttribute('style', 'top: 0px; left: 0px; width:100%; height:90vh; float: left');
     map = add_map_server('map', 0);
     add_map_extra(map);
     //add_track(comPk, trackid, 5);
 
-    new microAjax("get_region_airspace.php" + window.location.search,
-        function(data) {
-        all_airspace = JSON.parse(data);
-
-        if (all_airspace)
-        {
-            $.each(all_airspace, function (i, item) {
-                plot_air(i, all_airspace[i], '#ff00ff', 0);
-                $('#airspace').append($('<option>', {
-                    value: i,
-                    text : item['airName']
-                }));
+    if (regPk > 0)
+    {
+        new microAjax("get_region_airspace.php" + window.location.search,
+            function(data) {
+            all_airspace = JSON.parse(data);
+    
+            if (all_airspace)
+            {
+                $.each(all_airspace, function (i, item) {
+                    plot_air(i, all_airspace[i], '#ff00ff', 0);
+                    $('#airspace').append($('<option>', {
+                        value: i,
+                        text : item['airName']
+                    }));
+                });
+            }
+            else
+            {
+                $('#airdiv').hide();
+            }
             });
-        }
-        else
-        {
-            $('#airdiv').hide();
-        }
-        });
+    }
 
-
+    if (airPk > 0)
+    {
+        $('#airdiv').hide();
+        new microAjax("get_airspace.php" + window.location.search,
+            function(data) {
+                airspace = JSON.parse(data);
+	            plot_air(airPk, airspace[airPk], '#0000ff', 1);
+            }); }
 });
 

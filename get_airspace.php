@@ -6,40 +6,34 @@ header('Content-type: application/json');
 require 'authorisation.php';
 require 'xcdb.php';
 
-function get_airspace($airPk)
+function get_airspace($link, $airPk)
 {
-    $ret = [];
-    $link = db_connect();
+    $sql = "select A.*, AW.* from tblAirspace A, tblAirspaceWaypoint AW where A.airPk=$airPk and AW.airPk=A.airPk order by A.airName, A.airPk, AW.airOrder";
 
-    $sql = "SELECT A.*, AW.* from tblAirspace A, tblAirspaceWaypoint AW where A.airPk=$airPk and AW.airPk=A.airPk order by AW.airOrder";
-    $result = mysql_query($sql,$link);
-
+    $result = mysql_query($sql,$link) or json_die("get_airspace failed: $sql");
+    $airspaces = [];
+    $airPk = 0;
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
-    
-        $lasLat = $row['awpLatDecimal'];
-        $lasLon = $row['awpLongDecimal'];
-        $base = $row['airBase'];
-        $tops = $row['airTops'];
-        $radius = $row['airRadius'];
-        $class = $row['airClass'];
-        $shape = $row['airShape'];
-        $connect = $row['awpConnect'];
-        $astart = $row['awpAngleStart'];
-        $aend = $row['awpAngleEnd'];
-    
-        #$ret[] = array( 'class' => $class, 'latitude' => $lasLat, 'longitude' => $lasLon, 'base' => $base, 'tops' => $tops, 'shape' => $shape, 'radius' => $radius );
-        $ret[] = [ $class, $lasLat, $lasLon, $base, $tops, $shape, $radius, $connect, $astart, $aend ];
+        $id = $row['airPk'];
+        if ($id != $airPk)
+        {
+            $row['waypoints'] = [ [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'] ] ];
+            $airspaces[$id] = $row;
+            $airPk=$id;
+        }
+        else
+        {
+            $airspaces[$id]['waypoints'][] = [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'] ];
+        }
+
     }
-    
-    mysql_close($link);
-    
-    return $ret;
+    return $airspaces;
 }
 
-
+$link = db_connect();
 $airPk = reqival('airPk');
-$retarr = get_airspace($airPk);
+$retarr = get_airspace($link, $airPk);
 
 print json_encode($retarr);
 ?>
