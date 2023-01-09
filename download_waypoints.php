@@ -86,13 +86,14 @@ function latlon2UTM($latd, $lngd)
     if ($y < 0){$y = 10000000+$y;}
 
     //Output into UTM Boxes
-    $easting = round(10*($x))/10;  // easting
-    $northing = round(10*$y)/10;    // northing
+    $easting = round($x);  // easting
+    $northing = round($y);    // northing
     $DigraphLetrsE = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     $zone = substr($DigraphLetrsE, $latz, 1);
     $zone = "${utmz}$zone";
 
-    return $zone . " " . $easting . "E " . $northing . "N";
+    $out = sprintf("$zone   %07d   %07d", $easting, $northing);
+    return $out;
 }
 
 if (array_key_exists('download', $_REQUEST))
@@ -125,6 +126,10 @@ if (array_key_exists('download', $_REQUEST))
     {
         // do nothing
         print "Title,Code,Country,Latitude,Longitude,Elevation,Style,Direction,Length,Frequency,Description\r\n";
+    }
+    else if ($format == 'utm')
+    {
+        print "\$FormatUTM\r\n";
     }
     else
     {
@@ -159,7 +164,8 @@ if (array_key_exists('download', $_REQUEST))
         elseif ($format == 'utm')
         {
             $utm = latlon2UTM($lat, $lon);
-            print "W  $name $utm $alt $desc\r\n";
+            $salt = sprintf("%4d", $alt);
+            print "$name   $utm   $salt  $desc\r\n";
         }
         elseif ($format == 'cup')
         {
@@ -172,7 +178,7 @@ if (array_key_exists('download', $_REQUEST))
             {
                 $ns = "S";
             }
-            $slat = sprintf("%2d%2.3f%s", $adeg, $ammm, $ns);
+            $slat = sprintf("%2d%06.3f%s", $adeg, $ammm, $ns);
 
             $alon = abs($lon);
             $adeg = floor($alon);
@@ -182,7 +188,7 @@ if (array_key_exists('download', $_REQUEST))
             {
                 $ew = "W";
             }
-            $slon = sprintf("%3d%2.3f%s", $adeg, $ammm, $ew);
+            $slon = sprintf("%3d%06.3f%s", $adeg, $ammm, $ew);
 
             //"Lesce-Bled","LESCE",SI,4621.666N,01410.332E,505.0m,2,130,1140.0m,"123.50","Home airfield"
             print "\"$desc\",\"$name\",AU,$slat,$slon,${alt}m,1,,,,\r\n";
