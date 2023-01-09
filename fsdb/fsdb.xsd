@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Fs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="FsCompetition">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FsScoreFormula">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                      <xs:attribute type="xs:string" name="id"/>
+                      <xs:attribute type="xs:string" name="min_dist"/>
+                      <xs:attribute type="xs:string" name="nom_dist"/>
+                      <xs:attribute type="xs:string" name="nom_time"/>
+                      <xs:attribute type="xs:string" name="nom_launch"/>
+                      <xs:attribute type="xs:string" name="nom_goal"/>
+                      <xs:attribute type="xs:string" name="day_quality_override"/>
+                      <xs:attribute type="xs:string" name="bonus_gr"/>
+                      <xs:attribute type="xs:string" name="jump_the_gun_factor"/>
+                      <xs:attribute type="xs:string" name="jump_the_gun_max"/>
+                      <xs:attribute type="xs:string" name="normalize_1000_before_day_quality"/>
+                      <xs:attribute type="xs:string" name="time_points_if_not_in_goal"/>
+                      <xs:attribute type="xs:string" name="use_1000_points_for_max_day_quality"/>
+                      <xs:attribute type="xs:string" name="use_arrival_position_points"/>
+                      <xs:attribute type="xs:string" name="use_arrival_time_points"/>
+                      <xs:attribute type="xs:string" name="use_departure_points"/>
+                      <xs:attribute type="xs:string" name="use_difficulty_for_distance_points"/>
+                      <xs:attribute type="xs:string" name="use_distance_points"/>
+                      <xs:attribute type="xs:string" name="use_distance_squared_for_LC"/>
+                      <xs:attribute type="xs:string" name="use_leading_points"/>
+                      <xs:attribute type="xs:string" name="use_semi_circle_control_zone_for_goal_line"/>
+                      <xs:attribute type="xs:string" name="use_time_points"/>
+                      <xs:attribute type="xs:string" name="scoring_altitude"/>
+                      <xs:attribute type="xs:string" name="final_glide_decelerator"/>
+                      <xs:attribute type="xs:string" name="no_final_glide_decelerator_reason"/>
+                      <xs:attribute type="xs:string" name="min_time_span_for_valid_task"/>
+                      <xs:attribute type="xs:string" name="score_back_time"/>
+                      <xs:attribute type="xs:string" name="use_proportional_leading_weight_if_nobody_in_goal"/>
+                      <xs:attribute type="xs:string" name="leading_weight_factor"/>
+                      <xs:attribute type="xs:string" name="turnpoint_radius_tolerance"/>
+                      <xs:attribute type="xs:string" name="turnpoint_radius_minimum_absolute_tolerance"/>
+                      <xs:attribute type="xs:string" name="number_of_decimals_task_results"/>
+                      <xs:attribute type="xs:string" name="number_of_decimals_competition_results"/>
+                      <xs:attribute type="xs:string" name="redistribute_removed_time_points_as_distance_points"/>
+                      <xs:attribute type="xs:string" name="use_best_score_for_ftv_validity"/>
+                      <xs:attribute type="xs:string" name="use_constant_leading_weight"/>
+                      <xs:attribute type="xs:string" name="use_pwca2019_for_lc"/>
+                      <xs:attribute type="xs:string" name="use_flat_decline_of_timepoints"/>
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+              <xs:element type="xs:string" name="FsCompetitionNotes"/>
+              <xs:element name="FsParticipants">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="FsParticipant" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="FsCustomAttributes">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="FsCustomAttribute" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:simpleContent>
+                                      <xs:extension base="xs:string">
+                                        <xs:attribute type="xs:string" name="name" use="optional"/>
+                                        <xs:attribute type="xs:string" name="value" use="optional"/>
+                                      </xs:extension>
+                                    </xs:simpleContent>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute type="xs:string" name="id" use="optional"/>
+                        <xs:attribute type="xs:string" name="name" use="optional"/>
+                        <xs:attribute type="xs:string" name="nat_code_3166_a3" use="optional"/>
+                        <xs:attribute type="xs:string" name="female" use="optional"/>
+                        <xs:attribute type="xs:string" name="birthday" use="optional"/>
+                        <xs:attribute type="xs:string" name="glider" use="optional"/>
+                        <xs:attribute type="xs:string" name="glider_main_colors" use="optional"/>
+                        <xs:attribute type="xs:string" name="sponsor" use="optional"/>
+                        <xs:attribute type="xs:string" name="fai_licence" use="optional"/>
+                        <xs:attribute type="xs:string" name="CIVLID" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="FsTasks">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="FsTask" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="FsScoreFormula">
+                            <xs:complexType>
+                              <xs:simpleContent>
+                                <xs:extension base="xs:string">
+                                  <xs:attribute type="xs:string" name="id" use="optional"/>
+                                  <xs:attribute type="xs:string" name="min_dist" use="optional"/>
+                                  <xs:attribute type="xs:string" name="nom_dist" use="optional"/>
+                                  <xs:attribute type="xs:string" name="nom_time" use="optional"/>
+                                  <xs:attribute type="xs:string" name="nom_launch" use="optional"/>
+                                  <xs:attribute type="xs:string" name="nom_goal" use="optional"/>
+                                  <xs:attribute type="xs:string" name="day_quality_override" use="optional"/>
+                                  <xs:attribute type="xs:string" name="bonus_gr" use="optional"/>
+                                  <xs:attribute type="xs:string" name="jump_the_gun_factor" use="optional"/>
+                                  <xs:attribute type="xs:string" name="jump_the_gun_max" use="optional"/>
+                                  <xs:attribute type="xs:string" name="normalize_1000_before_day_quality" use="optional"/>
+                                  <xs:attribute type="xs:string" name="time_points_if_not_in_goal" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_1000_points_for_max_day_quality" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_arrival_position_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_arrival_time_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_departure_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_difficulty_for_distance_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_distance_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_distance_squared_for_LC" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_leading_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_semi_circle_control_zone_for_goal_line" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_time_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="scoring_altitude" use="optional"/>
+                                  <xs:attribute type="xs:string" name="final_glide_decelerator" use="optional"/>
+                                  <xs:attribute type="xs:string" name="no_final_glide_decelerator_reason" use="optional"/>
+                                  <xs:attribute type="xs:string" name="min_time_span_for_valid_task" use="optional"/>
+                                  <xs:attribute type="xs:string" name="score_back_time" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_proportional_leading_weight_if_nobody_in_goal" use="optional"/>
+                                  <xs:attribute type="xs:string" name="leading_weight_factor" use="optional"/>
+                                  <xs:attribute type="xs:string" name="turnpoint_radius_tolerance" use="optional"/>
+                                  <xs:attribute type="xs:string" name="turnpoint_radius_minimum_absolute_tolerance" use="optional"/>
+                                  <xs:attribute type="xs:string" name="number_of_decimals_task_results" use="optional"/>
+                                  <xs:attribute type="xs:string" name="number_of_decimals_competition_results" use="optional"/>
+                                  <xs:attribute type="xs:string" name="redistribute_removed_time_points_as_distance_points" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_best_score_for_ftv_validity" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_constant_leading_weight" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_pwca2019_for_lc" use="optional"/>
+                                  <xs:attribute type="xs:string" name="use_flat_decline_of_timepoints" use="optional"/>
+                                </xs:extension>
+                              </xs:simpleContent>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="FsTaskDefinition">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="FsTurnpoint" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:simpleContent>
+                                      <xs:extension base="xs:string">
+                                        <xs:attribute type="xs:string" name="id" use="optional"/>
+                                        <xs:attribute type="xs:string" name="lat" use="optional"/>
+                                        <xs:attribute type="xs:string" name="lon" use="optional"/>
+                                        <xs:attribute type="xs:string" name="altitude" use="optional"/>
+                                        <xs:attribute type="xs:string" name="radius" use="optional"/>
+                                        <xs:attribute type="xs:string" name="open" use="optional"/>
+                                        <xs:attribute type="xs:string" name="close" use="optional"/>
+                                      </xs:extension>
+                                    </xs:simpleContent>
+                                  </xs:complexType>
+                                </xs:element>
+                                <xs:element name="FsStartGate">
+                                  <xs:complexType>
+                                    <xs:simpleContent>
+                                      <xs:extension base="xs:string">
+                                        <xs:attribute type="xs:string" name="open" use="optional"/>
+                                      </xs:extension>
+                                    </xs:simpleContent>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:string" name="ss" use="optional"/>
+                              <xs:attribute type="xs:string" name="es" use="optional"/>
+                              <xs:attribute type="xs:string" name="goal" use="optional"/>
+                              <xs:attribute type="xs:string" name="groundstart" use="optional"/>
+                              <xs:attribute type="xs:string" name="qnh_setting" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="FsTaskState">
+                            <xs:complexType>
+                              <xs:simpleContent>
+                                <xs:extension base="xs:string">
+                                  <xs:attribute type="xs:string" name="task_state" use="optional"/>
+                                  <xs:attribute type="xs:string" name="score_back_time" use="optional"/>
+                                  <xs:attribute type="xs:string" name="cancel_reason" use="optional"/>
+                                  <xs:attribute type="xs:string" name="stop_time" use="optional"/>
+                                </xs:extension>
+                              </xs:simpleContent>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="FsParticipants">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="FsParticipant" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="FsFlightData">
+                                        <xs:complexType>
+                                          <xs:simpleContent>
+                                            <xs:extension base="xs:string">
+                                              <xs:attribute type="xs:string" name="distance" use="optional"/>
+                                              <xs:attribute type="xs:string" name="bonus_distance" use="optional"/>
+                                              <xs:attribute type="xs:string" name="started_ss" use="optional"/>
+                                              <xs:attribute type="xs:string" name="finished_ss" use="optional"/>
+                                              <xs:attribute type="xs:string" name="altitude_at_ess" use="optional"/>
+                                              <xs:attribute type="xs:string" name="finished_task" use="optional"/>
+                                              <xs:attribute type="xs:string" name="tracklog_filename" use="optional"/>
+                                              <xs:attribute type="xs:string" name="lc" use="optional"/>
+                                              <xs:attribute type="xs:string" name="iv" use="optional"/>
+                                              <xs:attribute type="xs:string" name="ts" use="optional"/>
+                                              <xs:attribute type="xs:string" name="alt" use="optional"/>
+                                              <xs:attribute type="xs:string" name="bonus_alt" use="optional"/>
+                                              <xs:attribute type="xs:string" name="max_alt" use="optional"/>
+                                              <xs:attribute type="xs:string" name="last_tracklog_point_distance" use="optional"/>
+                                              <xs:attribute type="xs:string" name="bonus_last_tracklog_point_distance" use="optional"/>
+                                              <xs:attribute type="xs:string" name="last_tracklog_point_time" use="optional"/>
+                                              <xs:attribute type="xs:string" name="last_tracklog_point_alt" use="optional"/>
+                                              <xs:attribute type="xs:string" name="landed_before_deadline" use="optional"/>
+                                              <xs:attribute type="xs:string" name="reachedGoal" use="optional"/>
+                                            </xs:extension>
+                                          </xs:simpleContent>
+                                        </xs:complexType>
+                                      </xs:element>
+                                      <xs:element name="FsResult">
+                                        <xs:complexType>
+                                          <xs:simpleContent>
+                                            <xs:extension base="xs:string">
+                                              <xs:attribute type="xs:string" name="rank" use="optional"/>
+                                              <xs:attribute type="xs:string" name="points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="distance" use="optional"/>
+                                              <xs:attribute type="xs:string" name="ss_time" use="optional"/>
+                                              <xs:attribute type="xs:string" name="finished_ss_rank" use="optional"/>
+                                              <xs:attribute type="xs:string" name="distance_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="linear_distance_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="difficulty_distance_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="time_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="arrival_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="departure_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="leading_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="penalty" use="optional"/>
+                                              <xs:attribute type="xs:string" name="penalty_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="penalty_reason" use="optional"/>
+                                              <xs:attribute type="xs:string" name="penalty_points_auto" use="optional"/>
+                                              <xs:attribute type="xs:string" name="penalty_reason_auto" use="optional"/>
+                                              <xs:attribute type="xs:string" name="penalty_min_dist_points" use="optional"/>
+                                              <xs:attribute type="xs:string" name="got_time_but_not_goal_penalty" use="optional"/>
+                                              <xs:attribute type="xs:string" name="started_ss" use="optional"/>
+                                              <xs:attribute type="xs:string" name="finished_ss" use="optional"/>
+                                              <xs:attribute type="xs:string" name="ss_time_dec_hours" use="optional"/>
+                                              <xs:attribute type="xs:string" name="ts" use="optional"/>
+                                              <xs:attribute type="xs:string" name="real_distance" use="optional"/>
+                                              <xs:attribute type="xs:string" name="last_distance" use="optional"/>
+                                              <xs:attribute type="xs:string" name="last_altitude_above_goal" use="optional"/>
+                                              <xs:attribute type="xs:string" name="altitude_bonus_seconds" use="optional"/>
+                                              <xs:attribute type="xs:string" name="altitude_bonus_time" use="optional"/>
+                                              <xs:attribute type="xs:string" name="altitude_at_ess" use="optional"/>
+                                              <xs:attribute type="xs:string" name="scored_ss_time" use="optional"/>
+                                              <xs:attribute type="xs:string" name="landed_before_stop" use="optional"/>
+                                            </xs:extension>
+                                          </xs:simpleContent>
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="id" use="optional"/>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="FsTaskScoreParams">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="FsTaskDistToTp" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:simpleContent>
+                                      <xs:extension base="xs:string">
+                                        <xs:attribute type="xs:string" name="tp_no" use="optional"/>
+                                        <xs:attribute type="xs:string" name="distance" use="optional"/>
+                                      </xs:extension>
+                                    </xs:simpleContent>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:string" name="ss_distance" use="optional"/>
+                              <xs:attribute type="xs:string" name="task_distance" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_present" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_flying" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_lo" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_reaching_nom_dist" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_reaching_es" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_reaching_goal" use="optional"/>
+                              <xs:attribute type="xs:string" name="sum_flown_distance" use="optional"/>
+                              <xs:attribute type="xs:string" name="best_dist" use="optional"/>
+                              <xs:attribute type="xs:string" name="best_time" use="optional"/>
+                              <xs:attribute type="xs:string" name="worst_time" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_in_competition" use="optional"/>
+                              <xs:attribute type="xs:string" name="launch_to_ess_distance" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_landed_before_stop" use="optional"/>
+                              <xs:attribute type="xs:string" name="sum_dist_over_min" use="optional"/>
+                              <xs:attribute type="xs:string" name="sum_real_dist_over_min" use="optional"/>
+                              <xs:attribute type="xs:string" name="sum_flown_distances" use="optional"/>
+                              <xs:attribute type="xs:string" name="best_real_dist" use="optional"/>
+                              <xs:attribute type="xs:string" name="last_start_time" use="optional"/>
+                              <xs:attribute type="xs:string" name="first_start_time" use="optional"/>
+                              <xs:attribute type="xs:string" name="first_finish_time" use="optional"/>
+                              <xs:attribute type="xs:string" name="max_time_to_get_time_points" use="optional"/>
+                              <xs:attribute type="xs:string" name="no_of_pilots_with_time_points" use="optional"/>
+                              <xs:attribute type="xs:string" name="goalratio" use="optional"/>
+                              <xs:attribute type="xs:string" name="arrival_weight" use="optional"/>
+                              <xs:attribute type="xs:string" name="departure_weight" use="optional"/>
+                              <xs:attribute type="xs:string" name="leading_weight" use="optional"/>
+                              <xs:attribute type="xs:string" name="time_weight" use="optional"/>
+                              <xs:attribute type="xs:string" name="distance_weight" use="optional"/>
+                              <xs:attribute type="xs:string" name="smallest_leading_coefficient" use="optional"/>
+                              <xs:attribute type="xs:string" name="available_points_distance" use="optional"/>
+                              <xs:attribute type="xs:string" name="available_points_time" use="optional"/>
+                              <xs:attribute type="xs:string" name="available_points_departure" use="optional"/>
+                              <xs:attribute type="xs:string" name="available_points_leading" use="optional"/>
+                              <xs:attribute type="xs:string" name="available_points_arrival" use="optional"/>
+                              <xs:attribute type="xs:string" name="time_validity" use="optional"/>
+                              <xs:attribute type="xs:string" name="launch_validity" use="optional"/>
+                              <xs:attribute type="xs:string" name="distance_validity" use="optional"/>
+                              <xs:attribute type="xs:string" name="stop_validity" use="optional"/>
+                              <xs:attribute type="xs:string" name="day_quality" use="optional"/>
+                              <xs:attribute type="xs:string" name="ftv_day_validity" use="optional"/>
+                              <xs:attribute type="xs:string" name="time_points_stop_correction" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="FsTaskResults">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="FsTaskResult" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="FsTaskScoreParams">
+                                        <xs:complexType>
+                                          <xs:sequence>
+                                            <xs:element name="FsTaskDistToTp" maxOccurs="unbounded" minOccurs="0">
+                                              <xs:complexType>
+                                                <xs:simpleContent>
+                                                  <xs:extension base="xs:string">
+                                                    <xs:attribute type="xs:string" name="tp_no" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="distance" use="optional"/>
+                                                  </xs:extension>
+                                                </xs:simpleContent>
+                                              </xs:complexType>
+                                            </xs:element>
+                                          </xs:sequence>
+                                          <xs:attribute type="xs:string" name="ss_distance" use="optional"/>
+                                          <xs:attribute type="xs:string" name="task_distance" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_present" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_flying" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_lo" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_reaching_nom_dist" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_reaching_es" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_reaching_goal" use="optional"/>
+                                          <xs:attribute type="xs:string" name="sum_flown_distance" use="optional"/>
+                                          <xs:attribute type="xs:string" name="best_dist" use="optional"/>
+                                          <xs:attribute type="xs:string" name="best_time" use="optional"/>
+                                          <xs:attribute type="xs:string" name="worst_time" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_in_competition" use="optional"/>
+                                          <xs:attribute type="xs:string" name="launch_to_ess_distance" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_landed_before_stop" use="optional"/>
+                                          <xs:attribute type="xs:string" name="sum_dist_over_min" use="optional"/>
+                                          <xs:attribute type="xs:string" name="sum_real_dist_over_min" use="optional"/>
+                                          <xs:attribute type="xs:string" name="sum_flown_distances" use="optional"/>
+                                          <xs:attribute type="xs:string" name="best_real_dist" use="optional"/>
+                                          <xs:attribute type="xs:string" name="last_start_time" use="optional"/>
+                                          <xs:attribute type="xs:string" name="first_start_time" use="optional"/>
+                                          <xs:attribute type="xs:string" name="first_finish_time" use="optional"/>
+                                          <xs:attribute type="xs:string" name="max_time_to_get_time_points" use="optional"/>
+                                          <xs:attribute type="xs:string" name="no_of_pilots_with_time_points" use="optional"/>
+                                          <xs:attribute type="xs:string" name="goalratio" use="optional"/>
+                                          <xs:attribute type="xs:string" name="arrival_weight" use="optional"/>
+                                          <xs:attribute type="xs:string" name="departure_weight" use="optional"/>
+                                          <xs:attribute type="xs:string" name="leading_weight" use="optional"/>
+                                          <xs:attribute type="xs:string" name="time_weight" use="optional"/>
+                                          <xs:attribute type="xs:string" name="distance_weight" use="optional"/>
+                                          <xs:attribute type="xs:string" name="smallest_leading_coefficient" use="optional"/>
+                                          <xs:attribute type="xs:string" name="available_points_distance" use="optional"/>
+                                          <xs:attribute type="xs:string" name="available_points_time" use="optional"/>
+                                          <xs:attribute type="xs:string" name="available_points_departure" use="optional"/>
+                                          <xs:attribute type="xs:string" name="available_points_leading" use="optional"/>
+                                          <xs:attribute type="xs:string" name="available_points_arrival" use="optional"/>
+                                          <xs:attribute type="xs:string" name="time_validity" use="optional"/>
+                                          <xs:attribute type="xs:string" name="launch_validity" use="optional"/>
+                                          <xs:attribute type="xs:string" name="distance_validity" use="optional"/>
+                                          <xs:attribute type="xs:string" name="stop_validity" use="optional"/>
+                                          <xs:attribute type="xs:string" name="day_quality" use="optional"/>
+                                          <xs:attribute type="xs:string" name="ftv_day_validity" use="optional"/>
+                                          <xs:attribute type="xs:string" name="time_points_stop_correction" use="optional"/>
+                                        </xs:complexType>
+                                      </xs:element>
+                                      <xs:element name="FsTaskResultParticipants">
+                                        <xs:complexType>
+                                          <xs:sequence>
+                                            <xs:element name="FsTaskParticipantResult" maxOccurs="unbounded" minOccurs="0">
+                                              <xs:complexType>
+                                                <xs:simpleContent>
+                                                  <xs:extension base="xs:string">
+                                                    <xs:attribute type="xs:string" name="id" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="rank" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="distance_points" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="departure_points" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="arrival_points" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="leading_points" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="time_points" use="optional"/>
+                                                    <xs:attribute type="xs:string" name="points" use="optional"/>
+                                                  </xs:extension>
+                                                </xs:simpleContent>
+                                              </xs:complexType>
+                                            </xs:element>
+                                          </xs:sequence>
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="id" use="optional"/>
+                                    <xs:attribute type="xs:string" name="title" use="optional"/>
+                                    <xs:attribute type="xs:string" name="ts" use="optional"/>
+                                    <xs:attribute type="xs:string" name="result_pattern" use="optional"/>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute type="xs:string" name="id" use="optional"/>
+                        <xs:attribute type="xs:string" name="name" use="optional"/>
+                        <xs:attribute type="xs:string" name="tracklog_folder" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="FsCompetitionResults">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="FsCompetitionResult" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="FsParticipant" maxOccurs="unbounded" minOccurs="0">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="FsTask" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:simpleContent>
+                                      <xs:extension base="xs:string">
+                                        <xs:attribute type="xs:string" name="id" use="optional"/>
+                                        <xs:attribute type="xs:string" name="points" use="optional"/>
+                                        <xs:attribute type="xs:string" name="counting_points" use="optional"/>
+                                        <xs:attribute type="xs:string" name="counts" use="optional"/>
+                                      </xs:extension>
+                                    </xs:simpleContent>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:string" name="id" use="optional"/>
+                              <xs:attribute type="xs:string" name="points" use="optional"/>
+                              <xs:attribute type="xs:string" name="rank" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute type="xs:string" name="id" use="optional"/>
+                        <xs:attribute type="xs:string" name="title" use="optional"/>
+                        <xs:attribute type="xs:string" name="top" use="optional"/>
+                        <xs:attribute type="xs:string" name="ts" use="optional"/>
+                        <xs:attribute type="xs:string" name="task_result_pattern" use="optional"/>
+                        <xs:attribute type="xs:string" name="comp_result_pattern" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="FsTeamResults">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="FsTeamResult" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="FsTeam" maxOccurs="unbounded" minOccurs="0">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="FsParticipant" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="FsTask" maxOccurs="unbounded" minOccurs="0">
+                                        <xs:complexType>
+                                          <xs:simpleContent>
+                                            <xs:extension base="xs:string">
+                                              <xs:attribute type="xs:string" name="id" use="optional"/>
+                                              <xs:attribute type="xs:string" name="counts" use="optional"/>
+                                            </xs:extension>
+                                          </xs:simpleContent>
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="id" use="optional"/>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:string" name="rank" use="optional"/>
+                              <xs:attribute type="xs:string" name="name" use="optional"/>
+                              <xs:attribute type="xs:string" name="points" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute type="xs:string" name="id" use="optional"/>
+                        <xs:attribute type="xs:string" name="title" use="optional"/>
+                        <xs:attribute type="xs:string" name="ts" use="optional"/>
+                        <xs:attribute type="xs:string" name="task_result_pattern" use="optional"/>
+                        <xs:attribute type="xs:string" name="comp_result_pattern" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="id"/>
+            <xs:attribute type="xs:string" name="name"/>
+            <xs:attribute type="xs:string" name="location"/>
+            <xs:attribute type="xs:string" name="from"/>
+            <xs:attribute type="xs:string" name="to"/>
+            <xs:attribute type="xs:string" name="utc_offset"/>
+            <xs:attribute type="xs:string" name="discipline"/>
+            <xs:attribute type="xs:string" name="ftv_factor"/>
+            <xs:attribute type="xs:string" name="fai_sanctioning"/>
+            <xs:attribute type="xs:string" name="categories"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="version"/>
+      <xs:attribute type="xs:string" name="comment"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
