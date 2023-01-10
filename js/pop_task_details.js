@@ -225,13 +225,38 @@ function waypoints_card(div, info, region)
     }
 }
 
+function add_airspace()
+{
+    var tasPk = url_parameter('tasPk');
+    var options = { };
+    options.tasPk = tasPk;
+    options.airPk = $('#airspacesel option:selected').val();
+    console.log(options);
+
+    $.post('add_task_airspace.php', options, function (res) {
+        console.log(res);
+
+        // add waypoint to table
+        $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+res.airPk+"\">" + res.airName + '</a></td><td>' + res.airClass + '</td><td>' + res.airBase + '<td>' + res.airTops + '</td></tr>');
+    });
+}
+
 function airspace_card(info)
 {
     for (var tc = 0; tc < info.length; tc++)
     {
-         $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+info[tc].airPk+"\">" + info[tc].airName + '</a></td><td>' + info[tc].airClass + '</td><td>' + info[tc].airBase + 
-            '<td>' + info[tc].airTops + '</td></tr>');
+         $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+info[tc].airPk+"\">" + info[tc].airName + '</a></td><td>' + info[tc].airClass + '</td><td>' + info[tc].airBase + '<td>' + info[tc].airTops + '</td></tr>');
     }
+}
+
+function populate_airspace_selection(res)
+{
+    var optres = '';
+    for (var tc = 0; tc < res.length; tc++)
+    {
+        optres += '<option value="' + res[tc][1] + '">' + res[tc][0] + '</option>';
+    }
+    $('#airspacesel').append(optres);
 }
 
 function populate_waypoints(info)
@@ -255,11 +280,14 @@ function populate_waypoints(info)
 
 function check_airspace()
 {
-    console.log('check_airspace');
+    var tasPk = url_parameter('tasPk');
+    var url = 'check_airspace.php?tasPk=' + tasPk;
+    console.log(url);
+    window.location.replace(url);
 }
 
 $(document).ready(function() {
-    var comPk = url_parameter("comPk");
+    var tasPk = url_parameter("tasPk");
     microAjax('get_task_details.php' + window.location.search, function(data) {
             var json = JSON.parse(data);
 
@@ -274,6 +302,10 @@ $(document).ready(function() {
         
             //airspace
             airspace_card(json.airspace);
+    });
+
+    $.post('get_nearby_airspace.php' + window.location.search, function (res) {
+        populate_airspace_selection(res);
     });
 });
 
