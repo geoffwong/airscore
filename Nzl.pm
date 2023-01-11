@@ -221,6 +221,111 @@ sub points_weight
 
 }
 
+sub pilot_departure_leadout
+{
+    my ($self, $formula, $task, $taskt, $pil, $Astart, $Aspeed) = @_;
+    my $x = 0;
+    my $Parrival = 0;
+    my $Cmin = $taskt->{'mincoeff'};
+
+    # Pilot departure score
+    # print Dumper($pil);
+
+    my $Pdepart = 0;
+    if ($task->{'departure'} eq 'leadout')
+    {
+        print "    leadout: ", $pil->{'coeff'}, ", $Cmin\n";
+        if ($pil->{'coeff'} > 0)
+        {
+            if ($pil->{'coeff'} <= $Cmin)
+            {
+                $Pdepart = $Astart;
+            }
+            elsif ($Cmin <= 0)
+            {
+                # this shouldn't happen
+                $Pdepart = 0;
+            }
+            else
+            {
+                $Pdepart = $Astart * (1-(($pil->{'coeff'}-$Cmin)/sqrt($Cmin))**(2/3));
+            }
+        }
+    }
+    elsif ($task->{'departure'} eq 'kmbonus')
+    {
+        my $kmarr = $taskt->{'kmmarker'};
+        my @tmarker = @$kmarr;
+        my $kmdist;
+
+        print "TMARKER=", Dumper(\@tmarker);
+        # KmBonus award points
+
+        # Don't do the section at the end
+        $kmdist = floor($task->{'ssdistance'} / 1000.0);
+
+        if (scalar(@tmarker) > 0)
+        {
+            #print "Astart=$Astart PKM=", Dumper($pil->{'kmmarker'});
+            for (my $km = 1; $km < $kmdist; $km++)
+            {
+                if ($pil->{'kmmarker'}->[$km] > 0 and $tmarker[$km] > 0)
+                {
+                    #$x = 1 - ($pil->{'kmmarker'}->[$km] - $tmarker[$km]) / ($tmarker[$km]/4);
+                    $x = 1 - ($pil->{'kmmarker'}->[$km] - $tmarker[$km]) / 600;
+                    if ($x > 0)
+                    {
+                        $Pdepart = $Pdepart + (0.2+0.037*$x+0.13*($x*$x)+0.633*($x*$x*$x));
+                    }
+                }
+            }
+            $Pdepart = $Pdepart * $Astart * 1.25 / $kmdist;
+            if ($Pdepart > $Astart)
+            {
+                $Pdepart = $Astart;
+            }
+        }
+        else
+        {
+            $Pdepart = 0;
+        }
+    }
+    elsif ($task->{'departure'} eq 'off')
+    {
+        $Pdepart = 0;
+        # print "    depart off\n";
+    }
+    else
+    {
+        # Normal departure points ..
+        $x = ($pil->{'startSS'} - $taskt->{'firstdepart'})/$formula->{'nomtime'};
+        print "    normal departure ss=", $pil->{'startSS'}, " firstdep=", $taskt->{'firstdepart'}, "x=$x\n";
+        if ($x < 1/2 and $pil->{'time'} > 0)
+        {
+            my $Pspeed = $self->pilot_speed($formula, $task, $taskt, $pil, $Aspeed);
+
+            $Pdepart = $Pspeed*$Astart/$Aspeed*(1-6.312*$x+10.932*($x*$x)-2.990*($x*$x*$x));
+            #$Pdepart = $Astart*(1-6.312*$x+10.932*($x*$x)-2.990*($x*$x*$x));
+            #$Pdepart = $Aspeed/6*(1-6.312*$x+10.932*($x*$x)-2.990*($x*$x*$x));
+        }
+    }
+
+    # Sanity
+    if (0+$Pdepart != $Pdepart)
+    {
+        # print "    Pdepart is nan\n";
+        $Pdepart = 0;
+    }
+
+    if ($Pdepart < 0)
+    {
+        $Pdepart = 0;
+    }
+
+    # print "    Pdepart: $Pdepart\n";
+    return $Pdepart;
+}
+
 sub points_allocation
 {
     my ($self, $dbh, $task, $taskt, $formula) = @_;

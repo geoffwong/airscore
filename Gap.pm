@@ -664,7 +664,7 @@ sub pilot_departure_leadout
         $notkm = $task->{'ssdistance'} * 0.15;
         if ($notkm < 10000.0)
         {
-            $kmdist = 10000.0;
+            $notkm = 10000.0;
         }
         $kmdist = floor(($task->{'ssdistance'} - $notkm) / 1000.0);
 
