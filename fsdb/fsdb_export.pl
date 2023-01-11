@@ -122,11 +122,11 @@ $dbh = db_connect();
 
 my $comp = read_competition($comPk);
 $fsdb->{'FsCompetition'}->{'id'} = $comp->{'comPk'};
-$fsdb->{'FsCompetition'}->{'name'} = $comp->{'comName'};
+$fsdb->{'FsCompetition'}->{'name'} = $comp->{'name'};
 $fsdb->{'FsCompetition'}->{'location'} = $comp->{'comLocation'};
-$fsdb->{'FsCompetition'}->{'from'} = substr($comp->{'comDateFrom'},0,10);
-$fsdb->{'FsCompetition'}->{'to'} = substr($comp->{'comDateTo'},0,10);
-$utc = $comp->{'comTimeOffset'};
+$fsdb->{'FsCompetition'}->{'from'} = substr($comp->{'datefrom'},0,10);
+$fsdb->{'FsCompetition'}->{'to'} = substr($comp->{'dateto'},0,10);
+$utc = $comp->{'timeoffset'};
 $fsdb->{'FsCompetition'}->{'utc_offset'} = $utc;
 $fsdb->{'FsCompetition'}->{'discipline'} = 'paragliding';
 if ($ref->{'comOverallScore'} ne 'ftv')
@@ -135,7 +135,7 @@ if ($ref->{'comOverallScore'} ne 'ftv')
 }
 else
 {
-    $fsdb->{'FsCompetition'}->{'ftv_factor'} = $comp->{'comOverallParam'} / 100;
+    $fsdb->{'FsCompetition'}->{'ftv_factor'} = $comp->{'overallparam'} / 100;
 }
 $fsdb->{'FsCompetition'}->{'fai_sanctioning'} = '2';
 $fsdb->{'FsCompetition'}->{'categories'} = 'filter';
@@ -161,10 +161,10 @@ $formula{'time_validity_based_on_pilot_with_speed_rank'} = '1';
 $formula{'min_dist'} = $ref->{'forMinDist'};
 $formula{'nom_dist'} = $ref->{'forNomDist'};
 $formula{'nom_launch'} =$ref->{'forNomLaunch'};
-$formula{'day_quality_override'} = empty();
-$formula{'bonus_gr'} = empty();
-$formula{'jump_the_gun_factor'} = empty();
-$formula{'jump_the_gun_max'} = empty();
+$formula{'day_quality_override'} = "0";
+$formula{'bonus_gr'} = "4";
+$formula{'jump_the_gun_factor'} = "0";
+$formula{'jump_the_gun_max'} = "0";
 $formula{'normalize_1000_before_day_quality'} = '0';
 if ($ref->{'forGoalSSpenalty'} == 1.0)
 {
@@ -255,17 +255,9 @@ while (defined($ref))
     $pilot->{'FsParticipant'}->{'sponsor'} = '';
     $pilot->{'FsParticipant'}->{'CIVLID'} = $ref->{'pilCIVL'};
     $pilot->{'FsParticipant'}->{'fai_license'} = '1';
+    $pilot->{'FsParticipant'}->{'FsCustomAttributes'} = empty();
 
-    #<xs:attribute type="xs:string" name="id" use="optional"/>
-    #<xs:attribute type="xs:string" name="name" use="optional"/>
-    #<xs:attribute type="xs:string" name="nat_code_3166_a3" use="optional"/>
-    #<xs:attribute type="xs:string" name="female" use="optional"/>
-    #<xs:attribute type="xs:string" name="birthday" use="optional"/>
-    #<xs:attribute type="xs:string" name="glider" use="optional"/>
     #<xs:attribute type="xs:string" name="glider_main_colors" use="optional"/>
-    #<xs:attribute type="xs:string" name="sponsor" use="optional"/>
-    #<xs:attribute type="xs:string" name="fai_licence" use="optional"/>
-    #<xs:attribute type="xs:string" name="CIVLID" use="optional"/>
 
     $pilmap{$ref->{'pilPk'}} = $count;
     push @pilots, $pilot;
@@ -306,17 +298,17 @@ foreach my $tasPk (@alltasks)
     #$task->{'FsParticipants'}->{'FsParticipant'} = \@pilots;
     #$task->{'FsTaskScoreParams'} = empty();
     #$task->{'FsTaskScoreParams'}->{'ss_distance'} = ''
-    $task->{'FsTaskScoreParams'}->{'task_distance'} = sprintf("%.2f", $ref ->{'tasShortRouteDistance'});
-    $task->{'FsTaskScoreParams'}->{'no_of_pilots_present'} = $ref->{'tasPilotsTotal'};
-    $task->{'FsTaskScoreParams'}->{'no_of_pilots_flying'} = $ref->{'tasPilotsLaunched'};
-    $task->{'FsTaskScoreParams'}->{'no_of_pilots_lo'} = $ref->{'tasPilotsLaunched'} - $ref->{'tasPilotsGoal'};
+    $task->{'FsTaskScoreParams'}->{'task_distance'} = sprintf("%.2f", $ref->{'short_distance'});
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_present'} = $task_totals->{'pilots'};
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_flying'} = $task_totals->{'launched'};
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_lo'} = $task_totals->{'launched'} - $task_totals->{'goal'};
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_reaching_nom_dist'} = '';
-    $task->{'FsTaskScoreParams'}->{'no_of_pilots_reaching_es'} = '';
-    $task->{'FsTaskScoreParams'}->{'no_of_pilots_reaching_goal'} = $ref->{'tasPilotsGoal'};
-    $task->{'FsTaskScoreParams'}->{'no_of_pilots_in_competition'} = $ref->{'tasPilotsTotal'};
-    $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'} = sprintf("%.2f", $ref->{'tasTotalDistanceFlown'});
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_reaching_es'} = $task_totals->{'ess'};
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_reaching_goal'} = $task_totals->{'goal'};
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_in_competition'} = $task_totals->{'pilots'};
+    $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'} = sprintf("%.2f", $task_totals->{'distance'});
     $task->{'FsTaskScoreParams'}->{'max_time_to_get_time_points'} = '';
-    $task->{'FsTaskScoreParams'}->{'no_of_pilots_with_time_points'} = $ref->{'tasPilotsGoal'};  # @fixme
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_with_time_points'} = $task_totals->{'ess'};  # @fixme
     #$task->{'FsTaskScoreParams'}->{'k'} = '';
     #$task->{'FsTaskScoreParams'}->{'arrival_weight'} = 
     $intformula{'arrival_weight'} = $ref->{'forWeightArrival'};
@@ -331,11 +323,18 @@ foreach my $tasPk (@alltasks)
     $task->{'FsTaskScoreParams'}->{'available_points_leading'} = $Astart;
     $task->{'FsTaskScoreParams'}->{'available_points_arrival'} = $Aarrival;
     #$task->{'FsTaskDistToTp'} = '';
-    $task->{'FsTaskScoreParams'}->{'time_validity'} = $ref->{'tasTimeQuality'};
-    $task->{'FsTaskScoreParams'}->{'launch_validity'} = $ref->{'tasLaunchQuality'}; 
-    $task->{'FsTaskScoreParams'}->{'distance_validity'} = $ref->{'tasDistQuality'};
-    $task->{'FsTaskScoreParams'}->{'day_quality'} = $ref->{'tasQuality'};
+    my ($distance,$time,$launch,$stopped) = $gap->day_quality($task_totals,$comformula);
+    $task->{'FsTaskScoreParams'}->{'time_validity'} = $time;
+    $task->{'FsTaskScoreParams'}->{'launch_validity'} = $launch;
+    $task->{'FsTaskScoreParams'}->{'distance_validity'} = $distance;
+    $task->{'FsTaskScoreParams'}->{'day_quality'} = $time * $launch * $distance;
     $taskmap{$ref->{'tasPk'}} = $task;
+
+    $task->{'FsTaskState'} = empty();
+    $task->{'FsTaskState'}->{'task_state'} = 'REGULAR';
+    $task->{'FsTaskState'}->{'score_back_time'} = '5';
+    $task->{'FsTaskState'}->{'cancel_reason'} = '';
+    $task->{'FsTaskState'}->{'stop_time'} = $ref->{'finish'};
 
     $count++;
     push @tasks, $task;
@@ -378,8 +377,8 @@ while (defined($ref))
     $turn->{'lat'} = sprintf("%.5f", $ref->{'rwpLatDecimal'});
     $turn->{'lon'} = sprintf("%.5f", $ref->{'rwpLongDecimal'});
     $turn->{'radius'} = $ref->{'tawRadius'};
-    $turn->{'open'} = '';
-    $turn->{'close'} = '';
+    $turn->{'open'} = '';  # "2020-01-19T11:00:00-05:00"
+    $turn->{'close'} = ''; # "2020-01-19T11:00:00-05:00"
     if ($ref->{'tawType'} eq 'start')
     {
         $ss = $cnt;
@@ -497,6 +496,7 @@ $task->{'FsParticipants'}->{'FsParticipant'} = $rarr;
 #header("Content-Disposition: attachment; filename=\"" . $fsdb->{'FsCompetition'}->{'name'} . ".fsdb\"");
 #header("Cache-Control: no-store, no-cache");
 
-my $xml = XMLout(\%fsx,  XMLDecl => 1, KeyAttr=> [ 'id' ]);
+my $xml = XMLout(\%fsx,  XMLDecl => "<?xml version='1.0' encoding='utf-8' ?>", KeyAttr => [ 'id' ], RootName => undef);
+#$xml->addAttribute('encoding', 'utf-8');
 print $xml;
 
