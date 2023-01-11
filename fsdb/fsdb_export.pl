@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -I..
 #
 # Export from Airscore to a FS compatible XML file
 # 
@@ -13,8 +13,11 @@ use Data::Dumper;
 use POSIX qw(ceil floor);
 use strict;
 
+use TrackDb;
 use TrackLib;
 use LadderDB;
+
+require Gap;
 
 my $pi = atan2(1,1) * 4; 
 
@@ -88,6 +91,7 @@ my %dud;
 my %fsx;
 my $fsdb;
 my %formula;
+my %intformula;
 my %pilmap;
 my %taskmap;
 my @pilots;
@@ -114,108 +118,112 @@ $fsx{'Fs'}->{'comment'} = "Supports only a single Fs element in a .fsdb file whi
 
 $dbh = db_connect('%DATABASE%', '%MYSQLUSER%', '%MYSQLPASSWORD%');
 
-$sth = $dbh->prepare("select * from tblCompetition where comPk=$comPk");
-$sth->execute();
-$ref = $sth->fetchrow_hashref();
-if (defined($ref))
+my $comp = read_competition($comPK);
+$fsdb->{'FsCompetition'}->{'id'} = $comp->{'comPk'};
+$fsdb->{'FsCompetition'}->{'name'} = $comp->{'comName'};
+$fsdb->{'FsCompetition'}->{'location'} = $comp->{'comLocation'};
+$fsdb->{'FsCompetition'}->{'from'} = substr($comp->{'comDateFrom'},0,10);
+$fsdb->{'FsCompetition'}->{'to'} = substr($comp->{'comDateTo'},0,10);
+$utc = $comp->{'comTimeOffset'};
+$fsdb->{'FsCompetition'}->{'utc_offset'} = $utc;
+$fsdb->{'FsCompetition'}->{'discipline'} = 'paragliding';
+if ($ref->{'comOverallScore'} ne 'ftv')
 {
-    $fsdb->{'FsCompetition'}->{'id'} = 0;
-    $fsdb->{'FsCompetition'}->{'name'} = $ref->{'comName'};
-    $fsdb->{'FsCompetition'}->{'location'} = $ref->{'comLocation'};
-    $fsdb->{'FsCompetition'}->{'from'} = substr($ref->{'comDateFrom'},0,10);
-    $fsdb->{'FsCompetition'}->{'to'} = substr($ref->{'comDateTo'},0,10);
-    $utc = $ref->{'comTimeOffset'};
-    $fsdb->{'FsCompetition'}->{'utc_offset'} = $utc;
-    $fsdb->{'FsCompetition'}->{'discipline'} = 'paragliding';
-    #$fsdb->{'FsCompetition'}->{'ftv_factor'} = 'paragliding';
-    #$fsdb->{'FsCompetition'}->{'fai_sanctioning'} = 'paragliding';
-    #$fsdb->{'FsCompetition'}->{'categories'} = 'paragliding';
+    $fsdb->{'FsCompetition'}->{'ftv_factor'} = '1';
 }
+else
+{
+    $fsdb->{'FsCompetition'}->{'ftv_factor'} = $comp->{'comOverallParam'} / 100;
+}
+$fsdb->{'FsCompetition'}->{'fai_sanctioning'} = '2';
+$fsdb->{'FsCompetition'}->{'categories'} = 'filter';
+
 
 $fsdb->{'FsCompetition'}->{'FsCompetitionNotes'} = empty();
 $fsdb->{'FsCompetition'}->{'FsScoreFormula'} = \%formula;
 
-$sth = $dbh->prepare("select * from tblFormula where comPk=$comPk");
-$sth->execute();
-$ref = $sth->fetchrow_hashref();
-if (defined($ref))
-{
-    $formula{'id'} = 'OzGAP2018';
-    $formula{'use_distance_points'} = '1';
-    $formula{'use_time_points'} = '1';
-    $formula{'use_departure_points'} = '0';
-    $formula{'use_leading_points'} = '1';
-    $formula{'nom_time'} = $ref->{'forNomTime'} / 60;
-    $formula{'nom_goal'} = $ref->{'forNomGoal'} / 100;
-    $formula{'time_points_if_not_in_goal'} = 1 - (0+$ref->{'forGoalSSPenalty'});
-    $formula{'jump_the_gun_factor'} = '0';
-    $formula{'use_1000_points_for_max_day_quality'} = '1';
-    $formula{'time_validity_based_on_pilot_with_speed_rank'} = '1';
+$ref = read_formula($comPk);
+$formula{'id'} = 'OzGAP2018';
+$formula{'use_distance_points'} = '1';
+$formula{'use_time_points'} = '1';
+$formula{'use_departure_points'} = '0';
+$formula{'use_leading_points'} = '1';
+$formula{'nom_time'} = $ref->{'forNomTime'} / 60;
+$formula{'nom_goal'} = $ref->{'forNomGoal'} / 100;
+$formula{'time_points_if_not_in_goal'} = 1 - (0+$ref->{'forGoalSSPenalty'});
+$formula{'jump_the_gun_factor'} = '0';
+$formula{'use_1000_points_for_max_day_quality'} = '1';
+$formula{'time_validity_based_on_pilot_with_speed_rank'} = '1';
 
-    $formula{'min_dist'} = $ref->{'forMinDist'};
-    $formula{'nom_dist'} = $ref->{'forNomDist'};
-    $formula{'nom_launch'} =$ref->{'forNomLaunch'};
-    $formula{'day_quality_override'} = empty();
-    $formula{'bonus_gr'} = empty();
-    $formula{'jump_the_gun_factor'} = empty();
-    $formula{'jump_the_gun_max'} = empty();
-    $formula{'normalize_1000_before_day_quality'} = '0';
-    if ($ref->{'forGoalSSpenalty'} == 1.0)
-    {
-        $formula{'time_points_if_not_in_goal'} = '0';
-    }
-    else
-    {
-        $formula{'time_points_if_not_in_goal'} = '1';
-    }
-    $formula{'use_1000_points_for_max_day_quality'} =
-    if ($ref->{'forArrival'} eq 'place')
-    {
-        $formula{'use_arrival_position_points'} ='1';
-        $formula{'use_arrival_time_points'} ='0';
-    }
-    else
-    {
-        $formula{'use_arrival_position_points'} =i '1';
-        $formula{'use_arrival_time_points'} = '0';
-    }
-    if ($formula{'LinearDist'} == 1.0)
-    {
-        $formula{'use_difficulty_for_distance_points'} = '0';
-    }
-    else
-    {
-        $formula{'use_difficulty_for_distance_points'} = '1';
-    }
-    $formula{'use_distance_points'} = '1';
-    $formula{'use_distance_squared_for_LC'} =
-    if ($ref->{'forDeparture'} eq 'leadout')
-    {
-        $formula{'use_leading_points'} = '1';
-    }
-    elsif ($ref->{'forDeparture'} eq 'departure')
-    {
-        $formula{'use_departure_points'} = '1';
-    }
-    $formula{'use_semi_circle_control_zone_for_goal_line'} = '1';
-    $formula{'use_time_points'} = '1';
-    $formula{'scoring_altitude'} =
-    $formula{'final_glide_decelerator'} = 'none';
-    $formula{'no_final_glide_decelerator_reason'} = '';
-    $formula{'min_time_span_for_valid_task'} = '60';
-    $formula{'score_back_time'} = '5';
-    $formula{'use_proportional_leading_weight_if_nobody_in_goal'} = '1';
-    $formula{'leading_weight_factor'} = '1';
-    $formula{'turnpoint_radius_tolerance'} = '0.0005';
-    $formula{'turnpoint_radius_minimum_absolute_tolerance'} = '5';
-    $formula{'number_of_decimals_task_results'} = '2';
-    $formula{'number_of_decimals_competition_results'} = '1';
-    $formula{'redistribute_removed_time_points_as_distance_points'} =
-    $formula{'use_best_score_for_ftv_validity'} = '1';
-    $formula{'use_constant_leading_weight'} = '0';
-    $formula{'use_pwca2019_for_lc'} = '0';
-    $formula{'use_flat_decline_of_timepoints'} = '0';
+$formula{'min_dist'} = $ref->{'forMinDist'};
+$formula{'nom_dist'} = $ref->{'forNomDist'};
+$formula{'nom_launch'} =$ref->{'forNomLaunch'};
+$formula{'day_quality_override'} = empty();
+$formula{'bonus_gr'} = empty();
+$formula{'jump_the_gun_factor'} = empty();
+$formula{'jump_the_gun_max'} = empty();
+$formula{'normalize_1000_before_day_quality'} = '0';
+if ($ref->{'forGoalSSpenalty'} == 1.0)
+{
+    $formula{'time_points_if_not_in_goal'} = '0';
 }
+else
+{
+    $formula{'time_points_if_not_in_goal'} = '1';
+}
+$formula{'use_1000_points_for_max_day_quality'} =
+if ($ref->{'forArrival'} eq 'place')
+{
+    $formula{'use_arrival_position_points'} ='1';
+    $formula{'use_arrival_time_points'} ='0';
+}
+else
+{
+    $formula{'use_arrival_position_points'} =i '1';
+    $formula{'use_arrival_time_points'} = '0';
+}
+if ($formula{'LinearDist'} == 1.0)
+{
+    $formula{'use_difficulty_for_distance_points'} = '0';
+}
+else
+{
+    $formula{'use_difficulty_for_distance_points'} = '1';
+}
+$formula{'use_distance_points'} = '1';
+$formula{'use_distance_squared_for_LC'} =
+if ($ref->{'forDeparture'} eq 'leadout')
+{
+    $formula{'use_leading_points'} = '1';
+}
+elsif ($ref->{'forDeparture'} eq 'departure')
+{
+    $formula{'use_departure_points'} = '1';
+}
+$formula{'use_semi_circle_control_zone_for_goal_line'} = '1';
+$formula{'use_time_points'} = '1';
+$formula{'scoring_altitude'} =
+$formula{'final_glide_decelerator'} = 'none';
+$formula{'no_final_glide_decelerator_reason'} = '';
+$formula{'min_time_span_for_valid_task'} = '60';
+$formula{'score_back_time'} = '5';
+$formula{'use_proportional_leading_weight_if_nobody_in_goal'} = '1';
+$formula{'leading_weight_factor'} = '1';
+$formula{'turnpoint_radius_tolerance'} = '0.0005';
+$formula{'turnpoint_radius_minimum_absolute_tolerance'} = '5';
+$formula{'number_of_decimals_task_results'} = '2';
+$formula{'number_of_decimals_competition_results'} = '1';
+$formula{'redistribute_removed_time_points_as_distance_points'} = '0';
+$formula{'use_best_score_for_ftv_validity'} = '1';
+$formula{'use_constant_leading_weight'} = '0';
+$formula{'use_pwca2019_for_lc'} = '0';
+$formula{'use_flat_decline_of_timepoints'} = '0';
+
+$intformula{'arrival_weight'} = $ref->{'forWeightArrival'};
+$intformula{'departure_weight'} = 0;
+$intformula{'leading_weight'} = $ref->{'forWeightStart'}; 
+$intformula{'time_weight'} = $ref->{'forWeightSpeed'};
+$intformula{'distance_weight'} = 1 - $ref->{'forWeightStart'} - $ref->{'forWeightSpeed'};
 
 $fsdb->{'FsCompetition'}->{'FsParticipants'}->{'FsParticipant'} = \@pilots;
 $sth = $dbh->prepare("select P.* from tblPilot P, tblTaskResult TR, tblTrack TK, tblTask T where P.pilPk=TK.pilPk and TK.traPk=TR.traPk and TR.tasPk=T.tasPk and T.comPk=$comPk group by P.pilPk");
@@ -266,13 +274,26 @@ $count = 1;
 $fsdb->{'FsCompetition'}->{'FsTasks'}->{'FsTask'} = \@tasks;
 
 # Tasks
-$sth = $dbh->prepare("select TK.* from tblTask TK where TK.comPk=$comPk order by TK.tasPk");
+my @alltasks;
+my $task_totals;
+
+$sth = $dbh->prepare("select tasPk from tblTask TK where TK.comPk=$comPk order by TK.tasPk");
 $sth->execute();
 $ref = $sth->fetchrow_hashref();
 while (defined($ref))
 {
-    my @tps;
+    push @alltasks, $ref->{'tasPk'}
+    $ref = $sth->fetchrow_hashref();
+}
 
+foreach my $tasPk (@alltasks)
+{
+    my $gap = Gap->new();
+    $ref = read_task($tasPk);
+    $task_totals = $gap->task_totals($dbh,$ref,$formula);
+    my ($Adistance, $Aspeed, $Astart, $Aarrival) = $gap->points_weight($ref, $taskt, $formula);
+
+    my @tps;
     $task = empty();
     $task->{'id'} = $count;
     $task->{'name'} = $ref->{'tasName'};
@@ -291,19 +312,20 @@ while (defined($ref))
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_in_competition'} = $ref->{'tasPilotsTotal'};
     $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'} = sprintf("%.2f", $ref->{'tasTotalDistanceFlown'});
     $task->{'FsTaskScoreParams'}->{'max_time_to_get_time_points'} = '';
-    #$task->{'FsTaskScoreParams'}->{'no_of_pilots_with_time_points'} = '';
+    $task->{'FsTaskScoreParams'}->{'no_of_pilots_with_time_points'} = $ref->{'tasPilotsGoal'};  # @fixme
     #$task->{'FsTaskScoreParams'}->{'k'} = '';
-    #$task->{'FsTaskScoreParams'}->{'arrival_weight'} = '';
-    #$task->{'FsTaskScoreParams'}->{'departure_weight'} = '';
-    #$task->{'FsTaskScoreParams'}->{'leading_weight'} = '';
-    #$task->{'FsTaskScoreParams'}->{'time_weight'} = '';
-    #$task->{'FsTaskScoreParams'}->{'distance_weight'} = '';
-    #$task->{'FsTaskScoreParams'}->{'smallest_leading_coefficient'} = '';
-    #$task->{'FsTaskScoreParams'}->{'available_points_distance'} = '';
-    #$task->{'FsTaskScoreParams'}->{'available_points_time'} = '';
+    #$task->{'FsTaskScoreParams'}->{'arrival_weight'} = 
+    $intformula{'arrival_weight'} = $ref->{'forWeightArrival'};
+    $task->{'FsTaskScoreParams'}->{'departure_weight'} = $intformula{'departure_weight'};
+    $task->{'FsTaskScoreParams'}->{'leading_weight'} = $intformula{'leading_weight'};
+    $task->{'FsTaskScoreParams'}->{'time_weight'} = $intformula{'time_weight'};
+    $task->{'FsTaskScoreParams'}->{'distance_weight'} = $intformula{'distance_weight'};
+    $task->{'FsTaskScoreParams'}->{'smallest_leading_coefficient'} = $task_totals->{'mincoeff'};
+    $task->{'FsTaskScoreParams'}->{'available_points_distance'} = $Adistance;
+    $task->{'FsTaskScoreParams'}->{'available_points_time'} = $Aspeed;
     #$task->{'FsTaskScoreParams'}->{'available_points_departure'} = '';
-    #$task->{'FsTaskScoreParams'}->{'available_points_leading'} = '';
-    #$task->{'FsTaskScoreParams'}->{'available_points_arrival'} = '';
+    $task->{'FsTaskScoreParams'}->{'available_points_leading'} = $Astart;
+    $task->{'FsTaskScoreParams'}->{'available_points_arrival'} = $Aarrival;
     #$task->{'FsTaskDistToTp'} = '';
     $task->{'FsTaskScoreParams'}->{'time_validity'} = $ref->{'tasTimeQuality'};
     $task->{'FsTaskScoreParams'}->{'launch_validity'} = $ref->{'tasLaunchQuality'}; 
