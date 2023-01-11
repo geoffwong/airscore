@@ -7,6 +7,10 @@ require_once 'authorisation.php';
 
 auth('system');
 $argPk = reqival('argPk');
+if ($argPk == 0)
+{
+    $argPk = reqival('regPk');
+}
 
 function get_region_airspace($link, $argPk)
 {

@@ -106,8 +106,8 @@ if (reqexists('download'))
 
         if ($shape == "circle")
         {
-            $subsql = "SELECT AW.* from tblAirspaceWaypoint AW where AW.awpPk=$centrepk by AW.airOrder";
-            $subresult = mysql_query($subsql,$link);
+            $subsql = "SELECT AW.* from tblAirspaceWaypoint AW where AW.awpPk=$centrepk order by AW.airOrder";
+            $subresult = mysql_query($subsql,$link) or die("Failed to query airspace ($subsql): ". mysql_error());
             $subrow = mysql_fetch_array($subresult, MYSQL_ASSOC);
             $lat = $subrow['awpLatDecimal'];
             $lon = $subrow['awpLongDecimal'];
