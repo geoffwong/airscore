@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I..
+#!/usr/bin/perl -I/home/geoff/bin
 #
 # Export from Airscore to a FS compatible XML file
 # 
@@ -11,11 +11,12 @@
 use XML::Simple;
 use Data::Dumper;
 use POSIX qw(ceil floor);
-use strict;
 
-use TrackDb;
-use TrackLib;
-use LadderDB;
+use TrackLib qw(:all);
+use Defines qw(:all);
+use TrackDb qw(:all);
+
+use strict;
 
 require Gap;
 
@@ -91,6 +92,7 @@ my %dud;
 my %fsx;
 my $fsdb;
 my %formula;
+my $comformula;
 my %intformula;
 my %pilmap;
 my %taskmap;
@@ -116,9 +118,9 @@ $fsx{'Fs'} = $fsdb;
 $fsx{'Fs'}->{'version'} = "3.4";
 $fsx{'Fs'}->{'comment'} = "Supports only a single Fs element in a .fsdb file which must be the root element.";
 
-$dbh = db_connect('%DATABASE%', '%MYSQLUSER%', '%MYSQLPASSWORD%');
+$dbh = db_connect();
 
-my $comp = read_competition($comPK);
+my $comp = read_competition($comPk);
 $fsdb->{'FsCompetition'}->{'id'} = $comp->{'comPk'};
 $fsdb->{'FsCompetition'}->{'name'} = $comp->{'comName'};
 $fsdb->{'FsCompetition'}->{'location'} = $comp->{'comLocation'};
@@ -143,6 +145,7 @@ $fsdb->{'FsCompetition'}->{'FsCompetitionNotes'} = empty();
 $fsdb->{'FsCompetition'}->{'FsScoreFormula'} = \%formula;
 
 $ref = read_formula($comPk);
+$comformula = $ref;
 $formula{'id'} = 'OzGAP2018';
 $formula{'use_distance_points'} = '1';
 $formula{'use_time_points'} = '1';
@@ -171,7 +174,7 @@ else
 {
     $formula{'time_points_if_not_in_goal'} = '1';
 }
-$formula{'use_1000_points_for_max_day_quality'} =
+$formula{'use_1000_points_for_max_day_quality'} = '0';
 if ($ref->{'forArrival'} eq 'place')
 {
     $formula{'use_arrival_position_points'} ='1';
@@ -179,7 +182,7 @@ if ($ref->{'forArrival'} eq 'place')
 }
 else
 {
-    $formula{'use_arrival_position_points'} =i '1';
+    $formula{'use_arrival_position_points'} = '1';
     $formula{'use_arrival_time_points'} = '0';
 }
 if ($formula{'LinearDist'} == 1.0)
@@ -191,7 +194,7 @@ else
     $formula{'use_difficulty_for_distance_points'} = '1';
 }
 $formula{'use_distance_points'} = '1';
-$formula{'use_distance_squared_for_LC'} =
+$formula{'use_distance_squared_for_LC'} = '0';
 if ($ref->{'forDeparture'} eq 'leadout')
 {
     $formula{'use_leading_points'} = '1';
@@ -253,16 +256,16 @@ while (defined($ref))
     $pilot->{'FsParticipant'}->{'CIVLID'} = $ref->{'pilCIVL'};
     $pilot->{'FsParticipant'}->{'fai_license'} = '1';
 
-    <xs:attribute type="xs:string" name="id" use="optional"/>
-    <xs:attribute type="xs:string" name="name" use="optional"/>
-    <xs:attribute type="xs:string" name="nat_code_3166_a3" use="optional"/>
-    <xs:attribute type="xs:string" name="female" use="optional"/>
-    <xs:attribute type="xs:string" name="birthday" use="optional"/>
-    <xs:attribute type="xs:string" name="glider" use="optional"/>
-    <xs:attribute type="xs:string" name="glider_main_colors" use="optional"/>
-    <xs:attribute type="xs:string" name="sponsor" use="optional"/>
-    <xs:attribute type="xs:string" name="fai_licence" use="optional"/>
-    <xs:attribute type="xs:string" name="CIVLID" use="optional"/>
+    #<xs:attribute type="xs:string" name="id" use="optional"/>
+    #<xs:attribute type="xs:string" name="name" use="optional"/>
+    #<xs:attribute type="xs:string" name="nat_code_3166_a3" use="optional"/>
+    #<xs:attribute type="xs:string" name="female" use="optional"/>
+    #<xs:attribute type="xs:string" name="birthday" use="optional"/>
+    #<xs:attribute type="xs:string" name="glider" use="optional"/>
+    #<xs:attribute type="xs:string" name="glider_main_colors" use="optional"/>
+    #<xs:attribute type="xs:string" name="sponsor" use="optional"/>
+    #<xs:attribute type="xs:string" name="fai_licence" use="optional"/>
+    #<xs:attribute type="xs:string" name="CIVLID" use="optional"/>
 
     $pilmap{$ref->{'pilPk'}} = $count;
     push @pilots, $pilot;
@@ -282,7 +285,7 @@ $sth->execute();
 $ref = $sth->fetchrow_hashref();
 while (defined($ref))
 {
-    push @alltasks, $ref->{'tasPk'}
+    push @alltasks, $ref->{'tasPk'};
     $ref = $sth->fetchrow_hashref();
 }
 
@@ -290,8 +293,9 @@ foreach my $tasPk (@alltasks)
 {
     my $gap = Gap->new();
     $ref = read_task($tasPk);
-    $task_totals = $gap->task_totals($dbh,$ref,$formula);
-    my ($Adistance, $Aspeed, $Astart, $Aarrival) = $gap->points_weight($ref, $taskt, $formula);
+    print Dumper($ref);
+    $task_totals = $gap->task_totals($dbh,$ref,$comformula);
+    my ($Adistance, $Aspeed, $Astart, $Aarrival) = $gap->points_weight($ref, $task_totals, \%formula);
 
     my @tps;
     $task = empty();
@@ -335,7 +339,6 @@ foreach my $tasPk (@alltasks)
 
     $count++;
     push @tasks, $task;
-    $ref = $sth->fetchrow_hashref();
 }
 
 
