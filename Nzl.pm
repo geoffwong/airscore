@@ -74,15 +74,6 @@ sub task_totals
         $minarr = 0;
     }
 
-    $maxdist = 0;
-    $mindept = 0;
-    $sth = $dbh->prepare("select max(tarDistance) as MaxDist from tblTaskResult where tasPk=$tasPk");
-    $sth->execute();
-    if ($ref = $sth->fetchrow_hashref())
-    {
-        $maxdist = 0 + $ref->{'MaxDist'};
-    }
-
     # Get the top 90% dist ...
     $topnine = 0;
     $dbh->do('set @x=0;');
@@ -101,10 +92,9 @@ sub task_totals
             $topnine = $topnine + $ref->{'tarDistance'};
         }
     }
-    print "distance=$totdist 90%dist=$topnine\n";
+    print "distance=$totdist 90%dist=$topnine stop=$stop\n";
 
     # task quality 
-    $taskt->{'maxdist'} = $maxdist;
     $taskt->{'fastest'} = $fastest;
     $taskt->{'firstdepart'} = $mindept;
     $taskt->{'firstarrival'} = $minarr;
@@ -398,6 +388,7 @@ sub points_allocation
 
         # Pilot distance score 
         $Pdist = $Adistance * sqrt($pil->{'distance'}/$taskt->{'maxdist'});
+        print "$tarPk dist: ", $pil->{'distance'}, "/ ", $taskt->{'maxdist'}, "\n";
 
         # Pilot speed score
         print "$tarPk speed: ", $pil->{'time'}, ", $Tmin\n";
@@ -452,7 +443,7 @@ sub points_allocation
         # Store back into tblTaskResult ...
         if (defined($tarPk))
         {
-            print "update $tarPk: d:$Pdist, s:$Pspeed, a:$Parrival, g:$Pdepart\n";
+            print "update $tarPk: s: $Pscore d:$Pdist, s:$Pspeed, a:$Parrival, g:$Pdepart\n";
             $sth = $dbh->prepare("update tblTaskResult set
                 tarDistanceScore=$Pdist, tarSpeedScore=$Pspeed,
                 tarArrival=$Parrival, tarDeparture=$Pdepart, tarScore=$Pscore
