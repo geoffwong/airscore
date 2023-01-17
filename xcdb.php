@@ -22,7 +22,7 @@ function get_all_tasks($link,$comPk)
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $tasPk = $row['tasPk'];
-        if (!$row['tasComment'])
+        if (!$row['tasComment'] || $row['tasComment'] == 'null')
         {
             $row['tasComment'] = '';
         }
@@ -102,16 +102,16 @@ function get_taskwaypoints($link,$tasPk)
 
 function get_all_regions($link)
 {
-	$regarr = [];
-	$sql = "SELECT * FROM tblRegion R order by regDescription";
-	$result = mysql_query($sql,$link);
-	while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
-	{
-		$id = $row['regPk'];
-		$regarr[$id] = $row['regDescription'];
-	}
-
-	return $regarr;
+    $regarr = [];
+    $sql = "SELECT * FROM tblRegion R order by regDescription";
+    $result = mysql_query($sql,$link);
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+    	$desc = $row['regDescription'];
+    	$regarr[$desc] = $row['regPk'];
+    }
+    
+    return $regarr;
 }
 
 function get_comp_region($link, $comPk)
@@ -159,5 +159,12 @@ function get_region($link, $regPk, $trackid)
     }
 
     return $ret;
+}
+function en2dhv($en)
+{
+    $dispclass =  [ 'A' => '1', 'B' => '1/2', 'C' => '2', 'D' => '2/3', 'CCC' => 'competition',
+                        'floater' => 'floater', 'kingpost' => 'kingpost', 'open' => 'open', 'rigid' => 'rigid' ];
+
+    return $dispclass[$en];
 }
 ?>

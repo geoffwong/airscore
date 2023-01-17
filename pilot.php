@@ -13,7 +13,7 @@ function piltracktable($link, $sort, $order, $start, $pilot)
     $sql = "select T.*, P.*, CTT.*, L.* from tblTrack T, tblPilot P, tblComTaskTrack CTT, tblWaypoint W left outer join tblLaunchSite L on (abs(W.wptLatDecimal-L.lauLatDecimal)+abs(W.wptLongDecimal-L.lauLongDecimal)) < 0.2 where W.wptPosition=0 and T.traPk=W.traPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk $sort group by T.traPk $order";
     $result = mysql_query($sql,$link) or die("Invalid track table " . mysql_error());
     $num = mysql_num_rows($result);
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $id = $row['traPk'];
         $dist = round($row['traLength']/1000,2);
@@ -56,7 +56,7 @@ if ($comp > 0)
 {
     $sql = "select * from tblCompetition C where comPk=$comp";
     $result = mysql_query($sql,$link);
-    if ($row = mysql_fetch_array($result))
+    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $title = $row['comName'];
     }
@@ -69,7 +69,7 @@ if ($pilot > 0)
 {
     $sql = "select P.pilFirstName, P.pilLastName from tblPilot P where P.pilPk=$pilot";
     $result = mysql_query($sql,$link);
-    if ($row = mysql_fetch_array($result))
+    if ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $name = $row['pilFirstName'] . ' ' . $row['pilLastName'];
         $title = "$name @ $title";

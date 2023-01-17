@@ -65,7 +65,7 @@ if ($tasPk > 0 || $trackid > 0)
     }
 
     $result = mysql_query($sql,$link) or die('Query failed: ' . mysql_error());
-    if ($row = mysql_fetch_array($result))
+    if ($row = mysql_fetch_array($result,MYSQL_ASSOC))
     {
         if ($tasPk == 0)
         {

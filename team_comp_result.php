@@ -12,7 +12,7 @@ function team_comp_result($comPk, $how, $param)
     $sql = "select TK.*,TR.*,P.* from tblTeamResult TR, tblTask TK, tblTeam P, tblCompetition C where C.comPk=$comPk and TR.tasPk=TK.tasPk and TK.comPk=C.comPk and P.teaPk=TR.teaPk order by P.teaPk, TK.tasPk";
     $result = mysql_query($sql) or die('Task result query failed: ' . mysql_error());
     $results = [];
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $score = round($row['terScore']);
         $validity = $row['tasQuality'] * 1000;
@@ -124,7 +124,7 @@ function team_agg_result($comPk, $teamsize)
 {
     $query = "select TM.teaPk,TK.tasPk,TK.tasName,TM.teaName,P.pilLastName,P.pilFirstName,P.pilPk,TR.tarScore*TP.tepModifier as tepscore from tblTaskResult TR, tblTask TK, tblTrack K, tblPilot P, tblTeam TM, tblTeamPilot TP, tblCompetition C where TP.teaPk=TM.teaPk and P.pilPk=TP.pilPk and C.comPk=TK.comPk and K.traPk=TR.traPk and K.pilPk=P.pilPk and TR.tasPk=TK.tasPk and TM.comPk=C.comPk and C.comPk=$comPk order by TM.teaPk,TK.tasPk,TR.tarScore*TP.tepModifier desc";
     $result = mysql_query($query) or die('Team aggregate query failed: ' . mysql_error());
-    $row = mysql_fetch_array($result);
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
     $htable = [];
     $hres = [];
     $sorted = [];
@@ -181,7 +181,7 @@ function team_agg_result($comPk, $teamsize)
             $tastotal = round($tastotal + $row['tepscore'],2);
             $size = $size + 1;
         }
-        $row = mysql_fetch_array($result);
+        $row = mysql_fetch_array($result, MYSQL_ASSOC);
     }
 
     // wrap up last one
@@ -209,7 +209,7 @@ $title = 'highcloud.net';
 
 $query = "SELECT T.*,F.* FROM tblCompetition T left outer join tblFormula F on F.comPk=T.comPk where T.comPk=$comPk";
 $result = mysql_query($query) or die('Comp query failed: ' . mysql_error());
-$row = mysql_fetch_array($result);
+$row = mysql_fetch_array($result, MYSQL_ASSOC);
 if ($row)
 {
     $comName = $row['comName'];
@@ -298,7 +298,7 @@ if ($tasTotal > 0)
     echo "<tr class=\"h\"><td><b>Res</b></td><td><b>Team</b></td><td><b>Total</b></td>";
     $query = "select T.* from tblTask T where T.comPk=$comPk order by T.tasDate";
     $result = mysql_query($query) or die('Task query failed: ' . mysql_error());
-    while ($row = mysql_fetch_array($result))
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $alltasks[] = $row['tasName'];
         $taskinfo[] = $row;

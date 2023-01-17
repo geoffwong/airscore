@@ -20,7 +20,7 @@ if (!is_admin('admin',$usePk,$comPk))
 
 $comptype = reqsval('Type');
 $overallscore = reqsval('OverallScore');
-$overallparam = reqfval('OverallParam');
+$overallparam = reqival('OverallParam');
 $teamscoring = reqsval('TeamScoring');
 $teamsize = reqival('TeamSize');
 $teamover = reqsval('TeamOver');
@@ -30,7 +30,7 @@ $locked = reqival('Locked');
 $query = "update tblCompetition set comType='$comptype', comOverallScore='$overallscore', comOverallParam=$overallparam, comTeamScoring='$teamscoring', comTeamSize=$teamsize, comTeamOver='$teamover', comSanction='$sanction', comLocked=$locked where comPk=$comPk";
 
 $result = mysql_query($query, $link) 
-    or die('Competition update failed: ' . mysql_error());
+    or json_die('Competition update failed: ' . mysql_error());
 
 $res['result'] = "ok";
 print json_encode($res);

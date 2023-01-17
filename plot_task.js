@@ -68,7 +68,7 @@ function plot_pilots_lo(tasPk)
         
     
           // Got a good response, create the map objects
-          pilots = RJSON.unpack(JSON.parse(data));
+          pilots = JSON.parse(data);
           //pbounds = new google.maps.LatLngBounds();
 
           for (row in pilots)

@@ -3,9 +3,15 @@ $(document).ready(function() {
     var url = new URL('http://highcloud.net/xc/get_result.php' + window.location.search);
     var comPk = url.searchParams.get("comPk");
     var flyclass = url_parameter("class");
+    var showcivl = url_parameter("civl");
     if (flyclass)
     {
         $('#dhv').val(flyclass);
+    }
+    var hide = [ 1,2,6,8 ];
+    if (showcivl)
+    {
+        hide = [ 1,6,8 ];
     }
     $('#task_result').dataTable({
         ajax: 'get_result.php?comPk='+comPk,
@@ -16,7 +22,7 @@ $(document).ready(function() {
         "dom": 'lrtip',
         "columnDefs": [
             {
-                "targets": [ 1, 2, 6, 8 ],
+                "targets": hide,
                 "visible": false 
             },
             //{ "type" : "numeric", "targets": [ 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 ] }

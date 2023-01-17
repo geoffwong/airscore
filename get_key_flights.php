@@ -40,17 +40,18 @@ function get_track_info($link,$comPk)
     # Most recent track
 	$sql = "select T.traPk, T.traLength, T.traScore from tblComTaskTrack CTT, tblTrack T where CTT.comPk=$comPk and T.traPk=CTT.traPk order by T.traDate desc";
 	$result = mysql_query($sql,$link) or json_die('get recent track failed: ' . mysql_error());
-    $recent = 0;
+    $recent = [] ;
     $longest = 0;
     $longestPk = 0;
     $top = 0;
     $topPk = 0;
+    $count = 0;
 	while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $traPk = $row["traPk"];
-        if ($recent == 0)
+        if ($count < 2)
         {
-            $recent = $traPk;
+            $recent[] = $traPk;
         }
 
         if ($row["traLength"] > $longest)
@@ -64,12 +65,22 @@ function get_track_info($link,$comPk)
             $top = $row["traScore"];
             $topPk = $row["traPk"];
         }
+        $count++;
     }
 
     # Longest track
-    $tracks[] = get_track_detail($link, "Recent Flight", $recent);
-    $tracks[] = get_track_detail($link, "Longest Flight", $longestPk);
-    $tracks[] = get_track_detail($link, "Top Flight", $topPk);
+    foreach ($recent as $rkey)
+    {
+        $tracks[] = get_track_detail($link, "Recent Flight", $rkey);
+    }
+    if ($longestPk > 0)
+    {
+        $tracks[] = get_track_detail($link, "Longest Flight", $longestPk);
+    }
+    if ($topPk > 0 && $topPk != $longestPk)
+    {
+        $tracks[] = get_track_detail($link, "Top Flight", $topPk);
+    }
 
 	$ret['tracks'] = $tracks;
 	return $ret;

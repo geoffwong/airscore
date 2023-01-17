@@ -34,6 +34,18 @@ function get_task_setup($link, $tasPk)
 	}
 }
 
+function get_task_airspace($link,$tasPk)
+{
+    $airarr = [];
+    $query = "select TA.*, A.* from tblTaskAirspace TA, tblAirspace A where TA.tasPk=$tasPk and A.airPk=TA.airPk";
+    $result = mysql_query($query, $link) or die('TaskAirspace select failed: ' . mysql_error());
+    while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
+    {
+        $airarr[] = $row;
+    }
+    return $airarr;
+}
+
 $link = db_connect();
 $comPk = reqival('comPk');
 $tasPk = reqival('tasPk');
@@ -41,6 +53,7 @@ $tasPk = reqival('tasPk');
 $taskinfo = get_task_setup($link, $tasPk);
 $waypoints = get_taskwaypoints($link, $tasPk);
 $region = get_region($link, $taskinfo['regPk'], 0);
+$airarr = get_task_airspace($link, $tasPk);
 
 $keys = [];
 $keys['tasPk'] = $taskinfo['tasPk'];
@@ -51,7 +64,7 @@ foreach ($keys as $key => $value)
     unset($taskinfo[$key]);
 }
 
-$data = [ 'keys' => $keys, 'taskinfo' => $taskinfo, 'waypoints' => $waypoints, 'region' => $region ];
+$data = [ 'keys' => $keys, 'taskinfo' => $taskinfo, 'waypoints' => $waypoints, 'region' => $region, 'airspace' => $airarr ];
 print json_encode($data);
 ?>
 

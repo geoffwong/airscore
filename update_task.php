@@ -6,6 +6,15 @@ header('Content-type: application/json; charset=utf-8');
 require_once 'authorisation.php';
 require_once 'dbextra.php';
 
+function sane_date($date)
+{
+    $year = substr($date, 0, 4);
+    if ($year < 2000 || $year > 2100)
+    {
+        return false;
+    }
+    return true;
+}
 
 function update_task($link,$tasPk, $old)
 {
@@ -58,6 +67,7 @@ $usePk = auth('system');
 $link = db_connect();
 $res = [];
 $comPk = reqival('comPk');
+$tasPk = reqival('tasPk');
 
 if (!is_admin('admin',$usePk,$comPk))
 {
@@ -66,68 +76,65 @@ if (!is_admin('admin',$usePk,$comPk))
    return;
 }
 
-    $query = "select tasStartTime, tasStartCloseTime, tasFinishTime, tasTaskType from tblTask where tasPk=$tasPk";
-    $result = mysql_query($query) 
-        or die('Task not associated with a competition: ' . mysql_error());
-    $old = mysql_fetch_array($result);
 
-    $Name = reqsval('taskname');
-    $Date = reqsval('date');
-    if (!sane_date($Date))
-    {
-        die("Unable to update task with illegal date: $Date");
-    }
+$query = "select tasStartTime, tasStartCloseTime, tasFinishTime, tasTaskType from tblTask where tasPk=$tasPk";
+$result = mysql_query($query) 
+    or die('Task not associated with a competition: ' . mysql_error());
+$old = mysql_fetch_array($result, MYSQL_ASSOC);
 
-    // Task Start/Finish
-    $TaskStart = reqsval('taskstart');
-    if (strlen($TaskStart) < 10)
-    {
-        $TaskStart = $Date . ' ' . $TaskStart;
-    }
-    $FinishTime = reqsval('taskfinish');
-    if (strlen($FinishTime) < 10)
-    {
-        $FinishTime = $Date . ' ' . $FinishTime;
-    }
+$Name = reqsval('Name');
+$Date = reqsval('Date');
+if (!sane_date($Date))
+{
+    die("Unable to update task with illegal date: $Date");
+}
 
-    // FIX: Launch Close
-    // Start gate open/close
-    $StartTime = reqsval('starttime');
-    if (strlen($StartTime) < 10)
-    {
-        $StartTime = $Date . ' ' . $StartTime;
-    }
-    $StartClose = reqsval('startclose');
-    if (strlen($StartClose) < 10)
-    {
-        $StartClose = $Date . ' ' . $StartClose;
-    }
+// Task Start/Finish
+$TaskStart = reqsval('TaskStart');
+if (strlen($TaskStart) < 10)
+{
+    $TaskStart = $Date . ' ' . $TaskStart;
+}
+$FinishTime = reqsval('FinishTime');
+if (strlen($FinishTime) < 10)
+{
+    $FinishTime = $Date . ' ' . $FinishTime;
+}
 
-    $TaskType = reqsval('tasktype');
-    $Interval = reqival('interval');
-    $regPk = addslashes($_REQUEST['region']);
-    $departure = addslashes($_REQUEST['departure']);
-    $arrival = addslashes($_REQUEST['arrival']);
-    $height = addslashes($_REQUEST['height']);
-    $comment = reqsval('taskcomment');
+// FIX: Launch Close
+// Start gate open/close
+$StartTime = reqsval('StartTime');
+if (strlen($StartTime) < 10)
+{
+    $StartTime = $Date . ' ' . $StartTime;
+}
+$StartClose = reqsval('StartCloseTime');
+if (strlen($StartClose) < 10)
+{
+    $StartClose = $Date . ' ' . $StartClose;
+}
 
-    $query = "update tblTask set tasName='$Name', tasDate='$Date', tasTaskStart='$TaskStart', tasStartTime='$StartTime', tasStartCloseTime='$StartClose', tasFinishTime='$FinishTime', tasTaskType='$TaskType', regPk=$regPk, tasSSInterval=$Interval, tasDeparture='$departure', tasArrival='$arrival', tasHeightBonus='$height', tasComment='$comment' where tasPk=$tasPk";
+$TaskType = reqsval('TaskType');
+$Interval = reqival('SSInterval');
+//$regPk = reqival('regPk');
+$departure = reqsval('Departure');
+$arrival = reqsval('Arrival');
+$height = reqsval('HeightBonus');
+$comment = reqsval('Comment');
+
+$query = "update tblTask set tasName='$Name', tasDate='$Date', tasTaskStart='$TaskStart', tasStartTime='$StartTime', tasStartCloseTime='$StartClose', tasFinishTime='$FinishTime', tasTaskType='$TaskType', tasSSInterval=$Interval, tasDeparture='$departure', tasArrival='$arrival', tasHeightBonus='$height', tasComment='$comment' where tasPk=$tasPk";
+$result = mysql_query($query) or die('Task add failed: ' . mysql_error());
+
+$TaskStopped = reqsval('StoppedTime');
+if (strlen($TaskStopped) < 10 && strlen($TaskStopped) > 2 && $TaskStopped != 'null')
+{
+    $TaskStopped = $Date . ' ' . $TaskStopped;
+    $query = "update tblTask set tasStoppedTime='$TaskStopped' where tasPk=$tasPk";
     $result = mysql_query($query) or die('Task add failed: ' . mysql_error());
+}
 
-    $TaskStopped = reqsval('taskstopped');
-    if (strlen($TaskStopped) < 10 && strlen($TaskStopped) > 2)
-    {
-        $TaskStopped = $Date . ' ' . $TaskStopped;
-    }
-
-    if (strlen($TaskStopped) > 2)
-    {
-        $query = "update tblTask set tasStoppedTime='$TaskStopped' where tasPk=$tasPk";
-        $result = mysql_query($query) or die('Task add failed: ' . mysql_error());
-    }
-
-    update_task($link, $tasPk, $old);
-    #update_tracks($link,$tasPk);
+update_task($link, $tasPk, $old);
+#update_tracks($link,$tasPk);
 
 $res['result'] = "ok";
 print json_encode($res);

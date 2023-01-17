@@ -21,7 +21,6 @@ function get_task_airspace($link, $tasPk, $trackid)
     else
     {
         $sql = "SELECT *, trlTime as bucTime FROM tblTrackLog where traPk=$trackid order by trlTime limit 1";
-        echo $sql;
         $result = mysql_query($sql,$link) or die('Tracklog location failed: ' . mysql_error());
         $row = mysql_fetch_array($result, MYSQL_ASSOC);
         $tracklat = $row['trlLatDecimal'];
@@ -40,6 +39,7 @@ function get_task_airspace($link, $tasPk, $trackid)
     }
 
     $result = mysql_query($sql,$link); // or die('Airspace selection failed: ' . mysql_error());
+    $airspaces = [];
     if ($result)
     {
         $addable = [];
@@ -49,13 +49,13 @@ function get_task_airspace($link, $tasPk, $trackid)
             $id = $row['airPk'];
             if ($id != $airPk)
             {
-                $row['waypoints'] = [ [ $row['airOrder'], $row['awpConnect'], $row['awpLatDecimal'], $row['awpLongDecimal'], $row['awpAngleStart'], $row['awpAngleEnd'], $row['awpRadius'] ] ];
+                $row['waypoints'] = [ [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'], $row['awpRadius'] ] ];
                 $airspaces[$id] = $row;
                 $airPk=$id;
             }
             else
             {
-                $airspaces[$id]['waypoints'][] = [ $row['airOrder'], $row['awpConnect'], $row['awpLatDecimal'], $row['awpLongDecimal'], $row['awpAngleStart'], $row['awpAngleEnd'], $row['awpRadius'] ];
+                $airspaces[$id]['waypoints'][] = [ $row['airOrder'], $row['awpConnect'], round($row['awpLatDecimal'],6), round($row['awpLongDecimal'],6), $row['awpAngleStart'], $row['awpAngleEnd'], $row['awpRadius'] ];
             }
         }
     }
