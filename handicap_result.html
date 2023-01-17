@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Task Result</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+    <link href="navbar.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="microajax.minified.js"></script>
+    <script src="js/utils.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="/" id="airbrand">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto" id="tasknav">
+            <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li class="nav-item">
+            <a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a>
+           </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+	<div class="modal fade" id="resultmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Manual Update</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="updateresult" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+			<div class="form-row">
+			  <label for="date-from" class="col-2 1ol-form-label">Result</label>
+			    <div class="col-10" id="resulttype">
+                <select name="result" id="result" class="form-control"></select>
+			    </div>
+			</div>
+		    <div class="form-row">
+			  	<label for="taskname" class="col-2 col-form-label">Glider</label>
+                <div class="col-10"><input class="form-control" type="text" value="" id="glider"></div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="regiondiv" class="col-2 col-form-label">DHV</label>
+			    <div class="col-10" id="regiondiv">
+                <select name="region" id="region" class="form-control"></select>
+			    </div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="taskname" class="col-2 col-form-label">Distance</label>
+                <div class="col-10"><input class="form-control" type="text" value="" id="penalty"></div>
+		    </div>
+		    <div class="form-row">
+			  	<label for="taskname" class="col-2 col-form-label">Penalty</label>
+                <div class="col-10"><input class="form-control" type="text" value="" id="penalty"></div>
+		    </div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="create_task();">Update</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+        
+      </div>
+
+    </div>
+	</div>
+    <div class="container-fluid">
+    <div class="row mt-1 mb-2">
+        <div class="col comp_header" id="comp_header">
+        <h2 id="comp_name"></h2>
+        <h3 id="task_date"></h3>
+        <select name="dhv" id="dhv" class="form-control" placeholder="Class">
+            <option value="open">Open</option>
+            <option value="handicap" selected>Performance Handicap</option>
+        </select>
+        <div>Handicap results are based upon a wing performance metric including wing size, loading and span. Distance and times are re-adjusted and the task rescored with a basic version of GAP. Where a wing can't be determined for handicap purposes 'unknown' will shown.</div>
+        </div>
+        <div class="col" class="task_waypoints">
+        <table class="table table-sm" id="waypoints">
+        <thead class="thead-light" id="wpts_hd">
+            <tr><th>Point</th><th>Type</th><th>Size</th><th>Dist</th><th>Description</th></tr>
+        </thead>
+        <tbody class="small" id="wpts_bd"></tbody>
+        </table>
+        </div>
+    </div>
+    <div class="row mb-3">
+    <div class="col w-100">
+    <table id="task_result" class="row-border compact" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Pilot</th>
+            <th>Nat</th>
+            <th>Glider</th>
+            <th>EN</th>
+            <th>SS</th>
+            <th>ES</th>
+            <th>Time</th>
+            <th id="altbonus">HBs</th>
+            <th>Kms</th>
+            <th id="leading">Lkm</th>
+            <th>Arv</th>
+            <th>Spd</th>
+            <th>Dst</th>
+            <th>Pen</th>
+            <th>Tot</th>
+        </tr>
+    </thead>
+    </table>
+    </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-sm">
+        <table class="table table-sm form_param" id="formula1">
+        <thead class="thead-light small" id="formula_hd">
+            <tr><th>GAP Parameter</th><th>Setting</th></tr>
+        </thead>
+        <tbody class="small" id="formula_bd"></tbody>
+        </table>
+        </div>
+        <div class="col-sm">
+        <table class="table table-sm form_param" id="formula2">
+        <thead class="thead-light small" id="formula_hd">
+            <tr><th>GAP Parameter</th><th>Setting</th></tr>
+        </thead>
+        <tbody class="small" id="formula_bd"></tbody>
+        </table>
+        </div>
+        <div class="col-sm" class="form_param">
+        <table class="table table-sm form_param" id="taskinfo">
+        <thead class="thead-light small" id="taskinfo_hd">
+            <tr><th>Task Metric</th><th>Value</th></tr>
+        </thead>
+        <tbody class="small" id="taskinfo_bd"></tbody>
+        </table>
+        </div>
+    </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="js/enums.js"></script>
+    <script type="text/javascript" src="js/pop_handicap.js"></script>
+    <script type="text/javascript" src="js/class_filter.js?v=2"></script>
+</body>
+</html>
+

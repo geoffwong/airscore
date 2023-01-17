@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Task Team Result</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+    <link href="navbar.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/rowgroup/1.1.2/css/rowGroup.dataTables.min.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="microajax.minified.js"></script>
+    <script src="js/utils.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="/" id="airbrand">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto" id="tasknav">
+            <li class="nav-item"> <a class="nav-link" href="comp_overview.html">Competitions</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_overview.html">Ladders</a> </li>
+            <li class="nav-item">
+            <a class="nav-link" href="#" onClick="document.location.href='comp_overall.html'+window.location.search;">Overall</a>
+           </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onClick="document.location.href='task_overview.html'+window.location.search;">Tasks</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onClick="document.location.href='submit_track.html'+window.location.search;">Submit</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+	<div class="modal fade" id="resultmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="delete_result();">Delete</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="update_result();">Update</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+        
+      </div>
+
+    </div>
+	</div>
+    <div class="container-fluid">
+    <div class="row mt-1 mb-2">
+        <div class="col comp_header" id="comp_header">
+        <h2 id="comp_name"></h2>
+        <h3 id="task_date"></h3>
+        <select name="dhv" id="dhv" class="form-control" placeholder="Class">
+            <option value="" selected>Teams</option>
+            <option value="open">Open</option>
+        </select>
+        <div id="startend"></div>
+        <div id="reloadspin" class="spinner-border ml-auto" role="status"></div>
+        </div>
+        <div class="col" class="task_waypoints">
+        <table class="table table-sm" id="waypoints">
+        <thead class="thead-light" id="wpts_hd">
+            <tr><th>Point</th><th>Type</th><th>Size</th><th>Dist</th><th>Description</th></tr>
+        </thead>
+        <tbody class="small" id="wpts_bd"></tbody>
+        </table>
+        </div>
+    </div>
+    <div class="row mb-3">
+    <div class="col w-100">
+    <table id="task_result" class="row-border compact" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>Team</th>
+            <th>Pilot</th>
+            <th>Result</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    </table>
+    </div>
+    </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/rowgroup/1.1.2/js/dataTables.rowGroup.min.js"></script>
+    <script type="text/javascript" src="js/enums.js"></script>
+    <script type="text/javascript" src="js/pop_task_team_result.js?v=1"></script>
+    <script type="text/javascript" src="js/class_filter.js?v=2"></script>
+</body>
+</html>
+

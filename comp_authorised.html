@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Authorised Administrators</title>
+
+    <!-- CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="task.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- JS -->
+    <script src="microajax.minified.js"></script>
+    <script src="js/url.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="/">airScore</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"> <a class="nav-link" href="comp_admin.html">Competitions</a></li>
+            <li class="nav-item"> <a class="nav-link" href="#" onClick="document.location.href='track_admin.html'+window.location.search;">Tracks</a></li>
+            <li class="nav-item"> <a class="nav-link" href="pilot_admin.html">Pilots</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="region_admin.html">Waypoints</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="airspace_admin.html">Airspace</a> </li>
+            <li class="nav-item"> <a class="nav-link" href="ladder_admin.html">Ladders</a> </li>
+            <li class="nav-item"> <a class="nav-link" onClick="document.location.href='competition.html'+window.location.search;">Competition</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Add Modal -->
+	<div class="modal fade" id="adminmodal" tabindex="-1" role="dialog" aria-labelledby="adminModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Add Authorised Admin</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="createadmin" action="javascript:void(0);" method="post">
+		    <div class="form-group">
+		    <div class="form-row" id="route">
+			  	<label for="date-from" class="col-2 col-form-label">Name</label>
+			    <div id="adminlistdiv" class="col-10">
+			    </div>
+		    </div>
+			</div>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="add_admin();">Add</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+
+    </div>
+	</div>
+
+    <!-- Remove Modal -->
+	<div class="modal fade" id="delmodal" tabindex="-1" role="dialog" aria-labelledby="deleteModal" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Remove Authorised Admin</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+		    <form id="removeadmin" action="javascript:void(0);" method="post">
+			<center>Confirm Admin Removal?</center>
+			</form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="delete_task();">Delete</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+	</div>
+
+    <!-- Main Page -->
+    <div class="container">
+    <div class="row mt-3">
+    </div>
+    <div class="row mt-1">
+        <div class="col-8">
+        <h2>Comp Details</h2>
+        </div>
+        <div class="col-4">
+        </div>
+    </div>
+    <div class="row"> 
+        <div class="col">
+        <table class="table form_param" id="taskinfo1">
+        <tbody class="" id="formula1_bd"></tbody>
+        </table>
+        </div>
+        <div class="col">
+        <table class="table form_param" id="taskinfo2">
+        <tbody class="" id="formula2_bd"></tbody>
+        </table>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-4"><h2>Admnistrators</h2></div>
+        <div class="col-8">
+            <button class="btn btn-primary btn-sm float-right ml-1" data-toggle="modal" data-target="#adminmodal">Add</button>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <table class="table table-sm form_param" id="administrators">
+        <thead class="thead-light small">
+            <tr><th>Id#</th><th>Administrator</th><th>Email</th><th>Remove</th></tr>
+        </thead>
+        </table>
+    </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script>
+    <script src="vendor/jquery.ui.touch-punch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="js/pop_authorised.js"></script>
+</body>
+</html>
+
