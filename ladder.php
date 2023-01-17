@@ -559,7 +559,7 @@ if ($ladPk > 0)
     {
         echo "<br><br>";
         echo "<form action=\"ladder.php?ladPk=$ladPk\" name=\"ladadmin\" method=\"post\">";
-        $query = "select C.comPk, C.comName from tblCompetition C, tblLadder L where L.ladPk=$ladPk and C.comDateTo between L.ladStart and L.ladEnd";
+        $query = "select C.comPk, C.comName from tblCompetition C, tblLadder L where L.ladPk=$ladPk and C.comDateFrom between L.ladStart and IFNULL(L.ladEnd,now())";
         $result = mysql_query($query) or die('Ladder query failed: ' . mysql_error());
         $comparr = [];
         while ($row = mysql_fetch_array($result, MYSQL_ASSOC))

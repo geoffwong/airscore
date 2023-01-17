@@ -7,14 +7,13 @@
 
 require DBD::mysql;
 use Data::Dumper;
+use Text::CSV qw( csv );
 use TrackLib qw(:all);
 
 #
 # Database handles
 #
 
-
-#
 # Extract 'fix' data into a nice record
 #
 sub read_membership
@@ -24,9 +23,12 @@ sub read_membership
     my @field;
     my $row;
 
+    # Read whole file in memory
     print "reading: $f\n";
-    open(FD, "$f") or die "can't open $f: $!";
+    my $aoa = csv (in => $f);    # as array of array
 
+    # for my $row ( @$aoa )
+    open(FD, "$f") or die "can't open $f: $!";
     while (<FD>)
     {
         $row = $_;
