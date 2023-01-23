@@ -143,8 +143,8 @@ $fsdb->{'FsCompetition'}->{'from'} = substr($comp->{'datefrom'},0,10);
 $fsdb->{'FsCompetition'}->{'to'} = substr($comp->{'dateto'},0,10);
 $utc = $comp->{'timeoffset'};
 $fsdb->{'FsCompetition'}->{'utc_offset'} = $utc;
-$fsdb->{'FsCompetition'}->{'discipline'} = uc($comp->{'class'});
-if ($ref->{'comOverallScore'} ne 'ftv')
+$fsdb->{'FsCompetition'}->{'discipline'} = $comp->{'class'};
+if ($ref->{'overallscore'} ne 'ftv')
 {
     $fsdb->{'FsCompetition'}->{'ftv_factor'} = '1';
 }
@@ -316,9 +316,9 @@ foreach my $tasPk (@alltasks)
     $task->{'FsScoreFormula'} = \%formula;
     #$task->{'FsParticipants'}->{'FsParticipant'} = \@pilots;
     #$task->{'FsTaskScoreParams'} = empty();
-    $task->{'FsTaskScoreParams'}->{'ss_distance'} = sprintf("%.2f", $ref->{'ssdistance'});
-    $task->{'FsTaskScoreParams'}->{'task_distance'} = sprintf("%.2f", $ref->{'short_distance'});
-    $task->{'FsTaskScoreParams'}->{'launch_to_ess_distance'} = sprintf("%.2f", $ref->{'endssdistance'});
+    $task->{'FsTaskScoreParams'}->{'ss_distance'} = sprintf("%.4f", ($ref->{'ssdistance'}/1000));
+    $task->{'FsTaskScoreParams'}->{'task_distance'} = sprintf("%.4f", ($ref->{'short_distance'}/1000));
+    $task->{'FsTaskScoreParams'}->{'launch_to_ess_distance'} = sprintf("%.4f", ($ref->{'endssdistance'}/1000));
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_present'} = $task_totals->{'pilots'};
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_flying'} = $task_totals->{'launched'};
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_lo'} = $task_totals->{'launched'} - $task_totals->{'goal'};
@@ -326,16 +326,16 @@ foreach my $tasPk (@alltasks)
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_reaching_es'} = $task_totals->{'ess'};
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_reaching_goal'} = $task_totals->{'goal'};
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_in_competition'} = $task_totals->{'pilots'};
-    $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'} = sprintf("%.2f", $task_totals->{'distance'});
+    $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'} = sprintf("%.3f", $task_totals->{'distance'}/1000);
     $task->{'FsTaskScoreParams'}->{'max_time_to_get_time_points'} = '0';
     $task->{'FsTaskScoreParams'}->{'no_of_pilots_with_time_points'} = $task_totals->{'ess'};  # @fixme
     #$task->{'FsTaskScoreParams'}->{'k'} = '';
     #$task->{'FsTaskScoreParams'}->{'arrival_weight'} = 
-    $task->{'FsTaskScoreParams'}->{'best_dist'} = $task_totals->{'maxdist'};
+    $task->{'FsTaskScoreParams'}->{'best_dist'} = sprintf("%.4f", $task_totals->{'maxdist'}/1000);
     $task->{'FsTaskScoreParams'}->{'best_time'} = $task_totals->{'fastest'};
     $task->{'FsTaskScoreParams'}->{'worst_time'} = '0';
-    $task->{'FsTaskScoreParams'}->{'sum_flown_distance'} = $task_totals->{'avdist'} * $task_totals->{'launched'};
-    $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'} = ($task_totals->{'avdist'} - $formula{'min_dist'}) * $task_totals->{'launched'};
+    $task->{'FsTaskScoreParams'}->{'sum_flown_distance'} = sprintf("%.2f", $task_totals->{'avdist'} * $task_totals->{'launched'} / 1000);
+    $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'} = sprintf("%.2f", ($task_totals->{'avdist'} - $formula{'min_dist'}) * $task_totals->{'launched'} / 1000);
     $task->{'FsTaskScoreParams'}->{'sum_real_dist_over_min'} = $task->{'FsTaskScoreParams'}->{'sum_dist_over_min'}; # ??
     $intformula{'arrival_weight'} = $ref->{'forWeightArrival'};
     $task->{'FsTaskScoreParams'}->{'departure_weight'} = $intformula{'departure_weight'};
@@ -411,18 +411,18 @@ while (defined($ref))
     $turn->{'lon'} = sprintf("%.5f", $ref->{'rwpLongDecimal'});
     $turn->{'altitude'} = $ref->{'rwpAltitude'};
     $turn->{'radius'} = $ref->{'tawRadius'};
-    $turn->{'open'} = $ref->{'tasStartTime'};
-    $turn->{'close'} = $ref->{'tasFinishTime'};
+    $turn->{'open'} = fs_time($ref->{'tasStartTime'}, $utc);
+    $turn->{'close'} = fs_time($ref->{'tasFinishTime'}, $utc);
     if ($ref->{'tawType'} eq 'start')
     {
         $ss = $cnt;
-        $turn->{'open'} = $ref->{'tasTaskStart'};
-        $turn->{'close'} = $ref->{'tasStartCloseTime'};
+        $turn->{'open'} = fs_time($ref->{'tasTaskStart'}, $utc);
+        $turn->{'close'} = fs_time($ref->{'tasStartCloseTime'}, $utc);
     }
     if ($ref->{'tawType'} eq 'speed')
     {
         $ss = $cnt;
-        $turn->{'close'} = $ref->{'tasStartCloseTime'};
+        $turn->{'close'} = fs_time($ref->{'tasStartCloseTime'}, $utc);
     }
     if ($ref->{'tawType'} eq 'endspeed')
     {
@@ -483,7 +483,7 @@ $taskoverall->{'FsTaskResultParticipants'} = empty();
 $taskoverall->{'FsTaskResultParticipants'}->{'FsTaskResultParticipant'} = $partresults;
 push @$taskresults, $taskoverall;
 
-$sth = $dbh->prepare("select TK.*, TR.*, TL.pilPk, TL.traStart, date_add(TK.tasDate, INTERVAL TR.tarSS SECOND) as Sss, date_add(TK.tasDate, INTERVAL TR.tarES SECOND) as Ess, date_add(TL.traStart, INTERVAL TL.traDuration SECOND) as FinishTime from tblTaskResult TR, tblTask TK, tblTrack TL  where TR.tasPk=TK.tasPk and TL.traPk=TR.traPk and TK.comPk=$comPk order by TK.tasPk, TR.tarScore desc");
+$sth = $dbh->prepare("select TK.*, TR.*, TL.pilPk, TL.traStart, date_add(TK.tasDate, INTERVAL TR.tarStart SECOND) as Start, date_add(TK.tasDate, INTERVAL TR.tarSS SECOND) as Sss, date_add(TK.tasDate, INTERVAL TR.tarES SECOND) as Ess, date_add(TL.traStart, INTERVAL TL.traDuration SECOND) as FinishTime from tblTaskResult TR, tblTask TK, tblTrack TL  where TR.tasPk=TK.tasPk and TL.traPk=TR.traPk and TK.comPk=$comPk order by TK.tasPk, TR.tarScore desc");
 $sth->execute();
 $ref = $sth->fetchrow_hashref();
 while (defined($ref))
@@ -496,7 +496,7 @@ while (defined($ref))
         $task->{'FsTaskResults'} = empty();
         $task->{'FsTaskResults'}->{'FsTaskResult'} = $taskresults;
         $taskoverall->{'FsTaskScoreParams'} = $task->{'FsTaskScoreParams'};
-        $taskoverall->{'ts'} = fs_time($ref->{'tasFinishTime'}); # strftime("%Y-%m-%sT%H:%M:%S", localtime);
+        $taskoverall->{'ts'} = fs_time($ref->{'tasFinishTime'}, 0); # strftime("%Y-%m-%sT%H:%M:%S", localtime);
         # clean up for new task
         $taskr = empty();
         $taskresults = emarr();
@@ -517,22 +517,22 @@ while (defined($ref))
     $taskr->{'FsFlightData'} = empty();
     $taskr->{'FsFlightData'}->{'distance'} = sprintf("%.3f", $ref->{'tarDistance'} / 1000);
     $taskr->{'FsFlightData'}->{'bonus_distance'} = sprintf("%.3f", $ref->{'tarDistance'} / 1000);
-    $taskr->{'FsFlightData'}->{'started_ss'} = fs_time($ref->{'Sss'}, $utc);
+    $taskr->{'FsFlightData'}->{'started_ss'} = fs_time($ref->{'Sss'}, 0);
     if ($ref->{'tarES'} > 0)
     {
-        $taskr->{'FsFlightData'}->{'finished_ss'} = fs_time($ref->{'Ess'}, $utc);
+        $taskr->{'FsFlightData'}->{'finished_ss'} = fs_time($ref->{'Ess'}, 0);
     }
     else
     {
         $taskr->{'FsFlightData'}->{'finished_ss'} = "00:00:00";
     }
-    $taskr->{'FsFlightData'}->{'finished_task'} = fs_time($ref->{'FinishTime'}, $utc);
+    $taskr->{'FsFlightData'}->{'finished_task'} = fs_time($ref->{'FinishTime'}, 0);
     $taskr->{'FsFlightData'}->{'tracklog_filename'} = 'none.igc';
     $taskr->{'FsFlightData'}->{'lc'} = sprintf("%.1f", $ref->{'tarLeadingCoeff'});
     $taskr->{'FsFlightData'}->{'iv'} = 0;
-    $taskr->{'FsFlightData'}->{'ts'} = fs_time($ref->{'tarStart'}, $utc);
+    $taskr->{'FsFlightData'}->{'ts'} = fs_time($ref->{'Start'}, 0);
     $taskr->{'FsFlightData'}->{'alt'} = $ref->{'tarLastAltitude'};
-    $taskr->{'FsFlightData'}->{'bonus_alt'} = $ref->{'tarLastAltitude'};
+    $taskr->{'FsFlightData'}->{'bonus_alt'} = '0'; # stopped: lastalt - goal_alt
     $taskr->{'FsFlightData'}->{'max_alt'} = '2000'; # why??
     $taskr->{'FsFlightData'}->{'landed_before_deadline'} = '1';
     if ($ref->{'tarGoal'} > 0)
@@ -542,6 +542,14 @@ while (defined($ref))
     else
     {
         $taskr->{'FsFlightData'}->{'reachedGoal'} = '0';
+    }
+    if ($ref->{'tarPenalty'} != 0)
+    {
+        # <FsResultPenalty penalty="9" penalty_points="900" penalty_reason="" />
+        $taskr->{'FsResultPenalty'} = empty();
+        $taskr->{'FsResultPenalty'}->{'penalty'} = '0';
+        $taskr->{'FsResultPenalty'}->{'penalty_points'} = sprintf("%d", int($ref->{'tarPenalty'}));
+        $taskr->{'FsResultPenalty'}->{'penalty_reason'} = $ref->{'tarComment'};
     }
     #$taskr->{'FsFlightData'}->{'last_tracklog_point_distance'} = sprintf("%.3f", $ref->{'tarDistance'} / 1000);
     #$taskr->{'FsFlightData'}->{'bonus_last_tracklog_point_distance'} = sprintf("%.3f", $ref->{'tarDistance'} / 1000);
@@ -559,19 +567,17 @@ while (defined($ref))
     $taskr->{'FsResult'}->{'arrival_points'} = sprintf("%.1f", $ref->{'tarArrival'});
     $taskr->{'FsResult'}->{'departure_points'} = '0';
     $taskr->{'FsResult'}->{'leading_points'} = sprintf("%.1f", $ref->{'tarDeparture'});;
-    $taskr->{'FsResult'}->{'penalty'} = 0;
-    $taskr->{'FsResult'}->{'penalty_points'} = sprintf("%.1f", $ref->{'tarPenalty'});
-    $taskr->{'FsResult'}->{'penalty_reason'} = $ref->{'tarComment'};
-    $taskr->{'FsResult'}->{'penalty_reason_auto'} = '';
+    #$taskr->{'FsResult'}->{'penalty_points_auto'} = sprintf("%d", int($ref->{'tarPenalty'}));
+    #$taskr->{'FsResult'}->{'penalty_reason_auto'} = '';
     $taskr->{'FsResult'}->{'penalty_min_dist_points'} = '0';
     $taskr->{'FsResult'}->{'goat_time_but_not_goal_penalty'} = 'False';
     $taskr->{'FsResult'}->{'ss_time_dec_hours'} = '';
     $taskr->{'FsResult'}->{'altitude_bonus_seconds'} = '0';
     $taskr->{'FsResult'}->{'altitude_bonus_time'} = '00:00:00';
-    $taskr->{'FsResult'}->{'ts'} = fs_time($ref->{'Ess'}, $utc); # now()?
+    $taskr->{'FsResult'}->{'ts'} = fs_time($ref->{'Ess'}, 0); # now()?
     $taskr->{'FsResult'}->{'altitude_at_ess'} = $ref->{'tarLastAltitude'};
-    $taskr->{'FsResult'}->{'started_ss'} = fs_time($ref->{'Sss'}, $utc);
-    $taskr->{'FsResult'}->{'finished_ss'} = fs_time($ref->{'Ess'}, $utc);
+    $taskr->{'FsResult'}->{'started_ss'} = fs_time($ref->{'Sss'}, 0);
+    $taskr->{'FsResult'}->{'finished_ss'} = fs_time($ref->{'Ess'}, 0);
     if ($ref->{'tarES'} > 0)
     {
         $taskr->{'FsResult'}->{'ss_time_dec_hours'} = sprintf("%.4f", ($ref->{'tarES'} - $ref->{'tarSS'}) / 3600);
@@ -626,7 +632,7 @@ my $ranked = emarr();
 $overall{'id'} = 'overall';
 $overall{'title'} = 'Overall';
 $overall{'top'} = 'all';
-$overall{'ts'} = strftime("%Y-%m-%sT%H:%M:%S", localtime);
+$overall{'ts'} = strftime("%Y-%m-%dT%H:%M:%S+00:00", localtime);
 $overall{'task_result_pattern'} = '#0';
 $overall{'comp_result_pattern'} = '#0';
 $overall{'comp_result_pattern'} = '#0';
