@@ -264,9 +264,9 @@ while (defined($ref))
         $pilot->{'FsParticipant'}->{'female'} = 0;
     }
     $pilot->{'FsParticipant'}->{'birthday'} = $ref->{'pilBirthdate'};
-    $pilot->{'FsParticipant'}->{'glider'} = '';
+    $pilot->{'FsParticipant'}->{'glider'} = $ref->{'traGlider'};
     $pilot->{'FsParticipant'}->{'color'} = '';
-    $pilot->{'FsParticipant'}->{'sponsor'} = '';
+    $pilot->{'FsParticipant'}->{'sponsor'} = $ref->{'pilSponsor'};
     $pilot->{'FsParticipant'}->{'CIVLID'} = $ref->{'pilCIVL'};
     $pilot->{'FsParticipant'}->{'fai_license'} = '1';
     $pilot->{'FsParticipant'}->{'FsCustomAttributes'} = empty();
