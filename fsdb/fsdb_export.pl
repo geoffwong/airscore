@@ -143,10 +143,10 @@ $fsdb->{'FsCompetition'}->{'from'} = substr($comp->{'datefrom'},0,10);
 $fsdb->{'FsCompetition'}->{'to'} = substr($comp->{'dateto'},0,10);
 $utc = $comp->{'timeoffset'};
 $fsdb->{'FsCompetition'}->{'utc_offset'} = $utc;
-$fsdb->{'FsCompetition'}->{'discipline'} = $comp->{'class'};
-if ($ref->{'overallscore'} ne 'ftv')
+$fsdb->{'FsCompetition'}->{'discipline'} = lc($comp->{'class'});
+if ($comp->{'overallscore'} ne 'ftv')
 {
-    $fsdb->{'FsCompetition'}->{'ftv_factor'} = '1';
+    $fsdb->{'FsCompetition'}->{'ftv_factor'} = '0';
 }
 else
 {
@@ -375,6 +375,7 @@ foreach my $tasPk (@alltasks)
 # Waypoints
 my ($ss, $es);
 my $tps = emarr();
+my $startg = emarr();
 my $sroute = emarr();
 my $turn;
 my $cnt = 1;
@@ -382,6 +383,7 @@ my $lastPk = 0;
 my $p1;
 my $p2;
 my $disxml;
+my $gate;
 my $dist = 0;
 
 $es = 0;
@@ -399,6 +401,12 @@ while (defined($ref))
         $task->{'FsTaskDefinition'}->{'groundstart'} = '0';
         $task->{'FsTaskDefinition'}->{'qnh_settings'} = '1013.25';
         $task->{'FsTaskDefinition'}->{'FsTurnpoint'} = $tps;
+        $task->{'FsTaskDefinition'}->{'FsTurnpoint'} = $tps;
+        $startg = emarr();
+        $gate = empty();
+        $gate->{'open'} = $turn->{'open'};
+        push @$startg, $gate; # should find all for speedrun
+        $task->{'FsTaskDefinition'}->{'FsStartGate'} = $startg;
         $task->{'FsTaskScoreParams'}->{'FsTaskDistToTp'} = $sroute;
         $tps = emarr();
         $sroute = emarr();
@@ -413,6 +421,7 @@ while (defined($ref))
     $turn->{'radius'} = $ref->{'tawRadius'};
     $turn->{'open'} = fs_time($ref->{'tasStartTime'}, $utc);
     $turn->{'close'} = fs_time($ref->{'tasFinishTime'}, $utc);
+
     if ($ref->{'tawType'} eq 'start')
     {
         $ss = $cnt;
@@ -461,6 +470,11 @@ $task->{'FsTaskDefinition'}->{'goal'} = 'CIRCLE';
 $task->{'FsTaskDefinition'}->{'ss'} = $ss;
 $task->{'FsTaskDefinition'}->{'es'} = $es;
 $task->{'FsTaskDefinition'}->{'FsTurnpoint'} = $tps;
+$startg = emarr();
+$gate = empty();
+$gate->{'open'} = $turn->{'open'};
+push @$startg, $gate; # should find all for speedrun
+$task->{'FsTaskDefinition'}->{'FsStartGate'} = $startg;
 $task->{'FsTaskScoreParams'}->{'FsTaskDistToTp'} = $sroute;
 
 # Add start gates <FsStartGate open="">
@@ -480,7 +494,7 @@ $taskoverall->{'title'} = 'Overall';
 #$taskoverall->{'ts'} = $ref->{'finish'};
 $taskoverall->{'result_pattern'} = '#0';
 $taskoverall->{'FsTaskResultParticipants'} = empty();
-$taskoverall->{'FsTaskResultParticipants'}->{'FsTaskResultParticipant'} = $partresults;
+$taskoverall->{'FsTaskResultParticipants'}->{'FsTaskParticipantResult'} = $partresults;  # omg - fucking insane naming
 push @$taskresults, $taskoverall;
 
 $sth = $dbh->prepare("select TK.*, TR.*, TL.pilPk, TL.traStart, date_add(TK.tasDate, INTERVAL TR.tarStart SECOND) as Start, date_add(TK.tasDate, INTERVAL TR.tarSS SECOND) as Sss, date_add(TK.tasDate, INTERVAL TR.tarES SECOND) as Ess, date_add(TL.traStart, INTERVAL TL.traDuration SECOND) as FinishTime from tblTaskResult TR, tblTask TK, tblTrack TL  where TR.tasPk=TK.tasPk and TL.traPk=TR.traPk and TK.comPk=$comPk order by TK.tasPk, TR.tarScore desc");
@@ -506,7 +520,7 @@ while (defined($ref))
         $taskoverall->{'id'} = 'overall';
         $taskoverall->{'title'} = 'Overall';
         $taskoverall->{'result_pattern'} = '#0';
-        $taskoverall->{'FsTaskResultParticipants'} = $partresults;
+        $taskoverall->{'FsTaskResultParticipants'}->{'FsTaskParticipantResult'} = $partresults;
         push @$taskresults, $taskoverall;
         $participants = emarr();
         $place = 1;
