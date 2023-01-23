@@ -149,6 +149,26 @@ function save_task()
 {
 }
 
+function export_fsdb()
+{
+    var comPk = url_parameter('comPk');
+    window.location.replace('download_fsdb.php?comPk='+comPk);
+//    $.get('download_fsdb.php?comPk='+comPk);
+//    $.ajax({
+//            url: 'download_fsdb.php?comPk='+comPk,  
+//            type: 'GET',
+//            enctype: 'multipart/form-data',
+//            cache: false,
+//            contentType: false,
+//            processData: false,
+//            timeout:0,
+//            dataType: "xml",
+//            success: function(data) {
+//                console.log("Success");
+//            }
+//        });
+}
+
 function reset_compinfo()
 {
     var header = $('#comp_header');
