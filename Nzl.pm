@@ -248,7 +248,7 @@ sub pilot_departure_leadout
         my @tmarker = @$kmarr;
         my $kmdist;
 
-        print "TMARKER=", Dumper(\@tmarker);
+        #print "TMARKER=", Dumper(\@tmarker);
         # KmBonus award points
 
         # Don't do the section at the end

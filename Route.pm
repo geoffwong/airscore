@@ -557,8 +557,8 @@ sub store_short_route
         $cdist = distance($closearr->[$i], $closearr->[$i+1]);
         if (($cdist == 0) and ddequal($wpts->[$i], $wpts->[$i+1]))
         {
-            print("wpt:$i to wpt:", $i+1, " have same centre\n");
-            if ($wpts->[$i+1]->{'how'} == 'exit')
+            print("wpt:$i to wpt:", $i+1, " have same centre (how=", $wpts->[$i+1]->{'how'}, ")\n");
+            if ($wpts->[$i+1]->{'how'} eq 'exit')
             {
                 if ($i >= 1)
                 {
@@ -571,6 +571,7 @@ sub store_short_route
             }
             else
             {
+                # print("wpt:$i to wpt:", $i+1, " have same centre - subtract: ", $wpts->[$i+1]->{'radius'}, "\n"); 
                 $cdist = $wpts->[$i]->{'radius'} - $wpts->[$i+1]->{'radius'}; 
             }
         }
