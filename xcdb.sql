@@ -266,14 +266,13 @@ create table tblHandicapResult
     hcrLeadingCoeff double
 );
 
-drop table if exists tblTrackLog;
-create table tblTrackLog
-(
-    traPk           integer not null primary key,
-    trlLatDecimal   double not null,
-    trlLongDecimal  double not null,
-    trlAltitude     integer not null,
-    trlTime         integer not null
+CREATE TABLE `tblTrackLog` (
+  `traPk` int(11) NOT NULL DEFAULT '0',
+  `trlLatDecimal` double NOT NULL DEFAULT '0',
+  `trlLongDecimal` double NOT NULL DEFAULT '0',
+  `trlTime` int(11) NOT NULL DEFAULT '0',
+  `trlAltitude` int(11) DEFAULT '0',
+  KEY `indtraPk` (`traPk`)
 );
 
 drop table if exists tblBucket;
