@@ -40,8 +40,18 @@ if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $com
     foreach ($ordered as $pil => $arr)
     {
         $score = 0 + $pil;
+        $x = strpos($pil, '!');
+        $pilPk = substr($pil,$x+1);
+
+        $arr['id'] = $pilPk;
         $arr['rank'] = $count;
         $arr['score'] = $score;
+        $tsorted = [];
+        foreach ($arr['tasks'] as $name => $tresult)
+        {
+            $tsorted[] = $tresult;
+        }
+        $arr['tasks'] = $tsorted;
         $sorted[] = $arr;
         $count++;
     }

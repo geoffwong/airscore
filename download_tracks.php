@@ -96,7 +96,7 @@ $link = db_connect();
 $tracks = [];
 $cominfo = [];
 $altmax = 2590;
-$usePk = auth('system');
+$usePk = check_auth('system');
 if (is_admin('admin',$usePk,$comPk))
 {
     $altmax = 0;

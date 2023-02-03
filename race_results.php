@@ -47,6 +47,14 @@ function comp_result($comPk, $cls)
 
     }
 
+    $results = extract_comp_results($comPk, $how, $param, $cls);
+    $structured_result = filter_results($comPk, $how, $param, $results);
+    return $structured_result;
+}
+
+function extract_comp_results($comPk, $how, $param, $cls)
+{
+
     $sql = "select TK.*,TR.*,P.*,T.traGlider,T.traDHV from tblTaskResult TR, tblTask TK, tblTrack T, tblPilot P, tblCompetition C where C.comPk=$comPk and TK.comPk=C.comPk and TK.tasPk=TR.tasPk and TR.traPk=T.traPk and T.traPk=TR.traPk and P.pilPk=T.pilPk $cls order by P.pilPk, TK.tasPk";
     $result = mysql_query($sql) or json_die('Task result query failed: ' . mysql_error());
     $results = [];
@@ -62,6 +70,7 @@ function comp_result($comPk, $cls)
         $glider = $row['traGlider'];
         $dhv = $row['traDHV'];
         $gender = $row['pilSex'];
+        $tasPk = 0 + $row['tasPk'];
     
         if (!array_key_exists($pilPk,$results) || !$results[$pilPk])
         {
@@ -89,10 +98,12 @@ function comp_result($comPk, $cls)
         {
             $perf = round($score, 0);
         }
-        $results[$pilPk]['tasks']["${perf}${tasName}"] = [ 'score' => $score, 'validity' => $validity, 'tname' => $tasName ];
+        
+        $taskid = sprintf("T%06d", $tasPk);
+        $results[$pilPk]['tasks']["${perf}${taskid}"] = [ 'score' => $score, 'validity' => $validity, 'tname' => $tasName, 'id' => $tasPk ];
     }
 
-    return filter_results($comPk, $how, $param, $results);
+    return $results;
 }
 
 function filter_results($comPk, $how, $param, $results)
@@ -266,7 +277,7 @@ function comp_hgfa_result($comPk)
     foreach ($sorted as $pil => $arr)
     {
         $nxt = [];
-        $tot = 0 + $pil;
+        $tot = $pil;
         if ($tot != $lasttot)
         {
             $nxt[] = $count;
@@ -280,7 +291,7 @@ function comp_hgfa_result($comPk)
             $nxt[] = $lastcount; 
             $nxt[] = $arr['name'];
         }
-        $nxt[] = $tot;
+        $nxt[] = 0 + $tot;
         
         $taskcount = 0;
         $rtable[$hgfa] = $nxt;

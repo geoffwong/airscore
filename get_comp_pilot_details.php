@@ -99,7 +99,14 @@ from    tblLadderComp LC
         $nrow[] = round($row['tasQuality'], 2);
         $nrow[] = round($row['tarScore'], 0);
         $nrow[] = round($topnat[$row['tasPk']], 0);
-        $nrow[] = round($row['ladScore']/$topnat[$row['tasPk']], 0);
+        if ($topnat[$row['tasPk']] != 0)
+        {
+            $nrow[] = round($row['ladScore']/$topnat[$row['tasPk']], 0);
+        }
+        else
+        {
+            $nrow[] = 0;
+        }
 		$incexternal = $row['ladIncExternal'];
         $start = $row['ladStart'];
         $end = $row['ladEnd'];

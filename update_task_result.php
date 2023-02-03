@@ -60,10 +60,6 @@ if ($dist > 0)
 else
 {
     $resulttype = reqsval("result");
-    if ($resulttype == "lo")
-    {
-        $resulttype = "dnf";
-    }
 }
 
 if ($tarPk > 0)

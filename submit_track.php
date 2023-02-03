@@ -63,7 +63,7 @@ if (array_key_exists('foo', $_REQUEST))
     fclose($fh);
 
     echo "<title>Track Accepted</title>\n";
-    $id = accept_track($comUnixTo, $comContact, $comEntryRestrict);
+    $id = accept_track($comUnixTo, $comContact, $comEntryRestrict, $comPk);
 
     $task = '';
     $query = "select tasPk from tblComTaskTrack where traPk=$id";
@@ -148,19 +148,18 @@ function task_score($traPk)
     return $retv;
 }
 
-function accept_track($until, $contact, $restrict)
+function accept_track($until, $contact, $restrict, $comid)
 {
     //$file = addslashes($_REQUEST['userfile']);
     $hgfa = reqsval('hgfanum');
     $name = addslashes(strtolower(trim($_REQUEST['lastname'])));
     $route = reqival('route');
-    $comid = reqival('comid');
 
     $link = db_connect();
     $query = "select pilPk, pilHGFA from tblPilot where pilLastName='$name'";
     $result = mysql_query($query) or die('Query failed: ' . mysql_error());
 
-    $member = 0;
+    $member = 1;
     while ($row=mysql_fetch_array($result, MYSQL_ASSOC))
     {
         if ($hgfa == $row['pilHGFA'])
@@ -170,16 +169,16 @@ function accept_track($until, $contact, $restrict)
         }
     }
 
-#    if ($restrict == 'registered')
-#    {
-#        $query = "select * from tblRegistration where comPk=$comid and pilPk=$pilPk";
-#        $result = mysql_query($query) or die('Registration query failed: ' . mysql_error());
-#        if (mysql_num_rows($result) == 0)
-##        {
-#            $member = 0;
-#        }
-#    }
-##
+    if ($restrict == 'registered')
+    {
+        $query = "select * from tblRegistration where comPk=$comid and pilPk=$pilPk";
+        $result = mysql_query($query) or die('Registration query failed: ' . mysql_error());
+        if (mysql_num_rows($result) == 0)
+        {
+            $member = 0;
+        }
+    }
+
     $gmtimenow = time() - (int)substr(date('O'),0,3)*60*60;
     if ($gmtimenow > ($until + 7*24*3600))
     {
@@ -219,7 +218,7 @@ function accept_track($until, $contact, $restrict)
     $dhv = reqsval('dhv');
     $safety = reqsval('pilotsafety');
     $quality = reqival('pilotquality');
-    if ($safety == "none")
+    if ($safety == "" or $safety == "none")
     {
         $query = "update tblTrack set traGlider='$glider', traDHV='$dhv', traConditions='$quality' where traPk=$maxPk";
     }
