@@ -11,20 +11,20 @@
     <!-- CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="task.css" rel="stylesheet">
-    <link href="navbar.css?v=1" rel="stylesheet">
     <link href="spacelab_bootstrap.css" rel="stylesheet">
+    <link href="css/navban.css?v=3" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet">
 
     <!-- JS -->
     <script src="microajax.minified.js"></script>
-    <script src="utils.js"></script>
+    <script src="js/utils.js"></script>
   </head>
 
   <body>
     <!-- Navigation -->
-    <nav id="nav" class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top" data-spy="affix">
+    <nav id="nav" class="navbar navbar-expand-lg first navbar-dark fixed-top" data-spy="affix">
       <div class="container">
-        <a class="navbar-brand" href="#">airScore</a>
+        <a class="navbar-brand" href="/" id="airbrand">airScore</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -42,8 +42,26 @@
     </nav>
 
     <div class="container" id="main">
-    <br>
-    <table id="competitions" class="row-border stripe compact mb-1" cellspacing="0" width="100%">
+    <div class="row mb-2">
+        <h2 class="shadow-sm text-danger">Current Competitions</h2>  
+    </div>
+    <table id="competitions" class="row-border stripe compact mb-4" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>Competition</th>
+            <th>Location</th>
+            <th></th>
+            <th>Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Flights</th>
+        </tr>
+    </thead>
+    </table>
+    <div class="row mt-4 mb-2">
+        <h2 class="shadow-sm text-danger">Recent Competitions</h2>  
+    </div>
+    <table id="recentcomps" class="row-border stripe compact mb-4" cellspacing="0" width="100%">
     <thead>
         <tr>
             <th>Competition</th>
@@ -56,6 +74,7 @@
         </tr>
     </thead>
     </table>
+
     </div>
 
     <!-- Bootstrap core JavaScript -->
@@ -65,7 +84,7 @@
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <!-- script src="https://rawgit.com/bassjobsen/affix/master/assets/js/affix.js"></script -->
     <!-- script type="text/javascript" src="navbar.js"></script -->
-    <script type="text/javascript" src="js/pop_comps.js"></script>
+    <script type="text/javascript" src="js/pop_open_comps.js"></script>
 </body>
 </html>
 

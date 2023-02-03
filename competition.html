@@ -97,12 +97,20 @@
 
     <div class="container">
     <div class="row mt-3">
+        <div class="col-6">
+            <div id="subspin" class="spinner-border ml-auto fa" role="status" hidden></div>
+        </div>
+        <div class="col-6">
+            <button class="btn btn-info btn-sm float-right ml-1" onclick="export_fsdb();">ExportFS</button>
+            <button class="btn btn-info btn-sm float-right ml-1" onclick="document.location.href='comp_authorised.html'+window.location.search;">Administrators</button>
+            <button class="btn btn-info btn-sm float-right" onclick="document.location.href='team_admin.html'+window.location.search;">Teams</button>
+        </div>
+    </div>
+    <div class="row mt-2">
         <div class="col-8"><h2>Competition</h2></div>
         <div class="col-4">
-            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_compinfo();">Save<div id="subspin" class="fa"></div></button>
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_compinfo();">Save</button>
             <button class="btn btn-secondary btn-sm float-right ml-1" onclick="reset_compinfo();">Reset</button>
-            <button class="btn btn-info btn-sm float-right ml-1" onclick="export_fsdb();">ExportFS</button>
-            <button class="btn btn-info btn-sm float-right" onclick="document.location.href='comp_authorised.html'+window.location.search;">Administrators</button>
         </div>
     </div>
     <div class="row"> 
@@ -117,7 +125,7 @@
         </table>
         </div>
     </div>
-    <div class="row mt-5">
+    <div class="row mt-4">
         <div class="col-8"><h2>Scoring</h2></div>
         <div class="col-4">
             <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_scoring();">Save</button>
@@ -142,7 +150,7 @@
         </table>
         </div>
     </div>
-    <div class="row mt-5" id="formrow">
+    <div class="row mt-4" id="formrow">
         <div class="col-4"><h2>Formula</h2></div>
         <div class="col-8">
             <button class="btn btn-primary btn-sm float-right ml-1" onclick="save_formula();">Save</button>
@@ -175,7 +183,7 @@
         </table>
         </div>
     </div>
-    <div class="row mt-5" id="taskrow">
+    <div class="row mt-4" id="taskrow">
         <div class="col-4"><h2>Tasks</h2></div>
         <div class="col-8">
             <button class="btn btn-primary btn-sm float-right ml-1" data-toggle="modal" data-target="#taskmodal">Create</button>

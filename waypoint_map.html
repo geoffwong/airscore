@@ -29,7 +29,7 @@
     <!-- Top Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary blue-gradient fixed-top">
       <div class="container">
-        <a class="navbar-brand" href="#">airScore</a>
+        <a class="navbar-brand" href="/">airScore</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -49,10 +49,10 @@
     <form><input type="hidden" name="foo" id="foo" size="8"></form>
     <div class="track_map" id="map">
     <div id="sidebar">
-        <h3>Waypoint Download</h3>
+        <h3 id="hding">Waypoint Download</h3>
         <div class="form-row align-items-center">
         <div class="col my-1">
-        <button class="btn btn-primary btn-primary btn-block" onclick="download_waypoints();">This Region</button>
+        <button class="btn btn-primary btn-primary btn-block" onclick="download_waypoints();">Download</button>
         </div>
         <div class="col my-1">
         <select class="custom-select" id="wptformat">
@@ -105,7 +105,7 @@
     <script src="js/jquery.ajax-cross-origin.min.js"></script>
     <script src="js/map_services.js"></script>
     <script src="js/srtm.js"></script>
-    <script src="js/pop_waypoints.js"></script>
+    <script src="js/pop_waypoints.js?v=2"></script>
 
   </body>
 </html>
