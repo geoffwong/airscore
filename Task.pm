@@ -309,7 +309,8 @@ sub remaining_task_dist
 
     # Special case for entry cylinder on goal
     if (($nextwpt->{'how'} eq 'entry') 
-        and ($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'}) and ($nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'}))
+        and ($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'}) and ($nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'})
+        and ($goal_point == $wmade+1))
     {
         #print "wpt centre = goal remdist\n";
         $s1{'lat'} = $nextwpt->{'lat'};
