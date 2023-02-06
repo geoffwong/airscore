@@ -157,7 +157,11 @@ foreach ($tracks as $row)
 {
     $pilot = $row['pilFirstName'] . ' ' . $row['pilLastName']; 
     $filename = preg_replace('/[\s+\/]/', '_', addslashes(strtolower( $row['pilLastName'] . '_' . $row['pilHGFA'] . '_' . $row['Start'] . '.igc')));
-    mkdir("/tmp/$tasPk");
+    
+    # mkdir might print a warning into the output when php.ini is in dev mode, while the output should be a pure zip file. 
+    # Such a warning would invalidate the downloaded file, so adding @ in front of it prevent the warnings here:
+    @mkdir("/tmp/$tasPk");
+
     $fname = "/tmp/$tasPk/" . $filename;
     if (!file_exists($fname))
     {
