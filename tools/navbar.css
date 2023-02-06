@@ -1,0 +1,66 @@
+html,body {
+  height:100%;
+  width: 100%;
+  height: 100%;
+  padding-top: 30px;
+  overflow-x: scroll;
+}
+
+.first {
+  height:100vh;
+  min-height:400px;
+  background-size:cover;
+  background-image:url('https://images.unsplash.com/photo-1470434151738-dc5f4474c239?dpr=1&auto=format&crop=entropy&fit=crop&w=1500&h=1000&q=80&cs=tinysrgb');
+}
+
+.affix {
+  background-color: #eee;
+  -webkit-transition:padding 0.2s ease-out;
+  -moz-transition:padding 0.2s ease-out;  
+  -o-transition:padding 0.2s ease-out;         
+  transition:padding 0.2s ease-out;
+}
+
+@media (min-width:768px) {
+    .affix-top {
+      /* navbar style at top */
+      background-color:transparent;
+      border-color:transparent;
+      padding: 15px;
+      -webkit-transition:all 0.5s ease;
+      -moz-transition:all 0.5s ease; 
+      -o-transition:all 0.5s ease;         
+      transition:all 0.5s ease;  
+    }
+}
+
+.banner {
+    min-height:120px;
+    background:url('../images/banner_pg_1.jpg') center top no-repeat;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.bannerhg {
+    min-height:120px;
+    background:url('../images/banner_hg_1.jpg') center top no-repeat;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+}
+
+nav .navbar-nav .nav-link,
+nav .navbar-brand {
+   color: #000;
+}
+
+#airbrand {
+   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+section {
+  height:calc(90% - 50px);
+  height: 90vh;
+}
+
