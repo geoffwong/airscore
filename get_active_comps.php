@@ -20,7 +20,7 @@ function get_active_comps($link, $comPk, $auth)
     }
     $sql = "select C.comPk, C.comName, C.comClass, T.tasPk, T.tasName, C.comType
         from tblCompetition C left outer join tblTask T on T.comPk=C.comPk and C.comType='Route' 
-        where curdate() < date_add(C.comDateTo, interval 3 day) and$restrict C.comDateTo > '0000-00-00'$notest order by C.comName";
+        where curdate() < date_add(C.comDateTo, interval 3 day) and$restrict C.comDateTo > '0000-01-01'$notest order by C.comName";
 
     $result = mysql_query($sql,$link) or json_die('get_all_tasks failed: ' . mysql_error());
 
