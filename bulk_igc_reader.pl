@@ -59,9 +59,8 @@ sub extract_igcs
 
         if (scalar @names > 0)
         {
-            $pilPk = 0 + $fields[0];
-            
-            #print "found: $pilPk\n";
+            $pilPk = 0 + $names[1];
+            print "Supposed HGFA # as found in the file name $file: $pilPk\n";
         }
 
         if ($pilPk > 0)
