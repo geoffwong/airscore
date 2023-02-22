@@ -643,14 +643,14 @@ create table tblLadderComp
 );
 
 create table tblLadderResult
-{
+(
     lcPk        integer not null primary key auto_increment,
     ladPk       integer,
     pilPk       integer,
     tasPk       integer,
     ldrResult   float,
     ldrValidity float
-}
+);
 
 create table tblExtTask
 (
