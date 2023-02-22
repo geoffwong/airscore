@@ -29,11 +29,19 @@ function update_task($link,$tasPk, $old)
     $retv = 0;
 
     // Get the old values
-    $oldstart = $old['tasStartTime'];
-    $oldclose = $old['tasStartCloseTime'];
-    $oldfinish = $old['tasFinishTime'];
-    $oldstop = $old['tasStoppedTime'];
-    $oldtype = $old['tasTaskType'];
+    if (array_key_exists('tasStartTime', $old)) {
+        $oldstart = $old['tasStartTime'];
+        $oldclose = $old['tasStartCloseTime'];
+        $oldfinish = $old['tasFinishTime'];
+        $oldstop = $old['tasStoppedTime'];
+        $oldtype = $old['tasTaskType'];
+    } else {
+        $oldstart = null;
+        $oldclose = null;
+        $oldfinish = null;
+        $oldstop = null;
+        $oldtype = null;
+    }
 
     $sql = "select T.*, TW.* from tblTask T left outer join tblTaskWaypoint TW on T.tasPk=TW.tasPk and TW.tawType='goal' where T.tasPk=$tasPk";
     $result = mysql_query($sql,$link) 
@@ -65,7 +73,11 @@ function update_task($link,$tasPk, $old)
     {
         $out = '';
         $retv = 0;
-        exec(BINDIR . "task_up.pl $tasPk", $out, $retv);
+        exec(BINDIR . "task_up.pl $tasPk 2>&1", $out, $retv);
+        if($retv != 0) {
+            echo '<pre>'; print_r($out); echo '</pre>';
+            throw new Exception($out[0]);
+        }
     }
 }
 
@@ -88,7 +100,11 @@ function update_tracks($link,$tasPk)
             #echo "Verifying effected track: $tpk<br>";
             $out = '';
             $retv = 0;
-            exec(BINDIR . "track_verify_sr.pl $tpk $tasPk", $out, $retv);
+            exec(BINDIR . "track_verify_sr.pl $tpk $tasPk 2>&1", $out, $retv);
+            if($retv != 0) {
+                echo '<pre>'; print_r($out); echo '</pre>';
+                throw new Exception($out[0]);
+            }
         }
     }
 }
@@ -176,7 +192,11 @@ if (reqexists('trackcopy'))
         }
         $result = mysql_query($query) or die('Failed to copy task tracks ' . mysql_error());
         // task_up
-        exec(BINDIR . "task_up.pl $tasPk", $out, $retv);
+        exec(BINDIR . "task_up.pl $tasPk 2>&1", $out, $retv);
+        if($retv != 0) {
+            echo '<pre>'; print_r($out); echo '</pre>';
+            throw new Exception($out[0]);
+        }
     }
 }
 
@@ -193,7 +213,11 @@ if (reqexists('copytask'))
     $result = mysql_query($query) or die('Failed to copy task waypoints ' . mysql_error());
     //$query = "update tblTask T set T.regPk=(select T2.regPk from tblTask T2 where T2.tasPk=$copytaskpk) where T.tasPk=$tasPk"
     //$result = mysql_query($query) or die('Failed to update task region ' . mysql_error());
-    exec(BINDIR . "task_up.pl $tasPk", $out, $retv);
+    exec(BINDIR . "task_up.pl $tasPk 2>&1", $out, $retv);
+    if($retv != 0) {
+        echo '<pre>'; print_r($out); echo '</pre>';
+        throw new Exception($out[0]);
+    }
 }
 
 // Update the task itself 
@@ -269,7 +293,11 @@ if (reqexists('fullrescore'))
 {
     $out = '';
     $retv = 0;
-    exec(BINDIR . "task_up.pl $tasPk", $out, $retv);
+    exec(BINDIR . "task_up.pl $tasPk 2>&1", $out, $retv);
+    if($retv != 0) {
+        echo '<pre>'; print_r($out); echo '</pre>';
+        throw new Exception($out[0]);
+    }
 }
 
 $query = "select C.comPk, C.comName, C.comEntryRestrict, T.* from tblCompetition C, tblTask T where T.tasPk=$tasPk and T.comPk=C.comPk";
@@ -344,7 +372,11 @@ if (reqexists('delete'))
     $query = "delete from tblTaskWaypoint where tawPk=$tawPk";
     $out = '';
     $retv = 0;
-    exec(BINDIR . "task_up.pl $tasPk", $out, $retv);
+    exec(BINDIR . "task_up.pl $tasPk 2>&1", $out, $retv);
+    if($retv != 0) {
+        echo '<pre>'; print_r($out); echo '</pre>';
+        throw new Exception($out[0]);
+    }
     $result = mysql_query($query) or die('Delete TaskWaypoint failed: ' . mysql_error());
 }
 
@@ -365,7 +397,11 @@ if (reqexists('update'))
     $result = mysql_query($query) or die('Update TaskWaypoint failed: ' . mysql_error());
     $out = '';
     $retv = 0;
-    exec(BINDIR . "task_up.pl $tasPk", $out, $retv);
+    exec(BINDIR . "task_up.pl $tasPk 2>&1", $out, $retv);
+    if($retv != 0) {
+        echo '<pre>'; print_r($out); echo '</pre>';
+        throw new Exception($out[0]);
+    }
     if (reqexists('debug'))
     {
         foreach ($out as $row)
