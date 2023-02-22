@@ -243,6 +243,9 @@ function add_airspace()
 
 function airspace_card(info)
 {
+    // if(!info)
+    //     return;
+    
     for (var tc = 0; tc < info.length; tc++)
     {
          $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+info[tc].airPk+"\">" + info[tc].airName + '</a></td><td>' + info[tc].airClass + '</td><td>' + info[tc].airBase + '<td>' + info[tc].airTops + '</td></tr>');
