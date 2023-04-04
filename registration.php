@@ -110,7 +110,7 @@ $query = "select P.*,H.hanHandicap from tblRegistration R left join tblPilot P o
 
 $regpilots = [];
 $result = mysql_query($query) or die('Team pilots query failed: ' . mysql_error());
-while ($row = mysql_fetch_array($result))
+while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
 {
     $regpilots[] = $row;
 }
