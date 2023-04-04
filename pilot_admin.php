@@ -165,7 +165,7 @@ if (reqexists('bulkadd'))
     //echo "bulk_pilot_import.pl $copyname<br>";
     chmod($copyname, 0644);
 
-    exec(BINDIR . "bulk_pilot_import.pl $copyname", $out, $retv);
+    exec(BINDIR . "bulk_pilot_import.pl $copyname 2>&1", $out, $retv);
     foreach ($out as $txt)
     {  
         echo "$txt<br>\n";
@@ -228,7 +228,7 @@ echo "FirstName: " . fin('fname', '', 10);
 echo "Sex: " . fselect('sex', 'M', [ 'M' => 'M', 'F' => 'F' ]);
 echo fis('addpilot', "Add Pilot", 5); 
 echo "<br>";
-echo "CSV (Last,First,FAI#,Sex,CIVL#): <input type=\"file\" name=\"bulkpilots\">";
+echo "CSV (Last,First,HGFA#,Sex,CIVL#): <input type=\"file\" name=\"bulkpilots\">";
 echo fis('bulkadd', 'Bulk Submit', 5);
 
 if ($ozimp)

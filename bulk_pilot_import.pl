@@ -8,6 +8,7 @@
 require DBD::mysql;
 use Data::Dumper;
 use Text::CSV qw( csv );
+use Scalar::Util qw(looks_like_number);
 use TrackLib qw(:all);
 
 #
@@ -33,14 +34,19 @@ sub read_membership
     {
         $row = $_;
 
-        print "row=$row\n";
-
         @field = split /,/, $row;
         if ($field[1] eq '')
         {
             next;
         }
-        print 'add name: ', $field[1], ' ', $field[0], "\n";
+
+        if(!looks_like_number($field[2]) || !looks_like_number($field[4]))
+        {
+            next;
+        }
+
+        print "row=$row";
+        print 'add name: ', $field[1], ' ', $field[0], "\n\n";
 
         # should be an insert/update ..
         insertup('tblPilot', 'pilPk', "pilLastName='" . $field[0] . 

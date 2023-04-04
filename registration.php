@@ -42,6 +42,10 @@ if ($comRestricted == 'open')
 }
 
 echo "<p><h2>Registration - $comName</h2></p>";
+echo "<form enctype=\"multipart/form-data\" action=\"download_registered_pilots.php?comPk=$comPk\" name=\"trackadmin\" method=\"post\">";
+echo fis('download_pilots', 'Download Registered Pilots', 15);
+echo "</form>";
+
 $usePk = auth('system');
 $cat = addslashes($_REQUEST['cat']);
 if ($cat == '')
