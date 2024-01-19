@@ -349,9 +349,10 @@ sub validate_task
 
         # Might re-enter start/speed section for elapsed time tasks 
         # Check if we did re-enter and set the task "back"
+        my $max_task_restart_dist = 15000;
         if (($lastin >= $spt) and 
-            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'}) and ($maxdist - $startssdist < 8000)) or 
-            (($task->{'type'} ne 'race') and ($wmade < $spt+2) and ($maxdist - $startssdist < 8000)))
+            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'}) and ($maxdist - $startssdist < $max_task_restart_dist)) or 
+            (($task->{'type'} ne 'race') and ($wmade < $spt+2) and ($maxdist - $startssdist < $max_task_restart_dist)))
            )
         {
             # Re-entered start cyclinder?
@@ -485,7 +486,10 @@ sub validate_task
         }
         if ($dist < ($wpt->{'radius'}+$wpt->{'margin'}) || $awarded)
         {
-            #print "lastin=$wcount\n";
+            if ($debug)
+            {
+                print "lastin=$wcount\n";
+            }
             $lastin = $wcount;
         }
 
@@ -763,9 +767,10 @@ sub validate_task
             }
         }
         #$kmtime = undef;
-        if ($task->{'type'} eq 'race')
+        print Dumper($task);
+        if ($task->{'type'} eq 'race' or (($task->{'type'} eq 'speedrun-interval') and ($startss - $starttime < 300)))
         {
-            print "Race start jump: $comment\n";
+            print "Race/initial start jump: $comment\n";
             # Store # of seconds jumped in penalty
             $penalty = $jump
             # shift leadout graph so it doesn't screw other lo points
@@ -796,7 +801,7 @@ sub validate_task
             else
             {
                 # exit jump
-                print "Exit gate jump: $comment\n";
+                print "Exit gate jump ($starttime vs $taskss): $comment\n";
                 $wcount = $spt;
                 if ($wmade > $spt)
                 {

@@ -48,7 +48,7 @@ $tarPk = reqival('tarpk');
 $glider = reqsval("glider");
 $dhv = en2dhv(reqsval("enrating"));
 $hgfa = reqsval("hgfa");
-$hgfanum = reqsval("hgfa");
+$hgfanum = reqival("hgfa");
 
 $dist = reqfval("dist");
 $penalty = reqival("penalty");
@@ -83,16 +83,22 @@ else
     }
 
     $query = "select tasDate from tblTask where tasPk=$tasPk";
-    $result = mysql_query($query) or die('Task date failed: ' . mysql_error());
-    $tasDate=mysql_result($result,0,0);
+    $result = mysql_query($query) or json_die('Task date failed: ' . mysql_error());
+    $tasDate = mysql_result($result,0,0);
 
     $query = "insert into tblTrack (pilPk,traGlider,traDHV,traDate,traStart,traLength) values ($pilPk,'$glider','$dhv','$tasDate','$tasDate',$dist)";
     $result = mysql_query($query) or json_die('Insert track result failed: ' . mysql_error());
 
     $maxPk = mysql_insert_id();
-
     $query = "insert into tblTaskResult (tasPk,traPk,tarDistance,tarPenalty,tarResultType) values ($tasPk,$maxPk,$dist,$penalty,'$resulttype')";
     $result = mysql_query($query) or json_die("Insert result failed ($query): " . mysql_error());
+
+   $res['result'] = 'ok';
+   $res['pilPk'] = $pilPk;
+   $res['tasPk'] = $tasPk;
+   $res['traPk'] = $maxPk;
+   print json_encode($res);
+   return;
 }
 
 # recompute every time?

@@ -77,7 +77,7 @@ function add_result(&$results, $row, $topnat, $how, $ladPk)
 
     if ($perf >= 1)
     {
-        $results[$pilPk]['scores']["${perf}${fullName}"] = [ 'score' => $score, 'validity' => $validity, 'name' => $fullName, 'taspk' => $row['tasPk'], 'extpk' => 0 + $row['extPk'] ];
+        $results[$pilPk]['scores']["${perf}${fullName}"] = [ 'score' => $score, 'validity' => $validity, 'name' => $fullName, 'taspk' => $row['tasPk'], 'compk' => $row['comPk'], 'extpk' => 0 + $row['extPk'] ];
         #$results[$pilPk]['scores'][] = [ $score, $validity, $fullName, $row['tasPk'], 0 + $row['extPk'] ];
     }
 
@@ -118,7 +118,7 @@ function ladder_result($ladPk, $ladder, $restrict, $altval)
     $sql = "select 0 as extPk, TR.tarScore,
         TP.pilPk, TP.pilLastName, TP.pilFirstName, TP.pilNationCode, TP.pilHGFA, TP.pilSex,
         TK.tasPk, TK.tasName, TK.tasDate, TK.tasQuality, 
-        C.comName, C.comDateTo, LC.lcValue, 
+        C.comPk, C.comName, C.comDateTo, LC.lcValue, 
         TR.tarScore * LC.lcValue * power(L.ladDepreciation, TIMESTAMPDIFF(YEAR, C.comDateTo, $end)) * TK.tasQuality as ladScore,
         (TR.tarScore * LC.lcValue * power(L.ladDepreciation, TIMESTAMPDIFF(YEAR, C.comDateTo, $end)) / (TK.tasQuality * LC.lcValue)) as validity
 from    tblLadderComp LC 
@@ -128,7 +128,7 @@ from    tblLadderComp LC
         join tblTaskResult TR on TR.tasPk=TK.tasPk
         join tblTrack TT on TT.traPk=TR.traPk
         join tblPilot TP on TP.pilPk=TT.pilPk
-WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < $end
+WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate <= $end
         $restrict
     and TP.pilNationCode=L.ladNationCode 
     order by TP.pilPk, C.comPk, (TR.tarScore * LC.lcValue * TK.tasQuality) desc";
@@ -149,7 +149,7 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < $end
         join tblLadder L on L.ladPk=LC.ladPk and LC.lcValue=450
         join tblCompetition C on LC.comPk=C.comPk
         join tblTask TK on C.comPk=TK.comPk
-        WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < $end";
+        WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate <= $end";
 
         $result = mysql_query($sql) or json_die('Total quality query failed: ' . mysql_error());
         $param = mysql_result($result,0,0) * $ladParam / 100 ;
@@ -183,11 +183,11 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < $end
             $xres = add_result($results, $row, $row['tasTopScore'], $how, $ladPk);
         }
 
-        $filtered = filter_results($ladPk, $how, $param, $param * $ladder['ladIncExternal'] / 100, $results);
+        $filtered = filter_results($ladPk, $how, $param, $param * $ladder['ladIncExternal'] / 100, $ladder['ladTaskLimit'], $results);
     }
     else
     {
-        $filtered = filter_results($ladPk, $how, $param, 0, $results);
+        $filtered = filter_results($ladPk, $how, $param, 0, $ladder['ladTaskLimit'], $results);
     }
 
     $res = [];
@@ -198,7 +198,7 @@ WHERE LC.ladPk=$ladPk and TK.tasDate > '$start' and TK.tasDate < $end
     return $res;
 }
 
-function filter_results($ladPk, $how, $param, $extpar, $results)
+function filter_results($ladPk, $how, $param, $extpar, $tasklimit, $results)
 {
     // Do the scoring totals (FTV/X or Y tasks etc)
     $sorted = [];
@@ -229,10 +229,19 @@ function filter_results($ladPk, $how, $param, $extpar, $results)
         else
         {
             # FTV scoring
+            $lastcompk = 0;
             $pilvalid = 0;
             $pilext = 0;
+            $comcount = [];
+            $compk = 0;
             foreach ($arr['scores'] as $perf => $taskresult)
             {
+                $compk = $taskresult['compk'];
+                $comcount[$compk] = $comcount[$compk] + 1;
+                if ($tasklimit > 0 and $comcount[$compk] > $tasklimit)
+                {
+                    continue;
+                }
                 if ($pilvalid < $param)
                 {
                     // if external
@@ -296,8 +305,9 @@ function filter_results($ladPk, $how, $param, $extpar, $results)
         $pilscore = round($pilscore,0);
         $arr['total'] = $pilscore;
         $sorted["${pilscore}!${pil}"] = $arr;
+        $sorted["99999!${pil}"] = $comcount;
     }
-
+    
     krsort($sorted, SORT_NUMERIC);
     //var_dump($sorted);
     return $sorted;
@@ -309,6 +319,8 @@ function datatable_clean($sorted)
 {
     $result = [];
     $pos = 1;
+    $lastscore = 0;
+    $lastpos = 0;
     foreach ($sorted as $row)
     {
         if ($row['total'] < 1) 
@@ -316,7 +328,16 @@ function datatable_clean($sorted)
             continue;
         }
         $newrow = [];
-        $newrow[] = $pos;
+        if ($row['total'] != $lastscore)
+        {
+            $newrow[] = $pos;
+            $lastpos = $pos;
+        }
+        else
+        {
+            $newrow[] = $lastpos;
+        }
+        $lastscore = $row['total'];
         $newrow[] = $row['name'];
         $newrow[] = $row['hgfa'];
         $newrow[] = '<b>' . $row['total'] . '</b>';

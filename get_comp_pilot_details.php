@@ -78,7 +78,7 @@ from    tblLadderComp LC
         join tblTrack TT on TT.traPk=TR.traPk
         join tblPilot TP on TP.pilPk=TT.pilPk
     where LC.ladPk=$ladPk and TK.tasDate > L.ladStart 
-    and TK.tasDate < case when L.ladEnd is not null then L.ladEnd else CURDATE() end
+    and TK.tasDate <= case when L.ladEnd is not null then L.ladEnd else CURDATE() end
     and TP.pilPk=$pilPk
     and TP.pilNationCode=L.ladNationCode 
     order by TP.pilPk, C.comPk, (TR.tarScore * LC.lcValue * TK.tasQuality) desc";

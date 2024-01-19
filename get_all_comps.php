@@ -10,7 +10,7 @@ $link = db_connect();
 
 function get_all_comps($link)
 {
-    $sql = "select C.comPk, C.comName, C.comLocation, C.comClass, C.comSanction, C.comType, C.comDateFrom, C.comDateTo, count(T.tasPk) as numTasks from tblCompetition C left outer join tblTask T on T.comPk=C.comPk where C.comName not like '%test%' and C.comDateTo > '0000-01-01' group by C.comPk order by C.comDateTo desc";
+    $sql = "select C.comPk, C.comName, C.comLocation, C.comClass, C.comSanction, C.comType, C.comDateFrom, C.comDateTo, count(T.tasPk) as numTasks from tblCompetition C left outer join tblTask T on T.comPk=C.comPk where C.comName not like '%test%' and C.comDateTo > '0000-00-00' group by C.comPk order by C.comDateTo desc";
 
     $result = mysql_query($sql,$link) or die('get_all_comps failed: ' . mysql_error());
 

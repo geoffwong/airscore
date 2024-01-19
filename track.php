@@ -55,7 +55,7 @@ function get_track_body($link, $trackid, $interval)
 
         $body['name'] = $name;
         $body['date'] = $date;
-        $body['startdate'] = $row["traDate"];
+        $body['startdate'] = $row["tasTaskStart"];
         $body['dist'] = $dist;
         $body['tasPk'] = $tasPk;    # get task name ...
         if ($ggoal && ($gtime > 0))
@@ -69,6 +69,7 @@ function get_track_body($link, $trackid, $interval)
         $body['glider'] = $glider;
         $body['comment'] = $comment;
         $body['initials'] = substr($row['pilFirstName'],0,1) . substr($row['pilLastName'],0,1);
+        $body['pilPk'] = $row['pilPk'];
 
         $sql = "select C.comClass, F.forClass, F.forVersion from tblCompetition C, tblComTaskTrack T, tblFormula F where F.comPk=C.comPk and C.comPk=T.comPk and T.traPk=$trackid";
         $result = mysql_query($sql,$link) or die('Com class query failed: ' . mysql_error());
@@ -104,7 +105,7 @@ function get_track_body($link, $trackid, $interval)
     }
     
     // Get some track points
-    $result = mysql_query($sql,$link);
+    $result = mysql_query($sql,$link) or die("Recent tracklog query failed: $sql");
     while ($row = mysql_fetch_array($result, MYSQL_ASSOC))
     {
         $bucTime = $offset + $row['bucTime'];
