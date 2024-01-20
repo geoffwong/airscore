@@ -551,13 +551,16 @@ sub store_short_route
     $dbh->do("delete from tblShortestRoute where tasPk=$tasPk");
 
     # Insert each short route waypoint
+    # @todo: this function shouldn't calculate the cumulative distance .. just store it
     for ($i = 0; $i < $num-1; $i++)
     {
         $dist = distance($wpts->[$i], $wpts->[$i+1]);
         $cdist = distance($closearr->[$i], $closearr->[$i+1]);
-        if (($cdist == 0) and ddequal($wpts->[$i], $wpts->[$i+1]))
+
+        # Out/in at start
+        if (($cdist == 0 or $i == 0) and ddequal($wpts->[$i], $wpts->[$i+1]))
         {
-            print("wpt:$i to wpt:", $i+1, " have same centre (how=", $wpts->[$i+1]->{'how'}, ")\n");
+            # print("wpt:$i to wpt:", $i+1, " have same centre (how=", $wpts->[$i+1]->{'how'}, ")\n");
             if ($wpts->[$i+1]->{'how'} eq 'exit')
             {
                 if ($i >= 1)
@@ -575,6 +578,13 @@ sub store_short_route
                 $cdist = $wpts->[$i]->{'radius'} - $wpts->[$i+1]->{'radius'}; 
             }
         }
+
+        # Entry -> entry on a radius (not line) at the end 
+        if (($i+1 == $num-1) and ($dist == 0) and ($wpts->[$i+1]->{'shape'} eq 'circle'))
+        {
+            $cdist = $wpts->[$i]->{'radius'} - $wpts->[$i+1]->{'radius'};
+        }
+
         print "Dist wpt:$i to wpt:", $i+1, " dist=$dist short_dist=$cdist\n";
         $sth = $dbh->do("insert into tblShortestRoute (tasPk,tawPk,ssrLatDecimal,ssrLongDecimal,ssrCumulativeDist,ssrNumber) values (?,?,?,?,?,?)",
             undef,$tasPk,$wpts->[$i]->{'key'}, $closearr->[$i]->{'dlat'}, $closearr->[$i]->{'dlong'}, $totdist,  $wpts->[$i]->{'number'});
@@ -623,10 +633,42 @@ sub task_distance
     my $ssdist;
     my $endssdist;
     my $startssdist;
+    my $wpt;
 
     my $waypoints = $task->{'waypoints'};
     my $allpoints = scalar @$waypoints;
     my $cwdist = 0;
+
+
+    # Work out key task points
+    for (my $i = 0; $i < $allpoints; $i++)
+    {
+        $wpt = $waypoints->[$i];
+        if (($wpt->{'type'} eq 'start') or ($wpt->{'type'} eq 'speed'))
+        {
+            $spt = $i;
+        }
+        if ($wpt->{'type'} eq 'endspeed') 
+        {
+            $ept = $i;
+        }
+        if ($wpt->{'type'} eq 'goal') 
+        {
+            $gpt = $i;
+        }
+    }
+
+    # Catch-alls for poorly defined task
+    if (!defined($gpt))
+    {
+        $gpt = $allpoints-1;
+    }
+    if (!defined($ept))
+    {
+        $ept = $gpt;
+    }
+
+    # Do distances
     for (my $i = 0; $i < $allpoints; $i++)
     {
         # Margins
@@ -638,37 +680,37 @@ sub task_distance
         # $waypoints->[$i]->{'margin'} = $margin;
 
         print "wpt $i: $cwdist\n";
-        if (( $waypoints->[$i]->{'type'} eq 'start') or 
-             ($waypoints->[$i]->{'type'} eq 'speed') )
+
+        # Start SS dist
+        if ($i == $spt)
         {
-            $spt = $i;
             $startssdist = $cwdist;
             if ($startssdist < 1 and ($waypoints->[$i]->{'how'} eq 'exit'))
             {
                 $startssdist += $waypoints->[$i]->{'radius'};
             }
         }
-        if ($waypoints->[$i]->{'type'} eq 'endspeed') 
+
+        # End SS dist
+        if ($i == $ept)
         {
-            $ept = $i;
-            #if ($waypoints->[$i]->{'how'} eq 'exit')
-            #{
-            #    $cwdist += $waypoints->[$i]->{'radius'};
-            #    if (ddequal($waypoints->[$i], $waypoints->[$i-1]))
-            #    {
-            #        $cwdist -= $waypoints->[$i-1]->{'radius'};
-            #    }
-            #}
             $endssdist = $cwdist;
-        }
-        if ($waypoints->[$i]->{'type'} eq 'goal') 
-        {
-            $gpt = $i;
+
+            # End speed and goal the same and it's an exit cylinder?
+            #    if (ddequal($waypoints->[$i], $waypoints->[$i-1])) - let's assume we don't have the same point multiple times ..
+            if ($ept == $gpt)
+            {
+                if ($waypoints->[$gpt]->{'how'} eq 'exit')
+                {   
+                    $endssdist += $waypoints->[$gpt]->{'radius'};
+                }   
+            }
+
         }
         if ($i < $allpoints-1)
         {
             #if (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'exit') and ($waypoints->[$i]->{'type'} eq 'start'))
-            if (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'exit')) 
+            if (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'exit'))
             {
                 $cwdist = $cwdist + $waypoints->[$i+1]->{'radius'};
                 if ($waypoints->[$i]->{'type'} ne 'start')
@@ -678,27 +720,21 @@ sub task_distance
             }
             else
             {
-                $cwdist = $cwdist + short_dist($waypoints->[$i], $waypoints->[$i+1]);
+                my $sdist = short_dist($waypoints->[$i], $waypoints->[$i+1]);
+
+                if (($i+1 != $gpt) or ($i+1 == $gpt and $waypoints->[$gpt]->{'shape'} ne 'circle'))
+                {
+                    $cwdist = $cwdist + $sdist;
+                }
+                elsif (($i+1 == $gpt) and 
+                    ($waypoints->[$gpt]->{'shape'} eq 'circle') and 
+                    (ddequal($waypoints->[$i], $waypoints->[$i+1]) and ($waypoints->[$i+1]->{'how'} eq 'entry')))
+                {
+                    $cwdist = $cwdist + $waypoints->[$i]->{'radius'} - $waypoints->[$i+1]->{'radius'};
+                }
+                print("allpoints=$allpoints i=$i gpt=$gpt newcwdist=$cwdist\n");
             }
         }
-    }
-
-    # Catch-alls for poorly defined task
-    if (!defined($gpt))
-    {
-        $gpt = $allpoints;
-    }
-    if (!defined($ept))
-    {
-        $ept = $gpt;
-    }
-    if (!defined($endssdist)) 
-    {
-        $endssdist = $cwdist;
-        if ($waypoints->[$gpt]->{'how'} eq 'exit')
-        {   
-            $endssdist += $waypoints->[$gpt]->{'radius'};
-        }   
     }
 
     $ssdist = $endssdist - $startssdist;
