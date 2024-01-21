@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -I../../bin
 
 #
 # Verify a track against a task
@@ -349,10 +349,9 @@ sub validate_task
 
         # Might re-enter start/speed section for elapsed time tasks 
         # Check if we did re-enter and set the task "back"
-        my $max_task_restart_dist = 15000;
         if (($lastin >= $spt) and 
-            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'}) and ($maxdist - $startssdist < $max_task_restart_dist)) or 
-            (($task->{'type'} ne 'race') and ($wmade < $spt+2) and ($maxdist - $startssdist < $max_task_restart_dist)))
+            ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'}) and ($maxdist - $startssdist < 15000)) or 
+            (($task->{'type'} ne 'race') and ($wmade < $spt+2) and ($maxdist - $startssdist < 15000)))
            )
         {
             # Re-entered start cyclinder?
@@ -618,8 +617,7 @@ sub validate_task
                         $starttime = $awtime;
                     }
                     $startss = $starttime;
-                    $coeff = 0; 
-                    $coeff2 = 0;
+                    $coeff = 0; $coeff2 = 0;
                     $reflag = -1;
                     if (($task->{'type'} eq 'race') && ($starttime > $task->{'sstart'}))
                     {
@@ -852,7 +850,6 @@ sub validate_task
             $dist_flown = 0;
         }
         print "wcount=0 dist=$dist_flown\n";
-        #$coeff = $coeff + ($essdist - $dist_flown)*($task->{'sfinish'}-$startss);
         $coeff = $essdist * ($task->{'sfinish'}-$task->{'sstart'});
         $coeff2 = $essdist * $essdist * ($task->{'sfinish'}-$task->{'sstart'});
     }
@@ -891,6 +888,8 @@ sub validate_task
     {
         # Goal
         print "goal (dist=$totdist)\n";
+        $coeff = $coeff + $essdist * ($startss - $taskss);
+        $coeff2 = $coeff2 + $essdist * $essdist * ($startss - $taskss) / 2;
         $dist_flown = $totdist; # compute_waypoint_dist($waypoints, $wcount-1);
     }
 

@@ -22,7 +22,7 @@ our @EXPORT = qw{:ALL};
 
 our $pi = atan2(1,1) * 4;    # accurate PI.
 
-my $debug = 0;
+my $debug = 1;
 my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
@@ -213,6 +213,16 @@ sub precompute_waypoint_dist
             }
             if ($debug) { print "same centre: $i dist=$dist\n"; }
         }
+
+        # Entry -> entry on a goal radius (not line) at the end
+        if (($i+1 == $goal_point) and 
+            (ddequal($waypoints->[$i], $waypoints->[$i+1])) and 
+            ($waypoints->[$i+1]->{'shape'} eq 'circle') and
+            ($waypoints->[$i+1]->{'how'} eq 'entry'))
+        {
+            $dist = $dist - $waypoints->[$i+1]->{'radius'};
+        }
+
         $wptdistcache->[$i+1] = $dist;
         if ($debug) { print "$i: cumdist=$dist\n"; }
 
@@ -322,8 +332,8 @@ sub remaining_task_dist
             $s1{'lat'} = $waypoints->[$goal_point]->{'lat'};
             $s1{'long'} = $waypoints->[$goal_point]->{'long'};
             my $rdist = qckdist2($coord, \%s1);
-            if ($debug) { print "    ### (Task.pm)entry/entry wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n"; }
             $remdist = $rdist - $radius;
+            if ($debug) { print "    ### (Task.pm ess/goal)entry/entry wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n"; }
             return $remdist;
         }
     }
