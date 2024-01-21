@@ -22,7 +22,7 @@ our @EXPORT = qw{:ALL};
 
 our $pi = atan2(1,1) * 4;    # accurate PI.
 
-my $debug = 1;
+my $debug = 0;
 my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
