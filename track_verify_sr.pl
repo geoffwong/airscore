@@ -276,7 +276,7 @@ sub validate_task
     my $interval = 0 + $task->{'interval'};
 
     my $waypoints = $task->{'waypoints'};
-    precompute_waypoint_dist($waypoints, $formula);
+    my ($spt, $ept, $gpt, $essdist, $startssdist, $endssdist, $totdist) = precompute_waypoint_dist($waypoints, $formula);
     $dist = compute_waypoint_dist($waypoints, $wcount-1);
     my $coords = $flight->{'coords'};
     my $awards = $flight->{'awards'};
@@ -300,7 +300,7 @@ sub validate_task
     my $utcmod = determine_utcmod($task, $coords->[0]);
 
     # Determine the start gate type and ESS dist
-    my ($spt, $ept, $gpt, $essdist, $startssdist, $endssdist, $totdist) = task_distance($task);
+    #my ($spt, $ept, $gpt, $essdist, $startssdist, $endssdist, $totdist) = task_distance($task);
     $total_distance = $totdist;
     $rpt = $waypoints->[$spt];
 
@@ -351,7 +351,9 @@ sub validate_task
         # Check if we did re-enter and set the task "back"
         if (($lastin >= $spt) and 
             ((($task->{'type'} eq 'race') and ($starttime < $task->{'sstart'}) and ($maxdist - $startssdist < 15000)) or 
-            (($task->{'type'} ne 'race') and ($wmade < $spt+2) and ($maxdist - $startssdist < 15000)))
+            (($task->{'type'} ne 'race') and ($wmade < $spt+2) and ($maxdist - $startssdist < 15000)) or
+            (($task->{'type'} ne 'race') and ($wmade < $spt+3) and ($starttime < $taskss))
+            )
            )
         {
             # Re-entered start cyclinder?

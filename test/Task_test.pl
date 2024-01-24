@@ -152,11 +152,11 @@ $wpts = $task6->{'waypoints'};
 
 # without cache
 $dist = compute_waypoint_dist($wpts, 2);
-is(sprintf("%.1f", $dist), "3086.8", "task 6 - wpt 2");
+is(sprintf("%.1f", $dist), "3086.6", "task 6 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
-is(sprintf("%.1f", $dist), "15181.0", "task 6 - wpt 3");
+is(sprintf("%.1f", $dist), "15185.1", "task 6 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 4);
-is(sprintf("%.1f", $dist), "27636.9", "task 6 - wpt 4");
+is(sprintf("%.1f", $dist), "27650.4", "task 6 - wpt 4");
 $dist = compute_waypoint_dist($wpts, 5);
 is(sprintf("%.1f", $dist), "39447.0", "task 6 - wpt 5");
 
@@ -164,9 +164,9 @@ is(sprintf("%.1f", $dist), "39447.0", "task 6 - wpt 5");
 precompute_waypoint_dist($wpts);
 
 $dist = compute_waypoint_dist($wpts, 2);
-is(sprintf("%.1f", $dist), "3086.8", "task 6 - wpt 2");
+is(sprintf("%.1f", $dist), "3086.6", "task 6 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
-is(sprintf("%.1f", $dist), "15181.0", "task 6 - wpt 3");
+is(sprintf("%.1f", $dist), "15185.1", "task 6 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 4);
 is(sprintf("%.1f", $dist), "27636.9", "task 6 - wpt 4");
 $dist = compute_waypoint_dist($wpts, 5);
@@ -191,7 +191,7 @@ $wpts = $task5->{'waypoints'};
 precompute_waypoint_dist($wpts);
 
 $dist = compute_waypoint_dist($wpts, 2);
-is(sprintf("%.1f", $dist), "5372.6", "task 5 - wpt 2");
+is(sprintf("%.1f", $dist), "5314.9", "task 5 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
 is(sprintf("%.1f", $dist), "41027.7", "task 5 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 4);
@@ -206,11 +206,11 @@ precompute_waypoint_dist($wpts);
 $dist = compute_waypoint_dist($wpts, 1);
 is(sprintf("%.1f", $dist), "4985.5", "task 2 - wpt 1");
 $dist = compute_waypoint_dist($wpts, 2);
-is(sprintf("%.1f", $dist), "54541.2", "task 2 - wpt 2");
+is(sprintf("%.1f", $dist), "54541.0", "task 2 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
-is(sprintf("%.1f", $dist), "122820.4", "task 2 - wpt 3");
+is(sprintf("%.1f", $dist), "122823.4", "task 2 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 4);
-is(sprintf("%.1f", $dist), "123817.4", "task 2 - wpt 4");
+is(sprintf("%.1f", $dist), "123817.2", "task 2 - wpt 4");
 
 # Test distance flown
 

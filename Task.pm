@@ -22,7 +22,7 @@ our @EXPORT = qw{:ALL};
 
 our $pi = atan2(1,1) * 4;    # accurate PI.
 
-my $debug = 0;
+my $debug = 1;
 my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
@@ -164,13 +164,38 @@ sub precompute_waypoint_dist
     my ($waypoints, $formula) = @_;
     my $wcount = scalar @$waypoints;
 
-    my $dist;
+    my ($spt, $ept, $gpt);
+    my $endssdist;
+    my $startssdist;
+
+    my $cdist;
     my $remdist;
-    my $exdist;
+    my $totdist;
     my (%s1, %s2);
     
+    # assume goal is last poin
+    $goal_point = $wcount - 1;
+
+    # Work out key task points
+    for my $i (0 .. $goal_point)
+    {
+        my $wpt = $waypoints->[$i];
+        if (($wpt->{'type'} eq 'start') or ($wpt->{'type'} eq 'speed'))
+        {
+            $spt = $i;
+        }
+        if ($wpt->{'type'} eq 'endspeed')
+        {
+            $ept = $i;
+        }
+        if ($wpt->{'type'} eq 'goal')
+        {
+            $gpt = $i;
+        }
+    }
+
     # Setup error margin
-    for my $i (0 .. $wcount-1)
+    for my $i (0 .. $goal_point)
     {
         my $errm = $waypoints->[$i]->{'radius'} * $formula->{'errormargin'} / 100;
         if ($errm < 5.0)
@@ -181,50 +206,80 @@ sub precompute_waypoint_dist
     }
 
     $wptdistcache = [];
-
-    $dist = 0.0;
     $wptdistcache->[0] = 0.0;
+
+    $cdist = 0.0;
+    $totdist = 0.0;
     #print Dumper($waypoints);
-    $goal_point = $wcount - 1;
-    for my $i (0 .. $goal_point-1)
+
+    for my $i (0 .. $goal_point)
     {
-        $s1{'lat'} = $waypoints->[$i]->{'short_lat'};
-        $s1{'long'} = $waypoints->[$i]->{'short_long'};
-        $s2{'lat'} = $waypoints->[$i+1]->{'short_lat'};
-        $s2{'long'} = $waypoints->[$i+1]->{'short_long'};
-        $exdist = distance(\%s1, \%s2);
-        if ($debug) { print "exdist $i=$exdist\n"; }
-        if ($exdist > 0.0)
+        if (%s2)
         {
-            $dist = $dist + $exdist;
+            $s1{'lat'} = $s2{'lat'};
+            $s1{'long'} = $s2{'lat'};
         }
-        elsif ($waypoints->[$i]->{'how'} eq 'exit' and $waypoints->[$i+1]->{'how'} eq 'exit')
+        $s2{'lat'} = $waypoints->[$i]->{'short_lat'};
+        $s2{'long'} = $waypoints->[$i]->{'short_long'};
+        if ($debug) { print "totdist $i=$totdist\n"; }
+
+        # Start SS dist
+        if ($i == $spt)
         {
-            # Check centres?
-            #print Dumper($waypoints->[$i]);
-            #print Dumper($waypoints->[$i+1]);
-            if ($i > 0 && (ddequal($waypoints->[$i], $waypoints->[$i+1]) and $waypoints->[$i+1]->{'how'} eq 'exit'))
+            $startssdist = $totdist;
+            if ($startssdist < 1 and ($waypoints->[$i]->{'how'} eq 'exit'))
             {
-                $dist = $dist + $waypoints->[$i+1]->{'radius'} - $waypoints->[$i]->{'radius'};
+                $startssdist += $waypoints->[$i]->{'radius'};
+            }
+        }
+
+        # End SS dist
+        if ($i == $ept)
+        {
+            $endssdist = $totdist;
+
+            # End speed and goal the same and it's an exit cylinder?
+            if ( ($waypoints->[$gpt]->{'how'} eq 'exit') and ddequal($waypoints->[$ept], $waypoints->[$gpt]) )
+            {
+                $endssdist += $waypoints->[$gpt]->{'radius'};
+            }
+        }
+
+        # Out/in at start
+        $cdist = 0;
+        if ($i == 0) 
+        {
+            if ($waypoints->[$i]->{'how'} eq 'exit')
+            {
+                $cdist = $waypoints->[$i]->{'radius'};
+            }
+        }
+        elsif (ddequal($waypoints->[$i-1], $waypoints->[$i]))
+        {
+            $cdist = distance(\%s1, \%s2);
+            print("wpt:$i to wpt:", $i+1, " have same centre (how=", $waypoints->[$i+1]->{'how'}, ")\n");
+            if ($waypoints->[$i]->{'how'} eq 'exit')
+            {
+                $cdist = $waypoints->[$i]->{'radius'} - $waypoints->[$i-1]->{'radius'};
             }
             else
             {
-                $dist = $dist + $waypoints->[$i+1]->{'radius'};
+                if ($waypoints->[$i]->{'shape'} eq 'circle')
+                {
+                    $cdist = $waypoints->[$i-1]->{'radius'} - $waypoints->[$i]->{'radius'};
+                }
+                else
+                {
+                    $cdist = $waypoints->[$i-1]->{'radius'};
+                    print("entry circle on non-circle cdist=$cdist");
+                }
             }
-            if ($debug) { print "same centre: $i dist=$dist\n"; }
         }
 
-        # Entry -> entry on a goal radius (not line) at the end
-        if (($i+1 == $goal_point) and 
-            (ddequal($waypoints->[$i], $waypoints->[$i+1])) and 
-            ($waypoints->[$i+1]->{'shape'} eq 'circle') and
-            ($waypoints->[$i+1]->{'how'} eq 'entry'))
-        {
-            $dist = $dist - $waypoints->[$i+1]->{'radius'};
-        }
+        $totdist = $totdist + $cdist;
+        $wptdistcache->[$i+1] = $totdist;
 
-        $wptdistcache->[$i+1] = $dist;
-        if ($debug) { print "$i: cumdist=$dist\n"; }
+        if ($debug) { print "$i: cumdist=$totdist ($cdist)\n"; }
 
         my $sdist = qckdist2(\%s1, $waypoints->[$i]);
         if ($waypoints->[$i]->{'radius'} > $sdist+100)
@@ -236,18 +291,21 @@ sub precompute_waypoint_dist
             $waypoints->[$i]->{'inside'} = 0;
         }
     }
-    $total_distance = $dist;
+
+    $total_distance = $totdist;
 
     $remainingdistcache = [];
     for my $i (0 .. $goal_point-1)
     {
-        $remdist = $dist - $wptdistcache->[$i];
+        $remdist = $totdist - $wptdistcache->[$i];
         $remainingdistcache->[$i] = $remdist;
         if ($debug) { print "$i: remdist=$remdist\n"; }
     }
     $remainingdistcache->[$goal_point] = 0.0;
 
-    if ($debug) { print "precompute dist=$dist\n"; print Dumper($remainingdistcache); }
+    if ($debug) { print "precompute dist=$totdist\n"; print Dumper($remainingdistcache); }
+    my $ssdist = $endssdist - $startssdist;
+    return ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist);
 }
 
 sub remaining_task_dist
@@ -262,8 +320,7 @@ sub remaining_task_dist
     my %se;
     my $radius = 0;
 
-    $remdist = $remainingdistcache->[$wmade+1];
-
+    $remdist = $remainingdistcache->[$wmade];
     if (($nextwpt->{'how'} eq 'exit') and ($waypoints->[$goal_point]->{'how'} eq 'exit'))
     {
         my $boob = 1;
