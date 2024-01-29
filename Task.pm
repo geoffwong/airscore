@@ -22,7 +22,7 @@ our @EXPORT = qw{:ALL};
 
 our $pi = atan2(1,1) * 4;    # accurate PI.
 
-my $debug = 1;
+my $debug = 0;
 my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
@@ -217,7 +217,7 @@ sub precompute_waypoint_dist
         if (%s2)
         {
             $s1{'lat'} = $s2{'lat'};
-            $s1{'long'} = $s2{'lat'};
+            $s1{'long'} = $s2{'long'};
         }
         $s2{'lat'} = $waypoints->[$i]->{'short_lat'};
         $s2{'long'} = $waypoints->[$i]->{'short_long'};
@@ -256,8 +256,7 @@ sub precompute_waypoint_dist
         }
         elsif (ddequal($waypoints->[$i-1], $waypoints->[$i]))
         {
-            $cdist = distance(\%s1, \%s2);
-            print("wpt:$i to wpt:", $i+1, " have same centre (how=", $waypoints->[$i+1]->{'how'}, ")\n");
+            print("wpt:",$i-1," to wpt:", $i, " have same centre (how=", $waypoints->[$i]->{'how'}, ")\n");
             if ($waypoints->[$i]->{'how'} eq 'exit')
             {
                 $cdist = $waypoints->[$i]->{'radius'} - $waypoints->[$i-1]->{'radius'};
@@ -274,6 +273,10 @@ sub precompute_waypoint_dist
                     print("entry circle on non-circle cdist=$cdist");
                 }
             }
+        }
+        else
+        {
+            $cdist = distance(\%s1, \%s2);
         }
 
         $totdist = $totdist + $cdist;
