@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I/home/geoff/bin
+#!/usr/bin/perl
 
 
 #
@@ -536,7 +536,7 @@ sub calc_kmdiff
         }
         $kmdiff->[$difdist] = 0 + $kmdiff->[$difdist] + $ref->{'Difficulty'};
         $difsum = $difsum + $ref->{'Difficulty'};
-        print("difdist=$difdist ", $kmdiff->[$difdist], "\n");
+        #print("difdist=$difdist ", $kmdiff->[$difdist], "\n");
         #print "dist($difdist): ", $ref->{'Distance'}, " diff: ", $kmdiff->[$difdist], "\n";
         #$kmdiff->[(0+$ref->{'Distance'})] = 0+$ref->{'Difficulty'};
     }
@@ -657,7 +657,7 @@ sub pilot_departure_leadout
         my $kmdist;
         my $notkm;
 
-        print "TMARKER=", Dumper(\@tmarker);
+        # print "TMARKER=", Dumper(\@tmarker);
         # KmBonus award points
 
         # Don't do the section at the end
@@ -778,7 +778,7 @@ sub pilot_distance
             (($pil->{'distance'}/$taskt->{'maxdist'}) * $formula->{'lineardist'}
             + $kmdiff->[floor($pil->{'distance'}/100.0)] * (1-$formula->{'lineardist'}));
 
-    # print $pil->{'tarPk'}, " Adist=$Adistance pil->dist=", $pil->{'distance'}, " maxdist=", $taskt->{'maxdist'}, " kmdiff=", $kmdiff->[floor($pil->{'distance'}/100.0)], "\n";
+    print $pil->{'traPk'}, " Adist=$Adistance pil->dist=", $pil->{'distance'}, " maxdist=", $taskt->{'maxdist'}, " kmdiff=", $kmdiff->[floor($pil->{'distance'}/100.0)], "\n";
     print $pil->{'traPk'}, " lin dist: ", $Adistance * ($pil->{'distance'}/$taskt->{'maxdist'}) * $formula->{'lineardist'}, " dif dist: ", $Adistance * $kmdiff->[floor($pil->{'distance'}/100.0)] * (1-$formula->{'lineardist'}), "\n";
 
     return $Pdist;
@@ -902,11 +902,14 @@ sub ordered_results
             {
                 # adjust for late starters
                 print "No goal, adjust pilot coeff from: ", $ref->{'tarLeadingCoeff'}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, "\n";
+                print "endss dist=", $task->{'endssdistance'}, " tarDist=", $ref->{'tarDistance'}, " ssdist=", $task->{'ssdistance'}, "\n";
 
                 # $remainingss * ($task->{'sfinish'}-$coord->{'time'})
                 if ($taskt->{'lastarrival'} > 0)
                 {
-                    $taskres{'coeff'} = $ref->{'tarLeadingCoeff'} + ($task->{'sfinish'} - $taskt->{'lastarrival'}) * ($task->{'endssdistance'} - $ref->{'tarDistance'}) / 1800 / $task->{'ssdistance'} ;
+                    my $remdist = $task->{'endssdistance'} - $ref->{'tarDistance'};
+                    $taskres{'coeff'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist / 1800 / $task->{'ssdistance'};
+                    $taskres{'coeff2'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist * $remdist / 1800 / $task->{'ssdistance'};
                     if ($taskres{'coeff'} < 0)
                     {
                         print " WARNING: negative leading coeff: ", $taskres{'coeff'}, " for ", $taskres{'traPk'}, "\n";

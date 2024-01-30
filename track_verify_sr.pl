@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I../../bin
+#!/usr/bin/perl
 
 #
 # Verify a track against a task
@@ -422,7 +422,7 @@ sub validate_task
                 }
                 elsif ($rdist > ($rpt->{'radius'}+$rpt->{'margin'}))
                 {
-                    print "reflag=-1 (setting to 0) rdist=$rdist\n";
+                    if ($debug) { print "reflag=-1 (setting to 0) rdist=$rdist\n"; }
                     $reflag = -1;
                 }
             }
@@ -767,7 +767,7 @@ sub validate_task
             }
         }
         #$kmtime = undef;
-        print Dumper($task);
+        #print Dumper($task);
         if ($task->{'type'} eq 'race' or (($task->{'type'} eq 'speedrun-interval') and ($startss - $starttime < 300)))
         {
             print "Race/initial start jump: $comment\n";

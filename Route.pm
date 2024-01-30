@@ -580,7 +580,10 @@ sub store_short_route
         }
 
         # Entry -> entry on a radius (not line) at the end 
-        if (($i+1 == $num-1) and ($dist == 0) and ($wpts->[$i+1]->{'shape'} eq 'circle'))
+        if (($i+1 == $num-1) and 
+            ($dist == 0) and 
+            ($wpts->[$i+1]->{'shape'} eq 'circle') and
+            ($wpts->[$i+1]->{'how'} eq 'entry'))
         {
             $cdist = $wpts->[$i]->{'radius'} - $wpts->[$i+1]->{'radius'};
         }
