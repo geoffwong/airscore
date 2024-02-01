@@ -323,7 +323,8 @@ sub remaining_task_dist
     my %se;
     my $radius = 0;
 
-    $remdist = $remainingdistcache->[$wmade];
+
+    # Concentric circles
     if (($nextwpt->{'how'} eq 'exit') and ($waypoints->[$goal_point]->{'how'} eq 'exit'))
     {
         my $boob = 1;
@@ -352,6 +353,7 @@ sub remaining_task_dist
     if ($nextwpt->{'type'} eq 'goal')
     {
         # Special goal case
+        $remdist = $remainingdistcache->[$wmade];
         if (($nextwpt->{'how'} eq 'exit')
             and (($nextwpt->{'lat'} == $lastwpt->{'lat'}) and ($nextwpt->{'long'} == $lastwpt->{'long'})))
         {
@@ -377,12 +379,15 @@ sub remaining_task_dist
         return $remdist;
     }
 
-    # Special case for entry cylinder on goal
+
     if (($nextwpt->{'how'} eq 'entry') 
         and ($nextwpt->{'lat'} == $waypoints->[$goal_point]->{'lat'}) and ($nextwpt->{'long'} == $waypoints->[$goal_point]->{'long'})
         and ($goal_point == $wmade+1))
     {
-        #print "wpt centre = goal remdist\n";
+        # Special case for entry cylinder on goal
+        $remdist = $remainingdistcache->[$wmade];
+        if ($debug) { print "wpt centre = goal remdist\n"; }
+        $remdist = $remainingdistcache->[$wmade];
         $s1{'lat'} = $nextwpt->{'lat'};
         $s1{'long'} = $nextwpt->{'long'};
         if ($waypoints->[$goal_point]->{'shape'} ne 'line') 
@@ -399,18 +404,19 @@ sub remaining_task_dist
     }
     else
     {
-        # Should dynamically work out optimal point to reach waypoint (see Route.pm)
-        # Can we make it efficient?
-        # (straight line to next if we're inside the waypoint or (radius - centre) if next waypoint is the same,
-        #    ie. exit and re-entry)
-        #print "remdist normal\n";
+        $remdist = $remainingdistcache->[$wmade+2];
+
+        # We dynamically work out optimal point to reach waypoint(see Route.pm) .. updated every 2 minutes (120 seconds)
+        # (straight line to next if we're inside the waypoint or (radius - centre) if next waypoint is the same, ie. exit and re-entry)
         if ($coord->{'time'} - $last_wpt_update > 120)
         {
             my %st;
 
+            if ($debug) { print "remdist=$remdist normal next waypoint: ", $nextwpt->{'name'}, "\n"; }
             $st{'lat'} = $waypoints->[$wmade+1]->{'short_lat'};
             $st{'long'} = $waypoints->[$wmade+1]->{'short_long'};
             $last_wpt_update = $coord->{'time'};
+            # Find the closest waypoint using the one ahead of the one we're heading to (nextwpt)
             $nearwpt = find_closest($coord, $nextwpt, \%st);
             # Update next waypoint
             # print Dumper($nearwpt);
@@ -422,13 +428,15 @@ sub remaining_task_dist
             }
         }
 
-        $s1{'lat'} = $nextwpt->{'short_lat'};
-        $s1{'long'} = $nextwpt->{'short_long'};
     }
+
+    # next leg after new closest waypoint
+    $s1{'lat'} = $nextwpt->{'short_lat'};
+    $s1{'long'} = $nextwpt->{'short_long'};
     $s2{'lat'} = $waypoints->[$wmade+1]->{'short_lat'};
     $s2{'long'} = $waypoints->[$wmade+1]->{'short_long'};
-
     my $rdist = qckdist2($coord, \%s1) + qckdist2(\%s1, \%s2);
+
     if ($debug) { print "    ### (Task.pm)remaining_task_dist wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n"; }
     $remdist = $remdist + $rdist - $radius;
 
