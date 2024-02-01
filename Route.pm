@@ -73,7 +73,7 @@ my $pi = atan2(1,1) * 4;
 
 my $dbh;
 my $sth;
-my $debug = 1;
+my $debug = 0;
 
 
 # Check if waypoints short positions are at the same location
@@ -135,6 +135,8 @@ sub find_closest
         }
         else
         {
+            print("vl=$vl\n");
+            print(Dumper($O2));
             $O = ($O2->{'radius'} / $vl) * $O;
         }
         $CL = $O + $C3;
@@ -270,9 +272,8 @@ sub find_closest
         my $db;
         my $vn;
 
-        # Ok - we have a 180deg? connect
+        # Ok - we have a 180deg connect (C2==C3)
         if ($debug) { print "180 deg connect: u=$u radius=", $P2->{'radius'}, "\n"; }
-#        return $P2;
     
 #        if ($P2->{'how'} eq 'exit' and $u == 0)
 #        {
@@ -288,31 +289,37 @@ sub find_closest
 #        }
 
         # find the intersection points (maybe in cylinder)
-        $v = plane_normal($C1, $C2);
-        $w = plane_normal($C3, $C2);
+        #print("C1=", Dumper($C1), "\n");
+        #print("C2=", Dumper($C2), "\n");
+        #print("C3=", Dumper($C3), "\n");
 
-        #print "dot_prod=",dot_product($a,$b), "\n";
-        #print "theta=$theta\n";
+        $v = plane_normal($C1, $C2);
         $a = $C1 - $C2;
         $vl = $a->length();
         if ($vl > 0)
         {
             $a = $a/$vl;
         }
+        $vn = $a;
+        
         $b = $C3 - $C2;
         $vl = $b->length();
         if ($vl > 0)
         {
             $b = $b/$vl;
+            $vn = $a + $b;
+            #$theta = acos($a . $b);
         }
-        $theta = acos($a . $b);
 
-        $vn = $a + $b;
+        #print "dot_prod=",dot_product($a,$b), "\n";
+        #print "theta=$theta\n";
+
         $vl = $vn->length();
         $vn = $vn/$vl;
         $O = $vn * $P2->{'radius'};
-        # print "vec_len=", $O->length(), "\n";
+        print "vec_len=", $O->length(),"\n", Dumper($O), "\n"; 
         $CL = $O + $C2;
+        #print("CL=", Dumper($CL), "\n");
     }
     else
     {
@@ -359,13 +366,16 @@ sub find_closest
         $CL = $O + $C2;
     }
 
-    if ($debug)
-    {
-        # print "Route: Centre=", Dumper($C2), "\n";
-        # print "Route: Closest=", Dumper($CL), "\n";
-    }
-     # Fix? Should keep radius and centre for next iteration
     my $result = cartesian2polar($CL);
+
+    if (0)
+    {
+        print "Route: Centre=", Dumper($C2), "\n";
+        print "Route: Centre(polar)=", Dumper(cartesian2polar($C2));
+        print "Route: Closest=", Dumper($CL), "\n";
+        print "Route: Closest(polar)=", Dumper($result), "\n";
+    }
+
     return $result;
 }
 
@@ -389,7 +399,7 @@ sub iterate_short_route
     my $newcl = $wpts->[0];
     for (my $i = 0; $i < $num-2; $i++)
     {
-        if ($debug) { print "iterate_short_route: $i: ", $orig->[$i]->{'name'}, "\n"; }
+        if ($debug) { print "iterate_short_route: $i: ", $orig->[$i+1]->{'name'}, "\n"; }
         if (0 and ddequal($orig->[$i+1], $orig->[$i+2]) and ($i < $num-3))
         {
             my $dirn;
@@ -499,14 +509,17 @@ sub find_shortest_route
             while (ddequal($newcl, $wpts->[$j]) and $j < $num-1)
             {
                 # Target task .. hopefully there's a way out.
+                if ($debug) { print "    FC1A\n"; }
                 $j++;
             }
             if ($j == $num-1)
             {
-                $newcl = find_closest($newcl, undef, $wpts->[$j-1], undef, undef);
+                if ($debug) { print "    FC1B\n"; }
+                $newcl = find_closest($newcl, undef, $wpts->[$j-1], $wpts->[$j-1], undef);
             }
             else
             {
+                if ($debug) { print "    FC1C\n"; }
                 $dirn = $wpts->[$j];
                 $newcl = find_closest($newcl, $wpts->[$i+1], undef, undef, $dirn);
             }
@@ -518,11 +531,13 @@ sub find_shortest_route
         }
         push @it1, $newcl;
     }
+
     # FIX: special case for end point ..
     #print "newcl=", Dumper($newcl);
     if ($debug) { print "From (ep) it1: $i: ", $wpts->[$i]->{'name'}, "\n"; }
     $newcl = find_closest($newcl, $wpts->[$num-1], undef, undef, undef);
     push @it1, $newcl;
+
     #print "IT1=", Dumper(\@it1);
     #return \@it1;
 
@@ -588,12 +603,13 @@ sub store_short_route
             $cdist = $wpts->[$i]->{'radius'} - $wpts->[$i+1]->{'radius'};
         }
 
-        print "Dist wpt:$i to wpt:", $i+1, " dist=$dist short_dist=$cdist\n";
+        print "Dist wpt:$i to wpt:", $i+1, " dist=$dist short_dist=$cdist, dlat=", $closearr->[$i]->{'dlat'}, " dlon=", $closearr->[$i]->{'dlong'}, "\n";
         $sth = $dbh->do("insert into tblShortestRoute (tasPk,tawPk,ssrLatDecimal,ssrLongDecimal,ssrCumulativeDist,ssrNumber) values (?,?,?,?,?,?)",
-            undef,$tasPk,$wpts->[$i]->{'key'}, $closearr->[$i]->{'dlat'}, $closearr->[$i]->{'dlong'}, $totdist,  $wpts->[$i]->{'number'});
+            undef,$tasPk,$wpts->[$i]->{'key'},$closearr->[$i]->{'dlat'}, $closearr->[$i]->{'dlong'}, $totdist,  $wpts->[$i]->{'number'});
         $totdist = $totdist + $cdist;
     }
 
+    print "Dist wpt:$i to wpt:", $i, " dist=0 short_dist=0, dlat=", $closearr->[$i]->{'dlat'}, " dlon=", $closearr->[$i]->{'dlong'}, "\n";
     $sth = $dbh->do("insert into tblShortestRoute (tasPk,tawPk,ssrLatDecimal,ssrLongDecimal,ssrCumulativeDist,ssrNumber) values (?,?,?,?,?,?)",
             undef, $tasPk,$wpts->[$i]->{'key'}, $closearr->[$i]->{'dlat'}, $closearr->[$i]->{'dlong'}, $totdist,  $wpts->[$i]->{'number'});
 
