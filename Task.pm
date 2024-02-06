@@ -164,7 +164,7 @@ sub precompute_waypoint_dist
     my ($waypoints, $formula) = @_;
     my $wcount = scalar @$waypoints;
 
-    my ($spt, $ept, $gpt);
+    my ($spt, $ept, $gpt) = (0,0,0);
     my $endssdist;
     my $startssdist;
 
@@ -193,6 +193,8 @@ sub precompute_waypoint_dist
             $gpt = $i;
         }
     }
+    if ($ept == 0) { $ept = $gpt; }
+    print("spt=$spt ept=$ept gpt=$gpt\n");
 
     # Setup error margin
     for my $i (0 .. $goal_point)
@@ -298,13 +300,13 @@ sub precompute_waypoint_dist
     $total_distance = $totdist;
 
     $remainingdistcache = [];
-    for my $i (0 .. $goal_point-1)
+    for my $i (0 .. $goal_point)
     {
         $remdist = $totdist - $wptdistcache->[$i];
         $remainingdistcache->[$i] = $remdist;
         if ($debug) { print "$i: remdist=$remdist\n"; }
     }
-    $remainingdistcache->[$goal_point] = 0.0;
+    $remainingdistcache->[$goal_point+1] = 0.0;
 
     if ($debug) { print "precompute dist=$totdist\n"; print Dumper($remainingdistcache); }
     my $ssdist = $endssdist - $startssdist;
