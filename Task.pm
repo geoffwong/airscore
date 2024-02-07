@@ -256,6 +256,19 @@ sub precompute_waypoint_dist
                 $cdist = $waypoints->[$i]->{'radius'};
             }
         }
+        elsif ($i == 1) 
+        {
+            if (($waypoints->[0]->{'how'} eq 'exit')
+                and ($waypoints->[$i]->{'how'} eq 'exit'))
+            {
+                # First point is from the center .. we've already added that distance
+                $cdist = distance(\%s1, \%s2) - $waypoints->[$i-1]->{'radius'};
+            }
+            else
+            {
+                $cdist = distance(\%s1, \%s2);
+            }
+        }
         elsif (ddequal($waypoints->[$i-1], $waypoints->[$i]))
         {
             print("wpt:",$i-1," to wpt:", $i, " have same centre (how=", $waypoints->[$i]->{'how'}, ")\n");
