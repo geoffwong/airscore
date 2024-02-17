@@ -269,7 +269,9 @@ sub read_task
         $task{'tasPk'} = $tasPk;
         $task{'comPk'} = $ref->{'comPk'};
         $task{'date'} = $ref->{'tasDate'};
+        $task{'name'} = $ref->{'tasName'};
         $task{'region'} = $ref->{'regPk'};
+        $task{'class'} = $ref->{'comClass'};
         $task{'launchopen'} = $ref->{'tasTaskStart'};
         $task{'slaunch'} = (24*3600 + substr($ref->{'tasTaskStart'},11,2) * 3600 +
                             substr($ref->{'TaskStart'},14,2) * 60 +

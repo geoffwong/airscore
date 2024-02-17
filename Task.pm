@@ -226,7 +226,7 @@ sub precompute_waypoint_dist
         if ($debug) { print "totdist $i=$totdist\n"; }
 
         # Start SS dist
-        if ($i == $spt)
+        if ($i == $spt+1)
         {
             $startssdist = $totdist;
             if ($startssdist < 1 and ($waypoints->[$i]->{'how'} eq 'exit'))
@@ -236,7 +236,7 @@ sub precompute_waypoint_dist
         }
 
         # End SS dist
-        if ($i == $ept)
+        if ($i == $ept+1)
         {
             $endssdist = $totdist;
 
@@ -258,8 +258,7 @@ sub precompute_waypoint_dist
         }
         elsif ($i == 1) 
         {
-            if (($waypoints->[0]->{'how'} eq 'exit')
-                and ($waypoints->[$i]->{'how'} eq 'exit'))
+            if ($waypoints->[0]->{'how'} eq 'exit')
             {
                 # First point is from the center .. we've already added that distance
                 $cdist = distance(\%s1, \%s2) - $waypoints->[$i-1]->{'radius'};
@@ -276,8 +275,7 @@ sub precompute_waypoint_dist
             {
                 $cdist = $waypoints->[$i]->{'radius'} - $waypoints->[$i-1]->{'radius'};
             }
-            else
-            {
+            else {
                 if ($waypoints->[$i]->{'shape'} eq 'circle')
                 {
                     $cdist = $waypoints->[$i-1]->{'radius'} - $waypoints->[$i]->{'radius'};
@@ -323,6 +321,7 @@ sub precompute_waypoint_dist
 
     if ($debug) { print "precompute dist=$totdist\n"; print Dumper($remainingdistcache); }
     my $ssdist = $endssdist - $startssdist;
+    print "precomp returns: $spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist\n";
     return ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist);
 }
 
