@@ -96,11 +96,18 @@ function olc_sort($result,$info)
 
     return $topscores;
 }
-function olc_result($link,$comPk,$info,$restrict)
+function olc_result($link,$comPk,$info,$restrict,$bydate)
 {
     // "SELECT A.* FROM tblComTaskTrack CTT, tblAirgainWaypoint A, tblTrack T where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=$pilPk and A.traPk=T.traPk";
     // $sql = "SELECT P.*, T.traPk, CTT.cttScore as adjScore, T.traDHV FROM tblTrack T, tblPilot P, tblComTaskTrack CTT where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk and T.traScore is not null $restrict order by P.pilPk, T.traScore desc";
-    $sql = "SELECT P.*, T.traPk, CTT.cttScore as adjScore, T.traDHV, count(*) as numWaypoints FROM tblTrack T, tblPilot P, tblComTaskTrack CTT left outer join tblAirgainWaypoint A on A.traPk=CTT.traPk where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk and T.traPk is not null $restrict group by T.traPk order by P.pilPk, adjScore desc, numWaypoints desc";
+    if ($bydate == 1)
+    {
+        $sql = "SELECT P.*, T.traPk, CTT.cttScore as adjScore, T.traDHV, count(*) as numWaypoints FROM tblTrack T, tblPilot P, tblComTaskTrack CTT left outer join tblAirgainWaypoint A on A.traPk=CTT.traPk where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk and T.traPk is not null $restrict group by T.traPk order by P.pilPk, T.traDate, adjScore desc, numWaypoints desc";
+    }
+    else
+    {
+        $sql = "SELECT P.*, T.traPk, CTT.cttScore as adjScore, T.traDHV, count(*) as numWaypoints FROM tblTrack T, tblPilot P, tblComTaskTrack CTT left outer join tblAirgainWaypoint A on A.traPk=CTT.traPk where CTT.comPk=$comPk and CTT.traPk=T.traPk and T.pilPk=P.pilPk and T.traPk is not null $restrict group by T.traPk order by P.pilPk, adjScore desc, numWaypoints desc";
+    }
     $result = mysql_query($sql,$link) or die('olc_result: ' . mysql_error());
 
     return olc_sort($result,$info);
@@ -119,9 +126,9 @@ function olc_handicap_result($link,$info,$restrict)
 
     return olc_sort($result,$info);
 }
-function get_olc_result($link, $comPk, $info, $restrict)
+function get_olc_result($link, $comPk, $info, $restrict, $bydate = 0)
 {
-    $sorted = olc_result($link, $comPk, $info, $restrict);
+    $sorted = olc_result($link, $comPk, $info, $restrict, $bydate);
 
     $count = 1;
     $lastcount = 1;

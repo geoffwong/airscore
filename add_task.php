@@ -7,8 +7,26 @@ require_once 'authorisation.php';
 require_once 'dbextra.php';
 require_once 'xcdb.php';
 
+function insert_waypoint($link, $regPk, $wpt)
+{
+    $name = $wpt['name'];
+    $lat = $wpt["lat"];
+    $lon = $wpt["lon"];
+    $alt = $wpt["altSmoothed"];
+    $desc = rtrim($wpt["description"]);
 
-function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
+    $map = [ 'regPk' => $regPk, 'rwpPk' => $rwpPk, 'rwpName' => $name, 'rwpLatDecimal' => $lat, 'rwpLongDecimal' => $lon, 'rwpAltitude' => $alt, 'rwpDescription' => $desc ];
+
+    if ($name != '' and $lat != 0)
+    {
+        unset($map['rwpPk']);
+        $wptid = insertup($link,'tblRegionWaypoint','rwpPk',"rwpName='$name' and regPk=$regPk", $map);
+
+        return $wptid;
+    }
+}
+
+function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $dte, $offset)
 {
     $taskin = file_get_contents($tmpfile, false, NULL, 0, 10000);
     $taskjson = json_decode($taskin, true);
@@ -62,10 +80,15 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
     // insert the turnpoints
     $waypoints = $taskjson['turnpoints'];
     $num = 10;
+    $tawPk = 0;
     $wtype = "'waypoint'";
     foreach ($waypoints as $wpt)
     {
         $rwpPk = $regid[strtolower(trim($wpt['waypoint']['name']))];
+        if (!$rwpPk)
+        {
+            $rwpPk = insert_waypoint($link, $regPk, $wpt['waypoint']);
+        }
         $radius = $wpt['radius'];
         if ($wtype == "'endspeed'")
         {
@@ -96,8 +119,21 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $dte, $offset)
         }
         $query = "insert into tblTaskWaypoint (tasPk, rwpPk, tawNumber, tawType, tawHow, tawShape, tawRadius) values ($tasPk, $rwpPk, $num, $wtype, $whow, $wshape, $radius)";
         error_log($query);
-        $result = mysql_query($query) or json_die('Failed to add task waypoints ' . mysql_error());
+        $result = mysql_query($query) or json_die('Failed to add task waypoints: ' . mysql_error());
+        $tawPk = mysql_insert_id();
         $num = $num + 10;
+    }
+
+    // Tidy the task up a bit - Airscore likes to have a 'goal'
+    if ($taskjson['goal']['type'] == 'LINE' && $tawPk > 0)
+    {
+        $query = "update tblTaskWaypoint set tawShape='line', tawType='goal' where tawPk=$tawPk";
+        $result = mysql_query($query) or json_die('Failed to update goal line: ' . mysql_error());
+    }
+    elseif  ($tawPk > 0 && $wtype != 'goal')
+    {
+        $query = "update tblTaskWaypoint set tawType='goal' where tawPk=$tawPk";
+        $result = mysql_query($query) or json_die('Failed to update last point to goal: ' . mysql_error());
     }
 
     exec(BINDIR . "task_up.pl $tasPk", $out, $retv);
@@ -109,16 +145,19 @@ function add_task($link, $comPk, $name, $offset)
     error_log("add_task region " . $_REQUEST['region']);
     $date = reqsval('date');
     $region = reqival('region');
-    if (!$region)
-    {
-        // @todo: remove this hack
-        $region = 393;
-    }
+    $createwpts = reqsval('createwpts');
     $tasPk = 0;
 
     if ($name == '')
     {
         json_die('Can\'t create a task with no name');
+        return;
+    }
+
+    if (!$region and !$createwpts)
+    {
+        // @todo: remove this hack
+        json_die('Can\'t create a task with no region (or createwpts)');
         return;
     }
 
@@ -129,7 +168,17 @@ function add_task($link, $comPk, $name, $offset)
         copy($_FILES['userfile']['tmp_name'], $copyname);
         chmod($copyname, 0644);
         // Process the file
-        $tasPk = add_xctrack_task($link, $tmpfile, $comPk, $name, $region, $date, $offset);
+        if ($createwpts)
+        {
+            // create a new "region" for the task itself
+            $now = time() % 1000;
+            $taskdesc = "taskreg_${comPk}_${date}_${now}";
+            $query = "insert into tblRegion (regDescription) values ('$taskdesc')";
+            $result = mysql_query($query) or die('Create task region failed: ' . mysql_error());
+            $region = mysql_insert_id();
+            $res['region'] = "Added reg=$region for task=$tasPk";
+        }
+        $tasPk = add_xctrack_task($link, $tmpfile, $comPk, $name, $region, $createwpts, $date, $offset);
     }
 
     if ($tasPk == 0)
@@ -175,10 +224,9 @@ $usePk = auth('system');
 $link = db_connect();
 #$cgi = var_export($_REQUEST,true);
 #error_log($cgi);
-$res = [];
 $comPk = reqival('comPk');
 $name = reqsval('taskname');
-
+$res = [];
 
 if (!is_admin('admin',$usePk,$comPk))
 {
@@ -191,6 +239,8 @@ $comformula = get_comformula($link, $comPk);
 $offset = $comformula['comTimeOffset'];
 $tasPk = add_task($link, $comPk, $name, $offset);
 
+$createwpts = reqsval('createwpts');
+$res['createwpts'] = $createwpts;
 $res['result'] = 'ok';
 $res['tasPk'] = $tasPk;
 

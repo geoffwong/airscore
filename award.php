@@ -22,7 +22,7 @@ function award_waypoint($link, $comPk, $tawPk, $trackid, $wptime)
     # Re-verify with new awarded waypoint(s)
     $out = '';
     $retv = 0; 
-    exec( BINDIR . "track_verify.pl $trackid $tasPk", $out, $retv);
+    exec( BINDIR . "track_verify_sr.pl $trackid $tasPk", $out, $retv);
     return 0;
 }
 

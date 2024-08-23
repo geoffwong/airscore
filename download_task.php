@@ -6,16 +6,16 @@ require_once 'xcdb.php';
 function get_xctrack_task($link, $comPk, $tasPk)
 {
     $res = [ 'version' => 1, 'taskType' => 'CLASSIC' ];
-    $goal = [ ];
-    $sss = [ ];
+    $goal = [];
+    $sss = [];
 
-    $region = get_comp_region($link, $comPk);
+    $region = get_task_region($link, $tasPk);
 
     $waytype = [ 'start' => 'TAKEOFF', 'speed' => 'SSS', 'endspeed' => 'ESS', 'waypoint' => '' ];
     $how = [ 'entry' => 'ENTER', 'exit' => 'EXIT' ];
     $shape = [ 'circle' => 'CYLINDER', 'semicircle' => 'LINE' ];
 
-//{"version":1,"taskType":"CLASSIC","turnpoints":[{"radius":2000,"waypoint":{"lon":146.965393,"lat":-36.757881,"altSmoothed":798,"name":"mys080","description":"MysticTO"},"type":"TAKEOFF"},{"radius":2000,"waypoint":{"lon":147.031784,"lat":-36.80389,"altSmoothed":997,"name":"7S-100","description":"SmokoRidge"},"type":"SSS"},{"radius":2000,"waypoint":{"lon":146.978851,"lat":-36.746181,"altSmoothed":339,"name":"6S-034","description":"MysticLZ"},"type":"ESS"},{"radius":1000,"waypoint":{"lon":146.891525,"lat":-36.717281,"altSmoothed":279,"name":"6L-028","description":"PorepunkAir"}}],"sss":{"type":"RACE","direction":"ENTER","timeGates":["02:00:00Z"]},"goal":{"type":"CYLINDER","deadline":"07:00:00Z"},"earthModel":"WGS84"}
+    //{"version":1,"taskType":"CLASSIC","turnpoints":[{"radius":2000,"waypoint":{"lon":146.965393,"lat":-36.757881,"altSmoothed":798,"name":"mys080","description":"MysticTO"},"type":"TAKEOFF"},{"radius":2000,"waypoint":{"lon":147.031784,"lat":-36.80389,"altSmoothed":997,"name":"7S-100","description":"SmokoRidge"},"type":"SSS"},{"radius":2000,"waypoint":{"lon":146.978851,"lat":-36.746181,"altSmoothed":339,"name":"6S-034","description":"MysticLZ"},"type":"ESS"},{"radius":1000,"waypoint":{"lon":146.891525,"lat":-36.717281,"altSmoothed":279,"name":"6L-028","description":"PorepunkAir"}}],"sss":{"type":"RACE","direction":"ENTER","timeGates":["02:00:00Z"]},"goal":{"type":"CYLINDER","deadline":"07:00:00Z"},"earthModel":"WGS84"}
 
     $taskinfo = get_comtask($link, $tasPk);
     $waypoints = get_taskwaypoints($link, $tasPk);
@@ -25,14 +25,8 @@ function get_xctrack_task($link, $comPk, $tasPk)
     //$start = substr($taskjson['sss']['timeGates'][0], 0, 8);
     //$finish = substr($taskjson['goal']['deadline'], 0, 8);
 
-    //$dtef = $dte;
-    //if ($finish < $start)
-    //{
-    //    // add one day 
-    //}
-
     // insert the turnpoints
-    $turnpoints = [ ];
+    $turnpoints = [];
     $offset = $taskinfo['comTimeOffset'];
     $nextday = 0;
     foreach ($waypoints as $wpt)
@@ -71,13 +65,9 @@ function get_xctrack_task($link, $comPk, $tasPk)
             $gates[] = sprintf("%02d", $hh) . substr($timez, 2, 6) . "Z";
             $sss['timeGates'] = $gates;
         }
-        elseif ($wpt['tawType'] == 'endspeed')
+        elseif ($wpt['tawType'] == 'endspeed' or $wpt['tawType'] == 'goal')
         {
             #{"goal":{"type":"CYLINDER","deadline":"07:00:00Z"},"earthModel":"WGS84"}
-            $goal = [];
-        }
-        elseif ($wpt['tawType'] == 'goal')
-        {
             $wshape = $shape[$wpt['tawShape']];   
             $goal = [];
             $goal['type'] = $wshape;
@@ -109,7 +99,7 @@ $format = reqival('format');
 
 $result = get_xctrack_task($link, $comPk, $tasPk);
 
-$jres = json_encode($result);
+$jres = json_encode($result, JSON_PRETTY_PRINT);
 
 header("Content-type: text/xctsk");
 header("Content-Disposition: attachment; filename=\"task_$tasPk.xctsk\"");

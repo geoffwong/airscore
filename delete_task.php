@@ -11,6 +11,7 @@ require_once 'xcdb.php';
 $usePk = auth('system');
 $link = db_connect();
 $comPk = reqival('comPk');
+$regPk = reqival('regPk');
 
 if (!is_admin('admin',$usePk,$comPk))
 {
@@ -41,6 +42,19 @@ if ($id > 0)
 
     $query = "delete from tblTaskResult where tasPk=$id";
     $result = mysql_query($query, $link) or die('Task TR delete failed: ' . mysql_error());
+
+    if ($regPk > 0)
+    {
+        $query = "select count(*) tblTask where regPk=$regPk";
+        $result = mysql_query($query, $link) or die('Task region count failed: ' . mysql_error());
+        $count = $result[0][0];
+        
+        if ($count == 1)
+        {
+            $query = "delete from tblRegion where regPk=$regPk and regDescription like 'task_%'";
+            $result = mysql_query($query, $link) or die('Task region delete failed: ' . mysql_error());
+        }
+    }
 
     $res['result'] = 'ok';
     $res['comPk'] = $comPk;

@@ -9,9 +9,11 @@ function create_task()
     fd.append('comPk', comPk);
     fd.append('taskname', $('#taskname').val());
     fd.append('date', $('#date').val());
+    fd.append('createwpts', $('#createwpts').val());
     fd.append('region', $('#region option:selected').val());
     //fd.append('region', $('#region').val());
     fd.append('userfile', $("#customFile")[0].files[0]);
+    //console.log(fd);
 
     $.ajax({
             url: 'add_task.php',  
@@ -42,7 +44,7 @@ function create_task()
                 }
                 else
                 {
-                    alert(res.result + ": " + res.error);
+                    alert(result.result + ": " + result.error);
                 }
             }
         });

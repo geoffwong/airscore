@@ -26,6 +26,7 @@ my $dbh;
 
 my $max_height = 3048;  # 10000' limit in oz 
 my $start_below = 100;
+my $debug = 0;
 #my $max_height = 2591;  # 8500' limit in oz 
 #my $max_height = 1666;  # 5000' limit in oz 
 
@@ -153,7 +154,7 @@ sub flight_check
                     }
                     else
                     {
-                        print "\n    MaxAltitude (", cln($space->{'name'}), ") max=", $max_height, "m alt=", $coord->{'alt'}, " dlat=", $coord->{'dlat'}, " dlong=", $coord->{'dlong'};
+                        if ($debug) { print "\n    MaxAltitude (", cln($space->{'name'}), ") max=", $max_height, "m alt=", $coord->{'alt'}, " dlat=", $coord->{'dlat'}, " dlong=", $coord->{'dlong'}; }
                     }
                 }
             }
@@ -173,7 +174,7 @@ sub flight_check
                         }
                         else
                         {
-                            print "\n    Circle (", cln($space->{'name'}), ") base=", $space->{'base'}, "m @ alt=", $coord->{'alt'}, "m horiz=", floor($space->{'radius'}-$dst+$start_below) , "m dlat=", $coord->{'dlat'}, " dlong=", $coord->{'dlong'};
+                            if ($debug) { print "\n    Circle (", cln($space->{'name'}), ") base=", $space->{'base'}, "m @ alt=", $coord->{'alt'}, "m horiz=", floor($space->{'radius'}-$dst+$start_below) , "m dlat=", $coord->{'dlat'}, " dlong=", $coord->{'dlong'}; }
                         }
                     }
 
@@ -202,7 +203,7 @@ sub flight_check
                         }
                         else
                         {
-                            print "\n    Polygon (", cln($space->{'name'}), ") base=", $space->{'base'}, "m) @ alt=", $coord->{'alt'}, " dlat=", $coord->{'dlat'}, " dlong=", $coord->{'dlong'};
+                            if ($debug) { print "\n    Polygon (", cln($space->{'name'}), ") base=", $space->{'base'}, "m) @ alt=", $coord->{'alt'}, " dlat=", $coord->{'dlat'}, " dlong=", $coord->{'dlong'}; }
                         }
                     }
                 }

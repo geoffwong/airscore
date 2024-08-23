@@ -11,6 +11,7 @@ require_once 'race_results.php';
 $link = db_connect();
 $comPk = reqival('comPk');
 $class = reqival('class');
+$bydate = reqival('bydate');
 $carr = [];
 
 // comp & formula info
@@ -74,8 +75,9 @@ if ($comType == 'RACE' || $comType == 'Team-RACE' || $comType == 'Route' || $com
 }
 else
 {
-    $civilised = get_olc_result($link, $comPk, $compinfo, '');
+    $civilised = get_olc_result($link, $comPk, $compinfo, '', $bydate);
     $compinfo['forClass'] = 'OLC'; 
+    $compinfo['bydate'] = $bydate;
     # $compinfo['forVersion'] = ''; 
 }
 

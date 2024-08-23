@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl -I /home/geoff/bin
 
 #
 # Reads in an OpenAir airspace file
@@ -118,7 +118,7 @@ sub pointcopy
     my ($p1) = @_;
     my %copy;
 
-    print "pc: lat=", $p1->{'lat'}, " lon=", $p1->{'lon'}, "\n";
+    #print "pc: lat=", $p1->{'lat'}, " lon=", $p1->{'lon'}, "\n";
     $copy{'lat'} = $p1->{'lat'};
     $copy{'lon'} = $p1->{'lon'};
 
@@ -151,7 +151,7 @@ sub bearing
     $brng = atan2($y, $x);
 
     # convert back to degree?
-    print "bearing=" . ($brng*180/$pi) . "\n";
+    #print "bearing=" . ($brng*180/$pi) . "\n";
 
     return $brng;
 }
@@ -227,7 +227,7 @@ sub read_openair
     my $lastfield;
     my $point2;
 
-    print "reading: $f\n";
+    #print "reading: $f\n";
     open(FD, "$f") or die "can't open $f: $!";
     $dirn = '+';
     $rec = {};
@@ -299,7 +299,7 @@ sub read_openair
                 # ignore wedge duplicate
                 if (($last->{'lat'} == $point->{'lat'}) and ($last->{'lon'} == $point->{'lon'}))
                 {
-                    print("Ignoring duplicate point\n");
+                    # print("Ignoring duplicate point\n");
                     next;
                 }
             }
@@ -367,7 +367,7 @@ sub read_openair
         }
         elsif ($field[0] eq "V")
         {
-            #print Dumper(\@field);
+            # print Dumper(\@field);
             if (substr($field[1],0,1) eq "X")
             {
                 # set center of following description 
@@ -426,7 +426,7 @@ sub read_airspace
     my $lastpoint;
     my ($a1, $a2);
 
-    print "reading: $f\n";
+    # print "reading: $f\n";
     open(FD, "$f") or die "can't open $f: $!";
 
     while (<FD>)
@@ -544,7 +544,7 @@ sub read_airspace
 #
 sub store_airspace
 {
-    my ($regions) = @_;
+    my ($regions, $extension) = @_;
     my $id;
     my $count;
     my $pts;
@@ -553,21 +553,22 @@ sub store_airspace
 
     for my $air ( @$regions )
     {
-        #print "select * from tblAirspace where airName='" . $air->{'name'} . "' and airClass='" . $air->{'class'} . "' and airBase=" . $air->{'base'} . " and airTops=" . $air->{'tops'} . "\n";
-        $sth = $dbh->prepare("select * from tblAirspace where airName='" . $air->{'name'} . "' and airClass='" . $air->{'class'} . "' and airBase=" . $air->{'base'} . " and airTops=" . $air->{'tops'});
+        # print "select * from tblAirspace where airName='" . $air->{'name'} . "' and airClass='" . $air->{'class'} . "' and airBase=" . $air->{'base'} . " and airTops=" . $air->{'tops'} . "\n";
+        $name = $extension . $air->{'name'};
+        $sth = $dbh->prepare("select * from tblAirspace where airName='" . $name . "' and airClass='" . $air->{'class'} . "' and airBase=" . $air->{'base'} . " and airTops=" . $air->{'tops'});
         $sth->execute();
         if ($ref = $sth->fetchrow_hashref())
         {
-            print "del ", $ref->{'airName'}, "\n";
+            #print "del $name\n";
             $dbh->do("delete from tblAirspaceWaypoint where airPk=?", undef, $ref->{'airPk'});
             $dbh->do("delete from tblAirspace where airPk=?", undef, $ref->{'airPk'});
         }
 
         # AirspaceWaypoint too?
-        print "insert ", $air->{'name'}, " - A", $air->{'class'}, "\n";
-        $dbh->do("insert into tblAirspace (airName,airClass,airBase,airTops,airShape) values (?,?,?,?,?)", undef, $air->{'name'}, $air->{'class'}, $air->{'base'}, $air->{'tops'}, $air->{'shape'});
+        $dbh->do("insert into tblAirspace (airName,airClass,airBase,airTops,airShape) values (?,?,?,?,?)", undef, $name, $air->{'class'}, $air->{'base'}, $air->{'tops'}, $air->{'shape'});
         $id = $dbh->last_insert_id(undef, undef, "tblAirspace", undef);
         $count = 0;
+        print "$id,", $name, ",", $air->{'class'}, ",", $air->{'base'}, ",", $air->{'tops'}, "\n";
 
         if (defined($air->{'centreto'}))
         {
@@ -593,7 +594,6 @@ sub store_airspace
             }
             $count++;
         }
-
     }
 }
 
@@ -608,7 +608,10 @@ db_connect();
 
 # Read the airspace file
 $airspace = read_openair($ARGV[0]);
+$extension = "";
+if (scalar @ARGV == 2)
+{
+    $extension = "_" . $ARGV[1];
+}
 #print Dumper($airspace);
-store_airspace($airspace);
-
-
+$airPk = store_airspace($airspace, $extension);

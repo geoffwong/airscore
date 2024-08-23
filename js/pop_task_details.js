@@ -228,24 +228,49 @@ function waypoints_card(div, info, region)
 function add_airspace()
 {
     var tasPk = url_parameter('tasPk');
-    var options = { };
-    options.tasPk = tasPk;
-    options.airPk = $('#airspacesel option:selected').val();
-    console.log(options);
+    var comPk = url_parameter('comPk');
 
-    $.post('add_task_airspace.php', options, function (res) {
-        console.log(res);
+    var fd = new FormData();
+    fd.append('tasPk', tasPk);
+    fd.append('comPk', comPk);
+    fd.append('airPk', $('#airspacesel option:selected').val());
+    fd.append('userfile', $("#customFile")[0].files[0]);
+    console.log(fd);
 
-        // add waypoint to table
-        $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+res.airPk+"\">" + res.airName + '</a></td><td>' + res.airClass + '</td><td>' + res.airBase + '<td>' + res.airTops + '</td></tr>');
-    });
+    $.ajax({
+            url: 'add_task_airspace.php',  
+            type: 'POST',
+            enctype: 'multipart/form-data',
+            data: fd,
+            cache: false,
+            contentType: false,
+            processData: false,
+            timeout:0,
+            dataType: "json",
+            success: function(result) {
+                console.log(result);
+                if (result['result'] == 'ok')
+                {
+                    var tasPk = result.tasPk;
+                    // add airspace(s) to table
+                    for (var ac = 0; ac < result.airspace.length; ac++)
+                    {
+                        //alert("ac=" + result.airspace[ac][0]);
+                        $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+result.airspace[ac][0]+"\">" + result.airspace[ac][1] + '</a></td><td>' + result.airspace[ac][2] + '</td><td>' + result.airspace[ac][3] + '<td>' + result.airspace[ac][4] + '</td></tr>');
+                    }
+                }
+                else
+                {
+                    alert(result.result + ": " + result.error);
+                }
+            }
+        });
+
+    //$.post('add_task_airspace.php', options, function (res) { console.log(res); });
 }
 
 function airspace_card(info)
 {
-    // if(!info)
-    //     return;
-    
     for (var tc = 0; tc < info.length; tc++)
     {
          $('#airspace tbody').append("<tr><td><a href=\"airspace_map.html?airPk="+info[tc].airPk+"\">" + info[tc].airName + '</a></td><td>' + info[tc].airClass + '</td><td>' + info[tc].airBase + '<td>' + info[tc].airTops + '</td></tr>');

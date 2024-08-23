@@ -4,6 +4,8 @@ $(document).ready(function() {
     var comPk = url.searchParams.get("comPk");
     var flyclass = url_parameter("class");
     var showcivl = url_parameter("civl");
+    var bydate = url_parameter("bydate");
+    var less = url_parameter("less");
     if (flyclass)
     {
         $('#dhv').val(flyclass);
@@ -13,8 +15,21 @@ $(document).ready(function() {
     {
         hide = [ 1,6,8 ];
     }
+    if (less)
+    {
+        hide = [ 1,2,5,6,8 ];
+    }
+    if (bydate)
+    {
+        bydate = '&bydate=1';
+        console.log(bydate);
+    }
+    else
+    {
+        bydate='';
+    }
     $('#task_result').dataTable({
-        ajax: 'get_result.php?comPk='+comPk,
+        ajax: 'get_result.php?comPk='+comPk+bydate,
         paging: false,
         searching: true,
         saveState: true,
