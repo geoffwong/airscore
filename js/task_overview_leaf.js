@@ -52,7 +52,7 @@ function plot_task_airspace(map, comPk, tasPk)
 
             for (airPk in res.airspaces)
             {
-                plot_air(airPk, res.airspaces[airPk], '#999999', false);
+                plot_air(map, airPk, res.airspaces[airPk], '#999999', false);
             }
         }
         else
@@ -100,16 +100,22 @@ function plot_all_tasks(comPk)
             {
                 add_map_row(comp_tasks.comp.comPk, taskinfo.task, count);
                 map = add_map_server('map_canvas'+count, count-1);
-                map.addControl(new L.Control.Fullscreen());
-                map.on('fullscreenchange', function () {
-                    if (map.isFullscreen()) {
-                        console.log('entered fullscreen');
-                        map_ruler = L.control.ruler().addTo(map);
-						plot_pilots_lo(map, taskinfo.task.tasPk);
-                        plot_task_airspace(map, comp_tasks.comp.comPk, taskinfo.task.tasPk);
+                var fullscreen = new L.Control.Fullscreen();
+                map._tasPk = taskinfo.task.tasPk;
+                map._comPk = comp_tasks.comp.comPk;
+                map.addControl(fullscreen);
+                map.on('fullscreenchange', function (e) 
+                {
+                    if (e.target.isFullscreen()) 
+                    {
+                        console.log('entered fullscreen: ' + e.target._tasPk);
+                        e.target._map_ruler = L.control.ruler().addTo(e.target);
+                        plot_pilots_lo(e.target, e.target._tasPk);
+                        plot_task_airspace(e.target, e.target._comPk, e.target._tasPk);
                     } 
-                    else {
-                        map.removeControl(map_ruler);
+                    else 
+                    {
+                        if (e.target._map_ruler) e.target.removeControl(e.target._map_ruler);
                         console.log('exited fullscreen');
                     }
                 });

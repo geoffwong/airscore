@@ -77,7 +77,7 @@ function get_recent_comps($link)
         left outer join tblTask T 
             on T.comPk=C.comPk 
         where C.comName not like '%test%' 
-        and C.comDateTo > date_sub(curdate(), interval 3 month) and C.comDateTo < curdate()
+        and C.comDateTo > date_sub(curdate(), interval 4 month) and C.comDateTo < curdate()
         group by C.comPk 
         order by C.comType desc, C.comDateFrom desc";
 

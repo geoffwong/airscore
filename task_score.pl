@@ -40,6 +40,29 @@ $TrackLib::dbh = db_connect();
 
 # Get the tasPk 
 $tasPk = $ARGV[0];
+if ($tasPk < 1)
+{
+    exit 1;
+}
+
+my $sleep_time = 0;
+if (scalar @ARGV > 1)
+{
+    $sleep_time = 1+$ARGV[1];
+}
+
+# Drop a mutex/lock - only do one at a time
+if (-e "/var/lock/score_$tasPk")
+{
+    print "Scoring $tasPk in progress\n";
+    exit 0;
+}
+`touch /var/lock/score_$tasPk`;
+
+if ($sleep_time > 0)
+{
+    sleep($sleep_time);
+}
 
 # Read the task itself ..
 $task = read_task($tasPk);
@@ -93,6 +116,7 @@ elsif ($formula->{'class'} eq 'pwc')
 else
 {
     print "Unknown formula class ", $formula->{'class'}, "\n";
+    `rm -f /var/lock/score_$tasPk`;
     exit 1;
 }
 
@@ -119,7 +143,8 @@ $sql = "update tblTask set tasTotalDistanceFlown=" . $taskt->{'distance'} .
             ", tasMaxDistance=" . $taskt->{'maxdist'} . 
        " where tasPk=$tasPk";
 
-#print $sql;
+print Dumper($taskt);
+print $sql, "\n";
 $sth = $TrackLib::dbh->prepare($sql);
 $sth->execute();
 
@@ -140,4 +165,6 @@ if ($taskt->{'pilots'} > 0)
     # Now allocate points to pilots ..
     $scr->points_allocation($TrackLib::dbh,$task,$taskt,$formula);
 }
+
+`rm -f /var/lock/score_$tasPk`;
 

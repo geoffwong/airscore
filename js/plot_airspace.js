@@ -29,7 +29,7 @@ $("#airspace")
             {
                 airlabelonscreen[key].removeFrom(map);
             }
-			plot_air(key, all_airspace[key], '#0000ff', 1);
+			plot_air(map, key, all_airspace[key], '#0000ff', 1);
     });
     //$("div").text( str );
   })
@@ -52,7 +52,7 @@ $(document).ready(function() {
             if (all_airspace)
             {
                 $.each(all_airspace, function (i, item) {
-                    plot_air(i, all_airspace[i], '#ff00ff', 0);
+                    plot_air(map, i, all_airspace[i], '#ff00ff', 0);
                     $('#airspace').append($('<option>', {
                         value: i,
                         text : item['airName']
@@ -72,7 +72,7 @@ $(document).ready(function() {
         new microAjax("get_airspace.php" + window.location.search,
             function(data) {
                 airspace = JSON.parse(data);
-	            plot_air(airPk, airspace[airPk], '#0000ff', 1);
+	            plot_air(map, airPk, airspace[airPk], '#0000ff', 1);
             }); }
 });
 

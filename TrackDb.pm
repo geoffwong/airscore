@@ -616,6 +616,7 @@ sub store_result
     print("insert into tblTaskResult (tasPk,traPk,tarDistance,tarSpeed,tarStart,tarGoal,tarSS,tarES,tarTurnpoints,tarLeadingCoeff,tarLeadingCoeff2,tarPenalty,tarComment,tarLastAltitude,tarLastTime) values ($tasPk,$traPk,$dist,$speed,$start,$goal,$ss,$endss,$turnpoints,$coeff,$coeff2,$penalty,'$comment',$stopalt,$stoptime)\n");
     my $sth = $dbh->prepare("insert into tblTaskResult (tasPk,traPk,tarDistance,tarSpeed,tarStart,tarGoal,tarSS,tarES,tarTurnpoints,tarLeadingCoeff,tarLeadingCoeff2,tarPenalty,tarComment,tarLastAltitude,tarLastTime) values ($tasPk,$traPk,$dist,$speed,$start,$goal,$ss,$endss,$turnpoints,$coeff,$coeff2,$penalty,'$comment',$stopalt,$stoptime)");
     $sth->execute();
+    my $tarPk = $dbh->last_insert_id(undef,undef,'tblTaskResult',undef);
 
     if (defined($result->{'kmtime'}))
     {
@@ -639,7 +640,7 @@ sub store_result
         $sth = $dbh->prepare("insert into tblTrackMarker (traPk,tmDistance,tmTime) values " . $tmarr);
         $sth->execute();
     }
-    return;
+    return $tarPk;
 }
 
 

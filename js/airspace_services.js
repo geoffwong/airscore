@@ -8,7 +8,7 @@ String.prototype.format = function()
     var args = arguments;
     return this.replace(pattern, function(capture){ return args[capture.match(/\d+/)]; });
 }
-function plot_air(airPk, airspace, clor, detailed)
+function plot_air(map, airPk, airspace, clor, detailed)
 {
     var track = airspace['waypoints'];
     var row;
@@ -172,7 +172,7 @@ function clear_airspace()
 function add_airspace() 
 {
     $("#airspace :selected").map(function(i, el) {
-        plot_air($(el).val(), all_airspace[$(el).val()], '#ff00ff', 0);
+        plot_air(map, $(el).val(), all_airspace[$(el).val()], '#ff00ff', 0);
     });
 } 
 function delete_airspace() 

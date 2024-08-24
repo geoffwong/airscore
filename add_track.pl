@@ -6,6 +6,7 @@ require DBD::mysql;
 
 use Time::Local;
 use Data::Dumper;
+use Airspace qw(:all);
 
 use TrackLib qw(:all);
 #use strict;
@@ -22,8 +23,6 @@ my $ref;
 my $res;
 my $ex;
 my ($glider,$dhv);
-my ($comFrom, $comTo);
-my $hdglider;
 
 my $pil = $ARGV[0];
 my $igc = $ARGV[1];
@@ -33,6 +32,208 @@ my $tasPk = 0 + $ARGV[3];
 my $forClass = '';
 my $forVersion = '';
 
+
+sub get_pilot_key
+{
+    my ($dbh, $comPk, $pil) = @_;
+    my $sql;
+    my $sth;
+    my $ref;
+    my $pilPk;
+    my $glider = 'unknown';
+    my $hdglider;
+    my $dhv = 'competition';
+
+    # Find the pilPk
+    if ((0 + $pil) > 0)
+    {
+        $sql = "select * from tblPilot where pilHGFA='$pil'"; #or pilCIVL='$pil'";
+    }
+    else
+    {
+        # Guess on last name ...
+        $sql = "select * from tblPilot where pilLastName='$pil' order by pilPk desc";
+    }
+
+    $sth = $dbh->prepare($sql);
+    $sth->execute();
+    if ($sth->rows() > 1)
+    {
+        print "Pilot ambiguity for $pil, use pilot HGFA/FAI#\n";
+        while  ($ref = $sth->fetchrow_hashref())
+        {
+            print $ref->{'pilHGFA'}, " ", $ref->{'pilFirstName'}, " ", $ref->{'pilLastName'}, " ", $ref->{'pilBirthdate'}, "\n";
+        }
+        return 0;
+    }
+
+    if ($ref = $sth->fetchrow_hashref())
+    {   
+        $pilPk = $ref->{'pilPk'};
+    }
+    else
+    {
+        my $header = read_header($igc);
+    
+        my $pilot = $header->{'pilot'};
+        $hdglider = $header->{'glider'};
+    
+        if (defined($pilot))
+        {
+            # split lastname(s) and select from database .. pick one?
+            my @arr = split(/ /, $pilot, 2);
+            my $lastname = $arr[1];
+            my $sth = $TrackLib::dbh->prepare("select pilPk from tblPilot where pilLastName='$lastname'");
+            $sth->execute();
+            my $res = $sth->fetchrow_array();
+            if ($sth->rows() == 1)
+            {
+                # @todo: improve to use firstname if multiple results returned
+                $pilPk = $res;
+            }
+        }
+    
+        if ($pilPk == 0)
+        {
+            print "Unable to identify pilot: $pil\n";
+            return 0;
+        }
+    }
+
+
+    # get previous track info for pilot
+    $sql = "select traGlider, traDHV from tblTrack where pilPk=$pilPk order by traPk desc";
+    $sth = $dbh->prepare($sql);
+    $sth->execute();
+    if  ($ref = $sth->fetchrow_hashref())
+    {
+        $glider = $ref->{'traGlider'};
+        $dhv = $ref->{'traDHV'};
+    }
+    else
+    {
+        if (defined($hdglider))
+        {
+            $glider = $hdglider;
+        }
+        else
+        {
+            $glider = 'Unknown';
+        }
+    }
+
+    return $pilPk, $glider, $dhv;
+}
+
+sub check_track_time
+{
+    my ($dbh, $comPk, $traPk) = @_;
+    my ($comFrom, $comTo, $comTimeOffset);
+    my $traStart = 0;
+    my $version;
+    my $ref;
+
+    my $sql = "select unix_timestamp(T.traStart) as TStart, unix_timestamp(C.comDateFrom) as CFrom, unix_timestamp(C.comDateTo) as CTo, C.comTimeOffset, F.forClass, F.forVersion from tblTrack T, tblCompetition C, tblFormula F where F.comPk=C.comPk and T.traPk=$traPk and C.comPk=$comPk";
+    my $sth = $dbh->prepare($sql);
+
+    $sth->execute();
+    if  ($ref = $sth->fetchrow_hashref())
+    {
+        $traStart = $ref->{'TStart'};
+        $comFrom = $ref->{'CFrom'};
+        $comTo = $ref->{'CTo'};
+        $comTimeOffset = $ref->{'comTimeOffset'};
+    
+        $version = $ref->{'forVersion'};
+
+        #$class = $ref->{'forClass'};
+        #print "comType=$comType forClass=$forClass\n";
+    }
+    
+    if ($traStart < ($comFrom-$comTimeOffset*3600))
+    {
+        print "Track ($traPk) from before the competition opened ($traStart:$comFrom)\n";
+        return undef;
+    }
+    
+    if ($traStart > ($comTo+86400))
+    {
+        print "Track ($traPk) from after the competition ended ($traStart:$comTo)\n";
+        return undef;
+    }
+    
+    return $version;
+}
+
+sub handle_task_track
+{
+    my ($dbh, $comPk, $tasPk, $tasType, $traPk) = @_;
+
+    print "Task type: $tasType\n";
+
+    # insert into tblComTaskTrack
+    my $sql = "insert into tblComTaskTrack (comPk,tasPk,traPk) values ($comPk,$tasPk,$traPk)";
+    $dbh->do($sql);
+
+    if (($tasType eq 'free') or ($tasType eq 'free-pin'))
+    {
+        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 0`;
+        # also verify for optional points in 'free' task?
+    }
+    elsif ($tasType eq 'olc')
+    {
+        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 3`;
+    }
+    elsif ($tasType eq 'airgain')
+    {
+        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 3`;
+        `${BINDIR}airgain_verify.pl $traPk $comPk $tasPk`;
+    }
+    elsif ($tasType eq 'speedrun' or $tasType eq 'race' or $tasType eq 'speedrun-interval')
+    {
+        # Optional really ...
+        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 3`;
+        `${BINDIR}track_verify_sr.pl $traPk $tasPk`;
+
+        # Airspace check - do something with a violation (add 1000pt penalty)
+        my $res = airspace_check_task_track($dbh, $tasPk, $traPk);
+        if ($res->{'result'} eq 'violation')
+        {
+            my $excess = $res->{'excess'};
+            my $sth = $dbh->prepare("update tblTaskResult set tarPenalty=1000, tarComment='Airspace violation=$excess' where tasPk=$tasPk and traPk=$traPk");
+            $sth->execute();
+        }
+
+        # Delay score - fork and background
+        my $pid = fork();
+        die "Fork failed: $!" if !defined $pid;
+        if ($pid == 0) 
+        {
+             # do this in the child
+             open STDIN, "</dev/null";
+             open STDOUT, ">/dev/null";
+             open STDERR, ">/dev/null";
+            `${BINDIR}task_score.pl $tasPk 300`;
+             exit;
+        }
+    }
+    else
+    {
+        print "Unknown task: $tasType\n";
+    }
+    if ($? > 0)
+    {
+        print("Flight/task optimisation failed\n");
+        exit(1);
+    }
+
+}
+
+
+#
+#
+#
+
 if (scalar(@ARGV) < 2)
 {
     print "add_track.pl <hgfa#> <igcfile> <comPk> [tasPk]\n";
@@ -41,84 +242,14 @@ if (scalar(@ARGV) < 2)
 
 $dbh = db_connect();
 
-# Find the pilPk
-if ((0 + $pil) > 0)
+$pilPk, $glider, $dhv = get_pilot_key($pil);
+if ($pilPk == 0)
 {
-    $sql = "select * from tblPilot where pilHGFA='$pil'"; #or pilCIVL='$pil'";
-}
-else
-{
-    # Guess on last name ...
-    $sql = "select * from tblPilot where pilLastName='$pil' order by pilPk desc";
-}
-$sth = $dbh->prepare($sql);
-$sth->execute();
-if ($sth->rows() > 1)
-{
-    print "Pilot ambiguity for $pil, use pilot HGFA/FAI#\n";
-    while  ($ref = $sth->fetchrow_hashref())
-    {
-        print $ref->{'pilHGFA'}, " ", $ref->{'pilFirstName'}, " ", $ref->{'pilLastName'}, " ", $ref->{'pilBirthdate'}, "\n";
-    }
+    print "Unable to identify pilot: $pil\n";
     exit(1);
 }
-if ($ref = $sth->fetchrow_hashref())
-{   
-    $pilPk = $ref->{'pilPk'};
-}
-else
-{
-    my $header = read_header($igc);
 
-    my $pilot = $header->{'pilot'};
-    $hdglider = $header->{'glider'};
-
-    if (defined($pilot))
-    {
-        # split lastname(s) and select from database .. pick one?
-        my @arr = split(/ /, $pilot, 2);
-        my $lastname = $arr[1];
-        my $sth = $TrackLib::dbh->prepare("select pilPk from tblPilot where pilLastName='$lastname'");
-        $sth->execute();
-        my $res = $sth->fetchrow_array();
-        if ($sth->rows() == 1)
-        {
-            # @todo: improve to use firstname if multiple results returned
-            $pilPk=$res;
-        }
-    }
-
-    if ($pilPk == 0)
-    {
-        print "Unable to identify pilot: $pil\n";
-        exit(1);
-    }
-}
-
-
-# get last track info
-$sql = "select traGlider, traDHV from tblTrack where pilPk=$pilPk order by traPk desc";
-$sth = $dbh->prepare($sql);
-$sth->execute();
-if  ($ref = $sth->fetchrow_hashref())
-{
-    $glider = $ref->{'traGlider'};
-    $dhv = $ref->{'traDHV'};
-}
-else
-{
-    if (defined($hdglider))
-    {
-        $glider = $hdglider;
-    }
-    else
-    {
-        $glider = 'Unknown';
-    }
-}
-
-
-# Load the track 
+# Read the track 
 $res = `${BINDIR}igcreader.pl $igc $pilPk`;
 $ex = $?;
 print $res;
@@ -172,8 +303,6 @@ else
         #print Dumper($ref);
         $tasType = $ref->{'tasTaskType'};
         $comType = $ref->{'comType'};
-        $comFrom = $ref->{'CFrom'};
-        $comTo = $ref->{'CTo'};
     }
     else
     {
@@ -181,74 +310,17 @@ else
     }
 }
 
-$traStart = 0;
-$sql = "select unix_timestamp(T.traStart) as TStart, unix_timestamp(C.comDateFrom) as CFrom, unix_timestamp(C.comDateTo) as CTo, C.comTimeOffset, F.forClass, F.forVersion from tblTrack T, tblCompetition C, tblFormula F where F.comPk=C.comPk and T.traPk=$traPk and C.comPk=$comPk";
-$sth = $dbh->prepare($sql);
-$sth->execute();
-if  ($ref = $sth->fetchrow_hashref())
-{
-    $traStart = $ref->{'TStart'};
-    $comFrom = $ref->{'CFrom'};
-    $comTo = $ref->{'CTo'};
-    $comTimeOffset = $ref->{'comTimeOffset'};
 
-    $forClass = $ref->{'forClass'};
-    $forVersion = $ref->{'forVersion'};
-    print "comType=$comType\n";
-    print "forClass=$forClass\n";
-}
-
-if ($traStart < ($comFrom-$comTimeOffset*3600))
+# Check track time makes sense
+$forVersion = check_track_time($dbh, $comPk, $traPk);
+if (!defined($forVersion))
 {
-    print "Track from before the competition opened ($traStart:$comFrom)\n";
-    print "traPk=$traPk\n";
-    exit(1);
-}
-
-if ($traStart > ($comTo+86400))
-{
-    print "Track from after the competition ended ($traStart:$comTo)\n";
-    print "traPk=$traPk\n";
     exit(1);
 }
 
 if ($tasPk > 0)
 {
-    print "Task type: $tasType\n";
-    # insert into tblComTaskTrack
-    $sql = "insert into tblComTaskTrack (comPk,tasPk,traPk) values ($comPk,$tasPk,$traPk)";
-    #print "add track=$sql\n";
-    $dbh->do($sql);
-
-    if (($tasType eq 'free') or ($tasType eq 'free-pin'))
-    {
-        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 0`;
-        # also verify for optional points in 'free' task?
-    }
-    elsif ($tasType eq 'olc')
-    {
-        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 3`;
-    }
-    elsif ($tasType eq 'airgain')
-    {
-        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 3`;
-        `${BINDIR}airgain_verify.pl $traPk $comPk $tasPk`;
-    }
-    elsif ($tasType eq 'speedrun' or $tasType eq 'race' or $tasType eq 'speedrun-interval')
-    {
-        # Optional really ...
-        `${BINDIR}optimise_flight.pl $traPk $comPk $tasPk 3`;
-        `${BINDIR}track_verify_sr.pl $traPk $tasPk`;
-    }
-    else
-    {
-        print "Unknown task: $tasType\n";
-    }
-    if ($? > 0)
-    {
-        print("Flight/task optimisation failed\n");
-        exit(1);
-    }
+    handle_task_track($dbh, $comPk, $tasPk, $tasType, $traPk);
 }
 else
 {

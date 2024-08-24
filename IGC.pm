@@ -658,7 +658,7 @@ sub is_flying
         return 1;
     }
 
-    if (($dist < 3.0 and abs($altdif) < 4) || (($dist+abs($altdif)) < 7))
+    if (($dist < 3.0 and abs($altdif) < 3) or (($dist+abs($altdif)) < 4))
     {
         #print "c1->lat=", $c1->{'lat'}, "c1->long=", $c1->{'long'}, "\n";
         #print "c2->lat=", $c2->{'lat'}, "c2->long=", $c2->{'long'}, "\n";
@@ -686,6 +686,8 @@ sub trim_flight
     my $timdif;
     my $count = 0;
     my $coord;
+    my $prev2;
+    my $prev;
     my $i;
 
     $full = $flight->{'coords'};
@@ -704,10 +706,14 @@ sub trim_flight
         {
             $count++;        
         }
+        $prev2 = $prev;
+        $prev = $coord;
         $coord = $next;
         $next = pop @$full; 
     }
-    # put the last two on again ...
+    # put the last few on again ...
+    push @$full, $prev2;
+    push @$full, $prev;
     push @$full, $next;
     push @$full, $coord;
 
@@ -889,6 +895,7 @@ sub read_flight
     {
         print "Unsupported file type detected: $ftype\n";
         print "Please submit an IGC file\n";
+        return undef;
     }
 
     # Trim off silly points ...
