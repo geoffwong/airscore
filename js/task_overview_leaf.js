@@ -39,6 +39,28 @@ function add_map_row(comPk, task, count)
 
     ele.style.paddingBottom = "40px";
 }
+function plot_task_airspace(map, comPk, tasPk)
+{
+    var options = { };
+    options.tasPk = tasPk;
+    options.comPk = comPk;
+    $.post("get_task_airspace.php", options, function (res) {
+        console.log(res);
+        if (res.result == 'ok')
+        {
+            var airspace;
+
+            for (airPk in res.airspaces)
+            {
+                plot_air(airPk, res.airspaces[airPk], '#999999', false);
+            }
+        }
+        else
+        {
+            alert("Task airspace failed: " + res.error);
+        }
+    });
+}
 function plot_all_tasks(comPk)
 {
     microAjax("get_all_tasks.php?comPk="+comPk, 
@@ -84,6 +106,7 @@ function plot_all_tasks(comPk)
                         console.log('entered fullscreen');
                         map_ruler = L.control.ruler().addTo(map);
 						plot_pilots_lo(map, taskinfo.task.tasPk);
+                        plot_task_airspace(map, comp_tasks.comp.comPk, taskinfo.task.tasPk);
                     } 
                     else {
                         map.removeControl(map_ruler);

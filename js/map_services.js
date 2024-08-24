@@ -118,6 +118,8 @@ function plot_pilots_lo(map, tasPk)
           var pilots;
           var pos;
 
+          if (data == "") return;
+
           // Got a good response, create the map objects
           pilots = JSON.parse(data);
           //pbounds = new L.LatLngBounds();
@@ -208,6 +210,7 @@ function add_panel(map, locn, ovhtml, classn)
 
 function merge_tracks(tasPk, traPk, incPk)
 {
+    console.log("traPk="+traPk+" incPk="+incPk);
     new microAjax("merge_track.php?tasPk="+tasPk+"&traPk="+traPk+"&incPk="+incPk, function(data) 
         { 
             window.location.href="tracklog_map.html?trackid="+traPk;
@@ -272,7 +275,7 @@ function add_award_task(tasPk, trackid)
     // add in a 'merge with' option?
     if (incpk > 0)
     {
-        ovhtml = ovhtml + "<br><button class=\"btn btn-primary btn-sm btn-block\" onclick=\"merge_tracks("+tasPk+','+trackid+','+incpk+");\">Merge Track</button></center>";
+        ovhtml = ovhtml + "<br><button class=\"btn btn-primary btn-sm btn-block\" onclick=\"merge_tracks("+tasPk+','+trackid+','+incpk+");\">Merge Track "+incpk+"</button></center>";
     }
     ovhtml = ovhtml + "</form>";
 
