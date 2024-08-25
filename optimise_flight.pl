@@ -29,7 +29,7 @@ sub task_trim
 {
     my ($task, $flight) = @_;
     my $waypoints;
-    my @allpoints;
+    my $allpoints;
     my $coords;
     my @newcoords;
     my $count;
@@ -41,7 +41,7 @@ sub task_trim
     $allpoints = scalar @$waypoints;
 
     $count = 0;
-    for $coord (@$coords)
+    for my $coord (@$coords)
     {
         # Check the task isn't finished ..
         if ($flight->{'udate'} + $coord->{'time'} < $task->{'gmstart'})
@@ -83,7 +83,7 @@ sub max_distance_from
     # reduce into buckets
     $num = scalar @$coords;
 
-    for ($i = 0; $i < $num-1; $i++)
+    for (my $i = 0; $i < $num-1; $i++)
     {
         $dist = qckdist2($start, $coords->[$i]);
         if ($dist > $max)
@@ -109,7 +109,7 @@ sub max_distance_from
 #
 sub reduce_flight
 {
-    my ($flight, $pilPk, $radius) = @_;
+    my ($flight, $radius) = @_;
     my $full;
     my @reduced;
     my $dist;
@@ -118,7 +118,7 @@ sub reduce_flight
 
 
     $full = $flight->{'coords'};
-    $coord = shift @$full; 
+    my $coord = shift @$full; 
 
     # reduce into buckets
     while (defined($coord))
@@ -332,6 +332,7 @@ sub reduce_segments
     my $res;
     my $t1;
     my $t2;
+    my $mg;
     my @cuttail;
     my @cuthead;
 
@@ -627,7 +628,7 @@ sub create_segments
         return $flight;
     }
 
-    for ($i = 0; $i < $num-1; $i++)
+    for (my $i = 0; $i < $num-1; $i++)
     {
         my $newseg;
         my $len;
@@ -715,10 +716,13 @@ sub select_segments
     my $result;
 
     my $startseg;
+    my $midseg;
+    my $replseg;
     my $maxstartdist;
 
     my $endseg;
     my $maxenddist;
+    my @selected;
 
     # we're actually picking 'points' - build segments at the end
     $segments++;
@@ -769,7 +773,7 @@ sub select_segments
     while (scalar @selected < $segments)
     {
         $num = scalar @selected;
-        %possible = ();
+        my %possible = ();
         for ($i = 0; $i < $num-1; $i++)
         {
             # fix: need to get total track length with new midpoint ..
@@ -804,7 +808,7 @@ sub select_segments
         #}
 
         # find the best and insert ...
-        $mg = $skeys[0];
+        my $mg = $skeys[0];
         #print "splicing: $mg with " . $possible{$mg}->{'segment'} . "\n";
         splice(@selected, $mg+1, 0, $possible{$mg}->{'segment'});
 
@@ -914,7 +918,7 @@ sub optimise_waypoints
 #
 sub store_waypoints
 {
-    my ($traPk,$flight) = @_;
+    my ($dbh, $traPk, $flight) = @_;
     my $coords;
     my $sth;
     my $seg;
@@ -955,7 +959,7 @@ sub store_waypoints
 
 sub store_segments
 {
-    my ($traPk,$flight) = @_;
+    my ($dbh, $traPk, $flight) = @_;
     my $coords;
     my $sth;
     my $seg;
@@ -995,7 +999,7 @@ sub store_segments
 #
 sub store_buckets
 {
-    my ($traPk,$flight) = @_;
+    my ($dbh, $traPk, $flight) = @_;
     my $coords;
     my $sth;
     my $seg;
@@ -1029,6 +1033,7 @@ sub score_track
     my $polarea;
     my $ascore;
     my $gap;
+    my $areabit;
     my $sz;
     
     $totlen=0;
@@ -1045,7 +1050,7 @@ sub score_track
     if (($gap/$totlen) < 0.2)
     {
         $polarea = polygon_area($track);
-        $areabit = (4*$pi*$polarea) / ($totlen*$totlen);
+        $areabit = (4*$TrackLib::pi*$polarea) / ($totlen*$totlen);
         $ascore = (1.4 + $areabit) * $totlen - $gap;
         if ($ascore > $totlen)
         {
@@ -1067,10 +1072,12 @@ my $flight;
 my $formula;
 my $task;
 my $comPk;
+my $tasPk;
 my $traPk;
 my $turnpoints;
 my $unreduced;
 my $numb;
+my $totlen;
 
 if (scalar(@ARGV) < 1)
 {
@@ -1106,7 +1113,6 @@ if ($track_width > $max_radius)
 if ($tasPk > 0)
 {
     my $startg;
-    my $totlen;
     my $sth;
 
     $flight->{'tasPk'} = $tasPk;
@@ -1171,21 +1177,21 @@ if ($tasPk > 0)
 }
 
 # Reduce into buckets
-$reduced = reduce_flight($flight, $pilPk, $bucket_radius);
+my $reduced = reduce_flight($flight, $bucket_radius);
 $numb = scalar @$reduced;
 if ($numb == 1)
 {
     print "Only one bucket - redo\n";
-    $reduced = reduce_flight($flight, $pilPk, $bucket_radius/4);
+    $reduced = reduce_flight($flight, $bucket_radius/4);
 }
 #print Dumper($reduced);
 #print "num buckets=$numb\n";
 
 $traPk = $flight->{'traPk'};
-#store_buckets($traPk, $reduced);
+#store_buckets($dbh, $traPk, $reduced);
 
 # Reduce into line segments
-$segmented = segment_flight($reduced);
+my $segmented = segment_flight($reduced);
 if (!defined($segmented) || scalar @$segmented == 0)
 {
     print "Unable to segment flight\n";
@@ -1201,7 +1207,7 @@ foreach my $seg (@$segmented)
 }
 $numb = scalar @$segmented;
 #print "Total flight length of un-reduced segments($numb)=$totlen\n";
-store_segments($traPk, $segmented);
+store_segments($dbh, $traPk, $segmented);
 
 if (scalar(@$segmented) > $turnpoints)
 {
@@ -1210,7 +1216,7 @@ if (scalar(@$segmented) > $turnpoints)
     $segmented = optimise_waypoints($segmented);
     print "Number of reduced segments=", scalar @$segmented, "\n";
 }
-store_waypoints($traPk, $segmented);
+store_waypoints($dbh, $traPk, $segmented);
 
 # Reduce segments to numbers of required segments
 # Ok .. output flight segments for a looksy
@@ -1223,8 +1229,7 @@ foreach my $seg (@$segmented)
 #print "Total flight length of $turnpoints reduced segments=$totlen\n";
 #print Dumper($segmented);
 
-$score = score_track($segmented,$totlen);
-
+my $score = score_track($segmented,$totlen);
 if ($tasPk > 0 and ($task->{'type'} ne 'airgain'))
 {
     my %result;
