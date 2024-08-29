@@ -55,6 +55,7 @@ sub get_pilot_key
         $sql = "select * from tblPilot where pilLastName='$pil' order by pilPk desc";
     }
 
+    print($sql, "\n");
     $sth = $dbh->prepare($sql);
     $sth->execute();
     if ($sth->rows() > 1)
@@ -68,16 +69,16 @@ sub get_pilot_key
     }
 
     if ($ref = $sth->fetchrow_hashref())
-    {   
+    {
         $pilPk = $ref->{'pilPk'};
     }
     else
     {
         my $header = read_header($igc);
-    
+
         my $pilot = $header->{'pilot'};
         $hdglider = $header->{'glider'};
-    
+
         if (defined($pilot))
         {
             # split lastname(s) and select from database .. pick one?
@@ -92,7 +93,7 @@ sub get_pilot_key
                 $pilPk = $res;
             }
         }
-    
+
         if ($pilPk == 0)
         {
             print "Unable to identify pilot: $pil\n";
@@ -107,6 +108,7 @@ sub get_pilot_key
     $sth->execute();
     if  ($ref = $sth->fetchrow_hashref())
     {
+        print Dumper($ref);
         $glider = $ref->{'traGlider'};
         $dhv = $ref->{'traDHV'};
     }
@@ -143,25 +145,25 @@ sub check_track_time
         $comFrom = $ref->{'CFrom'};
         $comTo = $ref->{'CTo'};
         $comTimeOffset = $ref->{'comTimeOffset'};
-    
+
         $version = $ref->{'forVersion'};
 
         #$class = $ref->{'forClass'};
         #print "comType=$comType forClass=$forClass\n";
     }
-    
+
     if ($traStart < ($comFrom-$comTimeOffset*3600))
     {
         print "Track ($traPk) from before the competition opened ($traStart:$comFrom)\n";
         return undef;
     }
-    
+
     if ($traStart > ($comTo+86400))
     {
         print "Track ($traPk) from after the competition ended ($traStart:$comTo)\n";
         return undef;
     }
-    
+
     return $version;
 }
 
@@ -207,7 +209,7 @@ sub handle_task_track
         # Delay score - fork and background
         my $pid = fork();
         die "Fork failed: $!" if !defined $pid;
-        if ($pid == 0) 
+        if ($pid == 0)
         {
              # do this in the child
              open STDIN, "</dev/null";
@@ -242,14 +244,14 @@ if (scalar(@ARGV) < 2)
 
 $dbh = db_connect();
 
-$pilPk, $glider, $dhv = get_pilot_key($pil);
+($pilPk, $glider, $dhv) = get_pilot_key($dbh, $comPk, $pil);
 if ($pilPk == 0)
 {
-    print "Unable to identify pilot: $pil\n";
+    print "Unable to identify pilot (2): $pil\n";
     exit(1);
 }
 
-# Read the track 
+# Read the track
 $res = `${BINDIR}igcreader.pl $igc $pilPk`;
 $ex = $?;
 print $res;
