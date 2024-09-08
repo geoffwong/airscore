@@ -7,6 +7,7 @@ require DBD::mysql;
 use Time::Local;
 use Data::Dumper;
 use Airspace qw(:all);
+use Defines qw(:all);
 
 use TrackLib qw(:all);
 #use strict;
