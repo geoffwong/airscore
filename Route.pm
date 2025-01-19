@@ -741,7 +741,9 @@ sub task_distance
             {
                 my $sdist = short_dist($waypoints->[$i], $waypoints->[$i+1]);
 
-                if (($i+1 != $gpt) or ($i+1 == $gpt and $waypoints->[$gpt]->{'shape'} ne 'circle'))
+                if (($i+1 != $gpt) or 
+                    ($i+1 == $gpt and $ept == $gpt) or 
+                    ($i+1 == $gpt and $waypoints->[$gpt]->{'shape'} ne 'circle'))
                 {
                     $cwdist = $cwdist + $sdist;
                 }

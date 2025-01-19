@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -I/home/bin/geoff
 
 
 #
@@ -76,6 +76,20 @@ sub spread
     }
 
     return $nbuc;
+}
+
+sub select_coeff
+{
+    my ($self, $formula) = @_;
+    my $leadingcoeff = 'tarLeadingCoeff';
+    if (($formula->{'class'} eq 'pwc' or $formula->{'class'} eq 'gap' 
+            or $formula->{'class'} eq 'ozgap' or $formula->{'class'} eq 'ggap') 
+        and (($formula->{'version'} + 0) > 2022))
+    {
+        $leadingcoeff = 'tarLeadingCoeff2';
+    }
+
+    return $leadingcoeff;
 }
 
 #
@@ -182,13 +196,14 @@ sub task_totals
     }
 
     # FIX: lead out coeff - first departure in goal and adjust min coeff 
+    my $leadingcoeff = $self->select_coeff($formula);
     if ($ess > 0)
     {
-        $sth = $dbh->prepare("select min(tarLeadingCoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarES > 0 and tarLeadingCoeff is not NULL and tarLeadingCoeff > 0");
+        $sth = $dbh->prepare("select min($leadingcoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarES > 0 and $leadingcoeff is not NULL and $leadingcoeff > 0");
     }
     else
     {
-        $sth = $dbh->prepare("select min(tarLeadingCoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and tarLeadingCoeff is not NULL and tarLeadingCoeff > 0");
+        $sth = $dbh->prepare("select min($leadingcoeff) as MinCoeff from tblTaskResult where tasPk=$tasPk and $leadingcoeff is not NULL and $leadingcoeff > 0");
     }
     $sth->execute();
     $mincoeff = 0;
@@ -370,6 +385,7 @@ sub day_quality
     }
     my $nomdistarea = $taskt->{'launched'}*((1+$formula->{'nomgoal'}/100)*($formula->{'nomdist'}-$formula->{'mindist'}) + $mdist) / 2;
     $distance = ($taskt->{'distance'}-$taskt->{'launched'}*$formula->{'mindist'}) / $nomdistarea;
+    print $taskt->{'distance'}, " ", $taskt->{'launched'}, " ", $formula->{'mindist'}, " ", $nomdistarea, "\n";
     print "distance quality=$distance\n";
     if ($distance > 1) 
     {
@@ -468,7 +484,7 @@ sub points_weight
     $Aarrival = 1000 * $quality * (1-$distweight) * $formula->{'weightarrival'};
     $speedweight = $formula->{'weightspeed'};
 
-    if (substr($formula->{'version'},0,2) eq 'hg')
+    if ($task->{'class'} eq 'HG')
     {
         $Adistance = 1000 * (0.9-1.665*$x+1.713*$x*$x-0.587*$x*$x*$x) * $quality;
         $Astart = 1000 * $quality * (1-$distweight) * 1.4/8;
@@ -836,11 +852,12 @@ sub ordered_results
     my $sth;
     my $lastES = -1;
     my $lastPlace = -1;
+    my $leadingcoeff = $self->select_coeff($formula);
 
     # Get all pilots and process each of them 
     # pity it can't be done as a single update ...
     $dbh->do('set @x=0;');
-    $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarPk, traPk, tarDistance, tarSS, tarES, tarPenalty, tarResultType, tarLeadingCoeff, tarGoal, tarLastAltitude, tarLastTime from tblTaskResult where tasPk=$tasPk and tarResultType <> 'abs' order by case when (tarES=0 or tarES is null) then 99999999 else tarES end, tarDistance desc");
+    $sth = $dbh->prepare("select \@x:=\@x+1 as Place, tarPk, traPk, tarDistance, tarSS, tarES, tarPenalty, tarResultType, $leadingcoeff as leadingcoeff, tarGoal, tarLastAltitude, tarLastTime from tblTaskResult where tasPk=$tasPk and tarResultType <> 'abs' order by case when (tarES=0 or tarES is null) then 99999999 else tarES end, tarDistance desc");
     $sth->execute();
     while ($ref = $sth->fetchrow_hashref()) 
     {
@@ -893,7 +910,7 @@ sub ordered_results
         }
 
         # Leadout Points
-        $taskres{'coeff'} = $ref->{'tarLeadingCoeff'};
+        $taskres{'coeff'} = $ref->{'leadingcoeff'};
         # FIX: adjust against fastest ..
         if ((($ref->{'tarES'} - $ref->{'tarSS'}) < 1) and ($ref->{'tarSS'} > 0))
         {
@@ -901,15 +918,15 @@ sub ordered_results
             if ($taskt->{'goal'} > 0)
             {
                 # adjust for late starters
-                print "No goal, adjust pilot coeff from: ", $ref->{'tarLeadingCoeff'}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, "\n";
-                print "endss dist=", $task->{'endssdistance'}, " tarDist=", $ref->{'tarDistance'}, " ssdist=", $task->{'ssdistance'}, "\n";
+                print "No goal, adjust pilot coeff from: ", $ref->{$leadingcoeff}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, "\n";
+                print "endss dist=", $task->{'endssdistance'}, " tarDist=", $ref->{'tarDistance'}, " ssdist=", $task->{'ssdistance'}, " tarSS=", $ref->{'tarSS'}, " tarES=", $ref->{'tarES'}, "\n";
 
                 # $remainingss * ($task->{'sfinish'}-$coord->{'time'})
                 if ($taskt->{'lastarrival'} > 0)
                 {
                     my $remdist = $task->{'endssdistance'} - $ref->{'tarDistance'};
-                    $taskres{'coeff'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist / 1800 / $task->{'ssdistance'};
-                    $taskres{'coeff2'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist * $remdist / 1800 / $task->{'ssdistance'};
+                    $taskres{'coeff'} = $ref->{$leadingcoeff} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist / 1800 / $task->{'ssdistance'};
+                    #$taskres{'coeff2'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist * $remdist / 1800 / $task->{'ssdistance'};
                     if ($taskres{'coeff'} < 0)
                     {
                         print " WARNING: negative leading coeff: ", $taskres{'coeff'}, " for ", $taskres{'traPk'}, "\n";
