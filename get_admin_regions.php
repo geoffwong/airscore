@@ -10,7 +10,7 @@ $link = db_connect();
 
 function get_admin_regions($link, $usePk)
 {
-    $sql = "SELECT R.regPk, R.regDescription, count(*) as Numbers from tblRegion R left outer join tblRegionWaypoint RW on RW.regPk=R.regPk group by R.regPk order by R.regDescription";
+    $sql = "SELECT R.regPk, R.regDescription, count(*) as Numbers from tblRegion R left outer join tblRegionWaypoint RW on RW.regPk=R.regPk where R.regDescription not like 'taskreg%' group by R.regPk order by R.regDescription";
     $result = mysql_query($sql,$link);
 
     $regions = []; 

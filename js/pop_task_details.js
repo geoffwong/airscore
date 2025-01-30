@@ -132,6 +132,19 @@ function delete_task()
     $.post("delete_task.php", options, deleted_task);
 }
 
+function download_tracks()
+{
+    var id = url_parameter('comPk');
+    var taskid = task_details.keys.tasPk;
+    var options = { comPk : id, tasPk : taskid };
+    console.log(options);
+
+    //$('#savespin').addClass('fa-circle-o-notch');
+    //$('#savespin').addClass('fa-spin');
+    //$.post("download_task_tracks.php", options, updated_comp_info);
+    window.location.replace("download_task_tracks.php?comPk="+id+"&tasPk="+taskid);
+}
+
 function save_waypoints()
 {
     var $rows1 = $('#waypointstbl').find('tr:has(td)');
@@ -312,6 +325,21 @@ function check_airspace()
     var url = 'check_airspace.php?tasPk=' + tasPk;
     console.log(url);
     window.location.replace(url);
+}
+
+function clear_airspace()
+{
+    var tasPk = url_parameter('tasPk');
+    //var url = 'clear_task_airspace.php?tasPk=' + tasPk;
+    $.post('clear_task_airspace.php' + window.location.search, function (res) {
+        console.log(res);
+        if (res.result != "ok")
+        {
+            alert(res.result + ": " + res.error);
+            return;
+        }
+        $('#airspace tbody').children().remove();
+    });
 }
 
 $(document).ready(function() {

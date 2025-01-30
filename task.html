@@ -65,6 +65,17 @@
                     <select name="airspacesel" id="airspacesel" class="form-control" placeholder="Airspace"></select>
 			    </div>
 		    </div>
+		    <div class="form-row">
+                <div class="col">
+                <center>OR</center>
+                </div>
+		    </div>
+		    <div class="form-row">
+                <div class="col">
+                <input name="userfile" type="file" class="custom-file-input" id="customFile">
+                <label class="custom-file-label" for="customFile" id="task_airspace">Airspace From File</label>
+                </div>
+		    </div>
 			</div>
 			</form>
         </div>
@@ -159,6 +170,7 @@
     <div class="row mt-3">
         <div class="col-12">
         <button id="delbut" class="btn btn-danger btn-sm float-left" data-toggle="modal" data-target="#delmodal">Delete</button>
+        <button id="tracksbut" class="btn btn-secondary btn-sm float-left ml-1" onClick="download_tracks();" >Tracks</button>
         <button id="resultbut" class="btn btn-info btn-sm float-right ml-1"  onClick="document.location.href='task_result.html'+window.location.search;">Results</button>
         <button id="scorebut" class="btn btn-info btn-sm float-right" onclick="score_task();">Score<div id="scorespin" class="fa"></div></button>
         </div>
@@ -202,8 +214,9 @@
     <div class="row mt-4">
         <div class="col-4"><h2>Airspace</h2></div>
         <div class="col-8">
-            <button class="btn btn-primary btn-sm float-right ml-1" onclick="check_airspace();">Check<div id="airspin" class="fa"></div></button>
             <button class="btn btn-primary btn-sm float-right ml-1" data-toggle="modal" data-target="#airspacemodal">Add</button>
+            <button class="btn btn-primary btn-sm float-right ml-1" onclick="check_airspace();">Check<div id="airspin" class="fa"></div></button>
+            <button class="btn btn-danger btn-sm float-right mr-5 ml-1" onclick="clear_airspace();">Reset<div id="airspin" class="fa"></div></button>
         </div>
     </div>
     <div class="row mb-4">
@@ -222,8 +235,8 @@
     <script src="vendor/jquery.ui.touch-punch.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="js/enums.js"></script>
-    <script type="text/javascript" src="js/pop_task_details.js?v=2"></script>
+    <script type="text/javascript" src="js/enums.js?v=1"></script>
+    <script type="text/javascript" src="js/pop_task_details.js?v=18"></script>
 </body>
 </html>
 

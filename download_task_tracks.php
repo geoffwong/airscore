@@ -7,16 +7,28 @@ function get_full_year($year)
     $output = system('grep HFDTE *');
 }
 
+
+function get_hfdte($indate)
+{
+    $date = substr($indate,8,2) . substr($indate,5,2) . substr($indate,2,2);
+    return $date;
+}
+
+function get_file_date_matches($base, $date)
+{
+    $output = shell_exec("grep -lE TE$date\|TE:$date $base*");
+    $result = explode("\n", $output);
+    return $result;
+}
+
 function match_file($year, $base, $date)
 {
     # get the latest matching submission (or all?)
-    $matches = glob($base . '*');
-    #print "match_file: $year $base"; 
-    #var_dump($matches); 
-    #echo "<br>";
-    if (sizeof($matches) > 0)
+    $date = get_hfdte($date);
+    $matches = get_file_date_matches($base, $date);
+    if (count($matches) > 0)
     {
-        return $matches[sizeof($matches)-1];
+        return $matches[count($matches)-2];
     }
     else
     {
@@ -74,23 +86,30 @@ foreach ($tracks as $row)
         }
     }
 
-    $basename =  strtolower($row['pilLastName']) . '_' . $row['pilHGFA'] . '_' . $row['traDate'];
+    $basename =  strtolower($row['pilLastName']) . '_' . $row['pilHGFA'] . '_';
     $result = match_file($year, $basename, $row['traDate']);
+    if (!$result and (0+$row['pilCIVL'] > 0))
+    {
+        $basename =  strtolower($row['pilLastName']) . '_' . $row['pilCIVL'] . '_';
+        $result = match_file($year, $basename, $row['traDate']);
+    }
     if ($result)
     {
         $ziplist[] = $result;
     }
 }
 
-#print "Download tracks disabled at this time<br>\r\n";
-#exit(0);
-
 # zip them up ..
 $allfiles = implode(' ', $ziplist);
+
+#print"Download tracks disabled at this time<br>\r\n";
+#var_dump($allfiles);
+#exit(0);
 
 $bname = strtolower(preg_replace('/[\s+\/]/', '_', $info['comName'] . '_' . $info['tasName'] . ".zip"));
 $filename = '/tmp/' . $bname;
 #echo ("zip \"$filename\" $allfiles 2>&1 > /dev/null");
+system("rm -f \"$filename\" 2>&1 > /dev/null");
 system("zip \"$filename\" $allfiles 2>&1 > /dev/null");
 
 header("Content-Type: application/zip");
