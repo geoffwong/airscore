@@ -377,15 +377,21 @@ sub day_quality
     }
     print "\nlaunch quality=$launch\n";
     
-
-    my $mdist = $formula->{'nomgoal'}/100 *($taskt->{'maxdist'} - $formula->{'nomdist'});
-    if ($mdist < 0)
+    if ($formula->{'distmeasure'} eq 'median')
     {
-        $mdist = 0;
+        $distance = $taskt->{'median'} / $formula->{'nomdist'};
     }
-    my $nomdistarea = $taskt->{'launched'}*((1+$formula->{'nomgoal'}/100)*($formula->{'nomdist'}-$formula->{'mindist'}) + $mdist) / 2;
-    $distance = ($taskt->{'distance'}-$taskt->{'launched'}*$formula->{'mindist'}) / $nomdistarea;
-    print $taskt->{'distance'}, " ", $taskt->{'launched'}, " ", $formula->{'mindist'}, " ", $nomdistarea, "\n";
+    else
+    {
+        my $mdist = $formula->{'nomgoal'}/100 *($taskt->{'maxdist'} - $formula->{'nomdist'});
+        if ($mdist < 0)
+        {
+            $mdist = 0;
+        }
+        my $nomdistarea = $taskt->{'launched'}*((1+$formula->{'nomgoal'}/100)*($formula->{'nomdist'}-$formula->{'mindist'}) + $mdist) / 2;
+        $distance = ($taskt->{'distance'}-$taskt->{'launched'}*$formula->{'mindist'}) / $nomdistarea;
+        print $taskt->{'distance'}, " ", $taskt->{'launched'}, " ", $formula->{'mindist'}, " ", $nomdistarea, "\n";
+    }
     print "distance quality=$distance\n";
     if ($distance > 1) 
     {
@@ -764,7 +770,14 @@ sub pilot_speed
     if ($Ptime > 0)
     {
         # $Pspeed = $Aspeed * (1-(($Ptime-$Tmin)/3600/sqrt($Tmin/3600))**(2/3)); # pre 2020
-        $Pspeed = $Aspeed * (1-(($Ptime-$Tmin)/3600/sqrt($Tmin/3600))**(5/6));
+        if ($formula->{'speedcalc'} eq 'extended')
+        {
+            $Pspeed = $Aspeed * (1-(($Ptime-$Tmin)/3600/sqrt($Tmin/1800))**(2/3));
+        }
+        else
+        {
+            $Pspeed = $Aspeed * (1-(($Ptime-$Tmin)/3600/sqrt($Tmin/3600))**(5/6));
+        }
     }
     else
     {
@@ -918,14 +931,14 @@ sub ordered_results
             if ($taskt->{'goal'} > 0)
             {
                 # adjust for late starters
-                print "No goal, adjust pilot coeff from: ", $ref->{$leadingcoeff}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, "\n";
+                print "No goal, adjust pilot coeff from: ", $ref->{'leadingcoeff'}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, "\n";
                 print "endss dist=", $task->{'endssdistance'}, " tarDist=", $ref->{'tarDistance'}, " ssdist=", $task->{'ssdistance'}, " tarSS=", $ref->{'tarSS'}, " tarES=", $ref->{'tarES'}, "\n";
 
                 # $remainingss * ($task->{'sfinish'}-$coord->{'time'})
                 if ($taskt->{'lastarrival'} > 0)
                 {
                     my $remdist = $task->{'endssdistance'} - $ref->{'tarDistance'};
-                    $taskres{'coeff'} = $ref->{$leadingcoeff} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist / 1800 / $task->{'ssdistance'};
+                    $taskres{'coeff'} = $ref->{'leadingcoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist / 1800 / $task->{'ssdistance'};
                     #$taskres{'coeff2'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist * $remdist / 1800 / $task->{'ssdistance'};
                     if ($taskres{'coeff'} < 0)
                     {

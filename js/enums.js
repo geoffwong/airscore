@@ -6,12 +6,13 @@ var all_enums = {
 	comTeamScoring   : [ 'aggregate', 'team-gap', 'handicap' ],
 	comTeamOver      : [ 'best', 'selected' ],
     comClass         : [ 'PG','HG','mixed' ],
-    forClass         : [ 'gap', 'ozgap', 'pwc', 'sahpa', 'nzl', 'ggap', 'nogap', 'jtgap', 'rtgap', 'timegap' ],
+    forClass         : [ 'gap', 'ozgap', 'pwc', 'sahpa', 'nzl', 'ggap', 'nogap', 'jtgap', 'rtgap', 'timegap', 'wptgap' ],
     forArrival       : [ 'none', 'place', 'timed' ],
     forDeparture     : [ 'none', 'departure', 'leadout', 'kmbonus' ],
     forDistMeasure   : [ 'average', 'median' ],
     forDiffRamp      : [ 'fixed', 'flexible' ],
     forDiffCalc      : [ 'all', 'lo' ],
+    forSpeedCalc     : [ 'normal', 'extended' ],
     forStoppedElapsedCalc : [ 'atstopped', 'shortesttime' ],
     forWeightDist    : [ 'pre2014', 'post2014' ],
     tasTaskType      : [ 'free', 'speedrun', 'race', 'olc', 'free-bearing', 'speedrun-interval', 'airgain', 'aat', 'free-pin' ],
@@ -100,7 +101,7 @@ function update_classes(com_class)
 {
     if (com_class == 'PG')
     {
-        var pg = { Novice: 'A', Fun: 'B', Sports: 'C', Serial: 'D', Competition: 'CCC' };
+        var pg = { Novice: 'A', Fun: 'B', Sports: 'C', Serial: 'D', Competition: 'CCC', Teams : 'taskteam' };
         $('#dhv option').remove();
         $('#dhv').append("<option value=\"\" selected>Open</option>");
         $.each(pg, function (key, val) {
@@ -110,7 +111,7 @@ function update_classes(com_class)
     }
     else if (com_class == 'HG')
     {
-        var hg = { Floater: 'F', Kingpost: 'G', Rigid: 'I' };
+        var hg = { Floater: 'F', Kingpost: 'G', Rigid: 'I', Teams : 'taskteam' };
         $('#dhv option').remove();
         $('#dhv').append("<option value=\"\" selected>Open</option>");
         $.each(hg, function (key, val) {

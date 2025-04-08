@@ -492,6 +492,7 @@ sub read_formula
         $formula{'diffdist'} = $ref->{'forDiffDist'} * 1000;
         $formula{'diffcalc'} = $ref->{'forDiffCalc'};
         $formula{'distmeasure'} = $ref->{'forDistMeasure'};
+        $formula{'speedcalc'} = $ref->{'forSpeedCalc'};
         $formula{'olcpoints'} = $ref->{'forOLCPoints'};
         $formula{'olcbase'} = $ref->{'forOLCBase'};
         $formula{'weightstart'} = $ref->{'forWeightStart'};
@@ -626,7 +627,6 @@ sub store_result
 
         $dbh->do("delete from tblTrackMarker where traPk=?", undef, $traPk);
         $tmarr = $result->{'kmtime'};
-        #print "KMTIME=", Dumper($tmarr);
 
         for my $ktm (@$tmarr)
         {
@@ -636,9 +636,13 @@ sub store_result
             push @arr, "($traPk, $count, $ktm)";
             $count++;
         }
-        $tmarr = join(",", @arr);
-        $sth = $dbh->prepare("insert into tblTrackMarker (traPk,tmDistance,tmTime) values " . $tmarr);
-        $sth->execute();
+        if ($count > 0)
+        {
+            $tmarr = join(",", @arr);
+            #print "insert into tblTrackMarker (traPk,tmDistance,tmTime) values " , $tmarr , "\n";
+            $sth = $dbh->prepare("insert into tblTrackMarker (traPk,tmDistance,tmTime) values " . $tmarr);
+            $sth->execute();
+        }
     }
     return $tarPk;
 }

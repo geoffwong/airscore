@@ -1,10 +1,10 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl -I../../bin
 
 #
 # Verify a track against a task
 # Used for Race competitions and Routes.
 #
-# Geoff Wong 2007-2025
+# Geoff Wong 2007
 #
 
 require DBD::mysql;
@@ -63,8 +63,10 @@ sub made_entry_waypoint
     my $made = 0;
     my $wpt = $waypoints->[$wmade];
 
+
     if ($awarded)
     {
+        print("wmade=$wmade awarded\n");
         return 1;
     }
 
@@ -80,7 +82,7 @@ sub made_entry_waypoint
             $made = 1;
         }
     }
-    elsif ($wmade > 0 && $wpt->{'shape'} eq 'line')
+    elsif ($wmade > 0 and $wpt->{'shape'} eq 'line')
     {
         # does the track intersect with the semi-circle
         if ($dist < ($wpt->{'radius'}+$wpt->{'margin'}) and (in_semicircle($waypoints, $wmade, $coord)))
@@ -91,12 +93,16 @@ sub made_entry_waypoint
     
     if ($made == 0) 
     {
+        if ($debug)
+        {
+            print "did not make entry waypoint ($dist) ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $coord->{'time'}, "\n";
+        }
         return 0;
     }
 
     if ($debug)
     {
-        print "made entry waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $coord->{'time'}, "\n";
+        print "MADE_entry_waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $coord->{'time'}, " dist=$dist awarded=$awarded\n";
     }
 
     return 1;
@@ -118,7 +124,7 @@ sub made_exit_waypoint
     {
         if ($debug)
         {
-            print "made_exit_waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $made_time, " ${dist}m\n";
+            print "MADE_exit_waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $made_time, " ${dist}m\n";
         }
         $made_time = $coord->{'time'};
         $entry_time = $coord->{'time'};
@@ -147,6 +153,13 @@ sub made_exit_waypoint
                 $made_time = ($entry_time + $made_time) / 2;
             }
             # otherwise we take the time from the last time inside the cylinder
+        }
+    }
+    else
+    {
+        if ($debug)
+        {
+            print "did not made_exit_waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $coord->{'time'}, " ${dist}m wcount=$wcount lastin=$lastin\n";
         }
     }
 
@@ -423,7 +436,10 @@ sub validate_task
 
         # Check the task isn't finished ..
         $coord->{'time'} = $coord->{'time'} - $utcmod;
-        # print "Coordinate time=: ", $coord->{'time'}, " sstopped=", $task->{'sstopped'}, " laststart=", $task->{'laststart'},  ".\n";
+        if ($debug)
+        {
+            print "Coordinate time=: ", $coord->{'time'}, " sstopped=", $task->{'sstopped'}, " laststart=", $task->{'laststart'},  ".\n";
+        }
         if (defined($task->{'sstopped'}) && !defined($endss)) 
         {
             my $maxtime;
@@ -517,13 +533,16 @@ sub validate_task
                     print "enable re-exit (reflag=1)\n";
                     $reflag = 1;
                 }
-                elsif ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}) and ($reflag == 1))
+                elsif ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}) and ($reflag == 1)
+                    and (not (($task->{'type'} eq 'race') and ($starttime > $taskss))))
                 {
                     #print "exited (exit) speed/startss ($lastin) at " . $coord->{'time'} . " maxdist=$maxdist\n";
                     print "re-exited rdist=$rdist speed/startss (" . $rpt->{'type'} . ":" . $rpt->{'radius'} . ") at " . $coord->{'time'} . " maxdist=$maxdist\n";
+                    print "re-exit tasktype=", $task->{'type'}, " start=$starttime taskss=$taskss\n";
                     $wcount = $spt;
+                    $lastin = $wcount;
                     $wmade = $wcount;
-                    $wpt = $waypoints->[$wcount];
+                    $wpt = $waypoints->[$wmade];
                     $reflag = 0;
                 }
                 elsif ($rdist > ($rpt->{'radius'}+$rpt->{'margin'}))
@@ -532,18 +551,18 @@ sub validate_task
                     $reflag = -1;
                 }
             }
-        } # re-enter start
+        } # re-start
        
         # Get the distance flown
         my $newdist = distance_flown($waypoints, $wmade, $coord);
 
-        # print "wcount=$wcount wmade=$wmade newdist=$newdist maxdist=$maxdist starttime=$starttime time=", $coord->{'time'}, "\n";
-
         # Work out leadout coeff / maxdist if we've moved on
+        #print "wcount=$wcount wmade=$wmade newdist=$newdist maxdist=$maxdist starttime=$starttime time=", $coord->{'time'}, "\n";
         if ($debug)
         {
-            print "newdist=$newdist maxdist=$maxdist wmade=$wmade time=", ($coord->{'time'} - $startss), " distrem=", ($essdist - $maxdist), " ncoeff=$coeff\n";
+            print "newdist=$newdist maxdist=$maxdist wmade=$wmade($wcount) time=", ($coord->{'time'} - $startss), " distrem=", ($essdist - $maxdist), " ncoeff=$coeff\n";
         }
+
         if ($newdist > $maxdist)
         {
             if (!defined($endss))
@@ -592,11 +611,11 @@ sub validate_task
         }
         if ($dist < ($wpt->{'radius'}+$wpt->{'margin'}) || $awarded)
         {
+            $lastin = $wcount;
             if ($debug)
             {
-                print "lastin=$wcount\n";
+                print "lastin=$lastin ", "wpt=", $wpt->{'name'}, " how=", $wpt->{'how'}, "\n";
             }
-            $lastin = $wcount;
         }
 
         #
@@ -717,7 +736,10 @@ sub validate_task
                 #print "exited waypoint ($wasinstart,$wasinSS) ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, "\n";
                 if ($wpt == $rpt)
                 {
-                    #print "exit waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " @ ", $coord->{'time'}, "\n";
+                    if ($debug)
+                    {
+                        print "exit waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " @ ", $coord->{'time'}, "\n";
+                    }
                     $starttime = $extime;
                     if ($awarded == 1 && $awtime > 0)
                     {

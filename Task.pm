@@ -22,7 +22,7 @@ our @EXPORT = qw{:ALL};
 
 our $pi = atan2(1,1) * 4;    # accurate PI.
 
-my $debug = 0;
+my $debug = 1;
 my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
@@ -273,9 +273,12 @@ sub precompute_waypoint_dist
             print("wpt:",$i-1," to wpt:", $i, " have same centre (how=", $waypoints->[$i]->{'how'}, ")\n");
             if ($waypoints->[$i]->{'how'} eq 'exit')
             {
+                # exit
                 $cdist = $waypoints->[$i]->{'radius'} - $waypoints->[$i-1]->{'radius'};
             }
-            else {
+            else 
+            {
+                # entry
                 if ($waypoints->[$i]->{'shape'} eq 'circle')
                 {
                     $cdist = $waypoints->[$i-1]->{'radius'} - $waypoints->[$i]->{'radius'};
@@ -320,6 +323,10 @@ sub precompute_waypoint_dist
     $remainingdistcache->[$goal_point+1] = 0.0;
 
     if ($debug) { print "precompute dist=$totdist\n"; print Dumper($remainingdistcache); }
+    if (!defined($endssdist))
+    {
+        $endssdist = $totdist;
+    }
     my $ssdist = $endssdist - $startssdist;
     print "precomp returns: $spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist\n";
     return ($spt, $ept, $gpt, $ssdist, $startssdist, $endssdist, $totdist);
@@ -338,7 +345,7 @@ sub remaining_task_dist
     my $radius = 0;
 
 
-    # Concentric circles
+    # Concentric circles with goal exit
     if (($nextwpt->{'how'} eq 'exit') and ($waypoints->[$goal_point]->{'how'} eq 'exit'))
     {
         my $boob = 1;
@@ -363,6 +370,22 @@ sub remaining_task_dist
         }
     }
 
+    # Concentric circles with entry/exit/entry 
+    # @TODO: should check if lastwpt was inside nextwpt rather than same centre
+    if (($wmade < $goal_point) and 
+            (($nextwpt->{'how'} eq 'exit') and 
+             (($lastwpt->{'lat'} eq $nextwpt->{'lat'}) and ($lastwpt->{'long'} eq $nextwpt->{'long'})) and 
+             (($waypoints->[$wmade+1]->{'lat'} eq $nextwpt->{'lat'}) and ($waypoints->[$wmade+1]->{'long'} eq $nextwpt->{'long'}))     and 
+             ($waypoints->[$wmade+1]->{'how'} eq 'entry')))
+    {
+        $s1{'lat'} = $lastwpt->{'lat'};
+        $s1{'long'} = $lastwpt->{'long'};
+        my $cdist = qckdist2($coord, \%s1);
+        $radius = $waypoints->[$wmade]->{'radius'};
+        $remdist = $remainingdistcache->[$wmade+1];
+        #print("remdist=$remdist radius=$radius cdist=$cdist\n");
+        return $remdist + $radius - $cdist;
+    }
 
     if ($nextwpt->{'type'} eq 'goal')
     {
@@ -426,7 +449,7 @@ sub remaining_task_dist
         {
             my %st;
 
-            if ($debug) { print "remdist=$remdist normal next waypoint: ", $nextwpt->{'name'}, "\n"; }
+            if ($debug) { print "remdist=$remdist normal next waypoint: ", $nextwpt->{'name'}, "(", $nextwpt->{'radius'}, ")\n"; }
             $st{'lat'} = $waypoints->[$wmade+1]->{'short_lat'};
             $st{'long'} = $waypoints->[$wmade+1]->{'short_long'};
             $last_wpt_update = $coord->{'time'};

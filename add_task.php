@@ -82,8 +82,10 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
     $num = 10;
     $tawPk = 0;
     $wtype = "'waypoint'";
-    foreach ($waypoints as $wpt)
+    for ($i = 0; $i < count($waypoints); $i++)
     {
+        $wpt = $waypoints[$i];
+
         $rwpPk = $regid[strtolower(trim($wpt['waypoint']['name']))];
         if (!$rwpPk)
         {
@@ -92,6 +94,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
         $radius = $wpt['radius'];
         if ($wtype == "'endspeed'")
         {
+            // always goal after endspped
             $wtype = "'goal'";
         }
         else
@@ -99,13 +102,19 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
             $wtype = $waytype[$wpt['type']];
         }
 
+        $whow = "'entry'";
         if ($wtype == "'start'")
         {
             $whow = "'exit'";
         }
-        else
+        if ($i < $count($waypoints)-1)
         {
-            $whow = "'entry'";
+            $next = $waypoints[$i+1];
+            // should physically check if inside next waypoint .. not just same point
+            if (($wpt['waypoint']['name'] == $next['waypoint']['name']) and ($radius < $next['radius']))
+            {
+                $whow = "'exit'";
+            }
         }
 
         $wshape = "'circle'";
