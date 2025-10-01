@@ -17,7 +17,7 @@ function add_comp($link, $usePk)
     {
         return -1;
     }
-    $query = "insert into tblCompetition (comName, comDateFrom, comDateTo, regPk) values ('$comname','$datefrom', '$dateto', 1)";
+    $query = "insert into tblCompetition (comName, comDateFrom, comDateTo, comType, regPk) values ('$comname','$datefrom', '$dateto', 'RACE', 1)";
 
     $result = mysql_query($query, $link) or json_die('Competition addition failed: ' . mysql_error());
     $comPk = mysql_insert_id();
