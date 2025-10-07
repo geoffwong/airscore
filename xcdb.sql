@@ -613,7 +613,8 @@ create table tblTrackMarker
 (
     traPk           integer,
     tmDistance      integer,
-    tmTime          integer
+    tmTime          integer,
+    index indTrack  (traPk)
 );
 
 drop table if exists tblLadder;

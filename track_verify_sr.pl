@@ -293,6 +293,7 @@ sub missing_leading_area
         $missing = $falling * $tasktime * $remainingss;
     }
 
+
     return $missing;
 }
 
@@ -312,11 +313,19 @@ sub inc_offset_leading_coeff
 {
     my ($task, $startss, $remainingss, $coeff, $leading_area) = @_;
 
-    my $essdist = 0 + $task->{'endssdistance'} - $task->{'startssdistance'};
+    my $ssdist = 0 + $task->{'endssdistance'} - $task->{'startssdistance'};
     my $taskss = 0 + $task->{'sstart'};
 
-    $coeff = $coeff + $essdist * ($startss - $taskss) + $remainingss * ($task->{'sfinish'}-$taskss);
-    $leading_area = $leading_area + missing_leading_area($task, $remainingss);
+    $coeff = $coeff + $ssdist * ($startss - $taskss) + $remainingss * ($task->{'sfinish'}-$taskss);
+    my $missing = missing_leading_area($task, $remainingss);
+    $leading_area = $leading_area + $missing;
+
+    if ($debug)
+    {
+        my $report_missing = $missing / 1800 / $ssdist;
+        my $report_coeff = $coeff / 1800 / $ssdist;
+        print("inc_offset_leading coeff=$report_coeff leading_area=$leading_area missing=$report_missing\n");
+    }
 
     return ($coeff, $leading_area);
 }
@@ -997,14 +1006,14 @@ sub validate_task
         $dist_flown = $maxdist; # distance_flown($waypoints, $wmade, $closestcoord);
         if (!defined($endss))
         {
-            print "$essdist - $dist_flown + $startssdist\n";
-            $remainingss = $essdist - $dist_flown + $startssdist;
+            print "    essdist=$essdist + startssdis=$startssdist (endssdist=$endssdist) - dist_flown=$dist_flown\n";
+            $remainingss = $endssdist - $dist_flown;
 
             # add rest of (distance_short * $task->{'sfinish'}) to coeff
             ($coeff, $leading_area) = inc_offset_leading_coeff($task, $startss, $remainingss, $coeff, $leading_area);
         }
         print "Didn't make goal startss=$startss taskss=$taskss endss=$endss count=$wcount dist=$dist_flown remainingss=$remainingss: ", $remainingss*($task->{'sfinish'}-$startss), " ncoeff=$coeff\n";
-        print "Closest to $wcount, distance=", distance($closestcoord, $waypoints->[$closestwpt]), "\n";
+        print "    Closest to $wcount, distance=", distance($closestcoord, $waypoints->[$closestwpt]), "\n";
     }
     else
     {
@@ -1044,7 +1053,10 @@ sub validate_task
     {
         $result{'stoptime'} = $lastcoord->{'time'};
     }
-    print "## coeff=$coeff essdist=$essdist\n";
+    if ($debug)
+    {
+        print("## coeff=$coeff essdist=$essdist\n");
+    }
     $result{'coeff'} = $coeff / 1800 / $essdist;
     $result{'coeff2'} = $leading_area / 1800 / $essdist;
     print "    coeff=", $result{'coeff'}, " coeff2=", $result{'coeff2'}, "\n";

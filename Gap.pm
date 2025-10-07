@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I/home/bin/geoff
+#!/usr/bin/perl
 
 
 #
@@ -211,7 +211,7 @@ sub task_totals
     {
         $mincoeff = $ref->{'MinCoeff'};
     }
-    #print "TTT: min leading coeff=$mincoeff\n";
+    print "TTT: min leading coeff=$mincoeff\n";
 
     my $maxdist = 0;
     my $mindept = 0;
@@ -855,6 +855,30 @@ sub pilot_penalty
     return $penalty;
 }
 
+sub missing_leading_area
+{
+    my ($self, $task, $remainingss, $timedif, $lctype) = @_;
+    my $missing;
+
+    if ($lctype eq 'tarLeadingCoeff')
+    {
+        return $timedif * $remainingss / 1800 / $task->{'ssdistance'};
+    }
+
+    if ($task->{'class'} eq 'HG')
+    {
+        $missing = $timedif * $remainingss * $remainingss / 1800 / $task->{'ssdistance'};
+    }
+    else
+    {
+        my $falling = (1 - 10**((-3*$remainingss/$task->{'ssdistance'})))**2;
+        $missing = $falling * $timedif * $remainingss / 1800 / $task->{'ssdistance'};
+    }
+
+    print("    missing_leading_area=$missing\n");
+    return $missing;
+}
+
 sub ordered_results
 {
     my ($self, $dbh, $task, $taskt, $formula) = @_;
@@ -931,15 +955,22 @@ sub ordered_results
             if ($taskt->{'goal'} > 0)
             {
                 # adjust for late starters
-                print "No goal, adjust pilot coeff from: ", $ref->{'leadingcoeff'}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, "\n";
-                print "endss dist=", $task->{'endssdistance'}, " tarDist=", $ref->{'tarDistance'}, " ssdist=", $task->{'ssdistance'}, " tarSS=", $ref->{'tarSS'}, " tarES=", $ref->{'tarES'}, "\n";
+                print "No goal (", $ref->{'traPk'}, "), adjust pilot coeff from: ", $taskres{'coeff'}, " sfinish=", $task->{'sfinish'}, " lastarrival=", $taskt->{'lastarrival'}, " start=", $task->{'sstart'}, "\n";
+                print "    endss dist=", $task->{'endssdistance'}, " tarDist=", $ref->{'tarDistance'}, " ssdist=", $task->{'ssdistance'}, " tarSS=", $ref->{'tarSS'}, " tarES=", $ref->{'tarES'}, "\n";
 
                 # $remainingss * ($task->{'sfinish'}-$coord->{'time'})
                 if ($taskt->{'lastarrival'} > 0)
                 {
                     my $remdist = $task->{'endssdistance'} - $ref->{'tarDistance'};
-                    $taskres{'coeff'} = $ref->{'leadingcoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist / 1800 / $task->{'ssdistance'};
-                    #$taskres{'coeff2'} = $ref->{'tarLeadingCoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist * $remdist / 1800 / $task->{'ssdistance'};
+                    my $tasktime = $task->{'sfinish'} - $task->{'sstart'};
+                    my $timedif = $taskt->{'lastarrival'} - $task->{'sstart'};
+                    print("    endtasktime=$tasktime timedif=$timedif\n");
+
+                    #$taskres{'coeff'} = $ref->{'leadingcoeff'} - ($task->{'sfinish'} - $taskt->{'lastarrival'}) * $remdist / 1800 / $task->{'ssdistance'};
+                    my $submaxlc = $self->missing_leading_area($task, $remdist, $tasktime, $leadingcoeff);
+                    my $addlastlc = $self->missing_leading_area($task, $remdist, $timedif, $leadingcoeff);
+                    $taskres{'coeff'} = $taskres{'coeff'} - $submaxlc + $addlastlc;
+
                     if ($taskres{'coeff'} < 0)
                     {
                         print " WARNING: negative leading coeff: ", $taskres{'coeff'}, " for ", $taskres{'traPk'}, "\n";
@@ -947,11 +978,11 @@ sub ordered_results
                     }
                 }
             
-                print " to: ", $taskres{'coeff'}, "\n";
+                print " to: ", $taskres{'coeff'}, " (min: ", $taskt->{'mincoeff'}, ")\n";
                 # adjust mincoeff?
-                if ($taskres{'coeff'} > 0 and $taskres{'coeff'} < $task->{'mincoeff'})
+                if ($taskres{'coeff'} > 0 and ($taskres{'coeff'} < $taskt->{'mincoeff'}))
                 {
-                    $task->{'mincoeff'} = $taskres{'coeff'};
+                    $taskt->{'mincoeff'} = $taskres{'coeff'};
                     print " NEW minimum coeff: ", $taskres{'mincoeff'}, "\n";
                 }
             }
@@ -961,12 +992,15 @@ sub ordered_results
         # @todo adjust against fastest?
         $taskres{'kmmarker'} = [];
         my $kt = $taskres{'kmmarker'};
-        my $sub = $dbh->prepare("select * from tblTrackMarker where traPk=" . $taskres{'traPk'} . " order by tmDistance");
-        $sub->execute();
-        my $sref;
-        while ($sref = $sub->fetchrow_hashref())
-        {
-            push @$kt, $sref->{'tmTime'};
+        if ($task->{'departure'} eq 'kmbonus')
+        {   
+            my $sub = $dbh->prepare("select * from tblTrackMarker where traPk=" . $taskres{'traPk'} . " order by tmDistance");
+            $sub->execute();
+            my $sref;
+            while ($sref = $sub->fetchrow_hashref())
+            {
+                push @$kt, $sref->{'tmTime'};
+            }
         }
 
         push @pilots, \%taskres;
@@ -1032,7 +1066,6 @@ sub points_allocation
     my $Tmin = $taskt->{'fastest'};
     my $Tfarr = $taskt->{'firstarrival'};
     # print Dumper($taskt);
-
 
     my $sorted_pilots = $self->ordered_results($dbh, $task, $taskt, $formula);
 
