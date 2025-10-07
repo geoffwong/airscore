@@ -19,9 +19,17 @@ var map;
 L.Control.Panel = L.Control.extend({
     onAdd: function(map) {
             this._container = L.DomUtil.create('div');
+            L.DomEvent.addListener(this._container, "click", this._details, this);
+            //L.DomEvent.disableClickPropagation(this._container);
             return this._container;
         },
         
+    _details: function(ev) {
+        console.log("toggle details");
+        $("details").toggle();
+        map.originalEvent.preventDefault();
+    },
+
     show: function(message, cssclass) {
         var elem = this._container;
         elem.innerHTML = message;
@@ -32,7 +40,7 @@ L.Control.Panel = L.Control.extend({
     onRemove: function(map) { 
         var elem = this._container;
         elem.style.display = 'none';
-        //L.DomEvent.off();
+        L.DomEvent.off(this._container, "click", this._details, this);
         // Nothing to do here 
     }
 });
@@ -207,19 +215,16 @@ function add_panel(map, locn, ovhtml, classn)
     panel.show(ovhtml, classn);
     return panel;
 }
-
 function merge_tracks(tasPk, traPk, incPk)
 {
-    console.log("traPk="+traPk+" incPk="+incPk);
-    new microAjax("merge_track.php?tasPk="+tasPk+"&traPk="+traPk+"&incPk="+incPk, function(data) 
-        { 
-            window.location.href="tracklog_map.html?trackid="+traPk;
-        } );
+    console.log("merge: tasPk="+tasPk+" traPk="+traPk+" incPk="+incPk);
+    $.post("merge_track.php", { 'tasPk' : tasPk, 'traPk' : traPk, 'incPk' : incPk },  
+        function( data ) { console.log( "merged: " + data ); });
 }
 function award_waypoint(comPk, tasPk, tawPk, trackid, wptime)
 {
     //post('award.php?tasPk=' + tasPk, { 'comPk' : comPk, 'trackid' : trackid, 'tawPk' : tawPk, 'wptime' : wptime}, 'post');
-    post('award.php?comPk=' + comPk + '&tasPk=' + tasPk + '&trackid=' + trackid + '&tawPk=' + tawPk + '&wptime=' + wptime, 'post');
+    $.post('award.php?comPk=' + comPk + '&tasPk=' + tasPk + '&trackid=' + trackid + '&tawPk=' + tawPk + '&wptime=' + wptime, 'post');
     // clear & reload track ..
 }
 var pbounds;
@@ -362,8 +367,15 @@ function plot_task_route(map, ssr)
         }
         else
         {
-              circle = new L.Circle(pos, {
-                radius:parseInt(crad),
+            var adjrad = parseInt(crad);
+            adjrad = adjrad;
+            if (adjrad > 10000)
+            {
+                // try to compensate for google maps inaccuracies with large cylinders
+                adjrad = adjrad * 0.999;
+            }
+            circle = new L.Circle(pos, {
+                radius:adjrad,
                 stroke:true,
                 color:"#ff0000",
                 opacity:1.0,
