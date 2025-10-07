@@ -127,8 +127,11 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
         {
             $wtype = $waytype[$wpt['type']];
         }
+        
+        // default to enter if not specified
+        
+        $whow = $wpt['type'] == "'exit'" ? "'exit'" : "'enter'";
 
-        $whow = "'entry'";
         if ($wtype == "'start'")
         {
             $whow = "'exit'";
@@ -149,7 +152,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
 		
 		    // If the current cylinder is entirely inside the next, set the next as 'exit'
 		    if ($distance + $r1 <= $r2) {
-		        $waypoints[$i + 1]['type'] = 'exit';
+		        $waypoints[$i + 1]['type'] = "'exit'";
 		    }
         }
 
