@@ -26,6 +26,13 @@ function insert_waypoint($link, $regPk, $wpt)
     }
 }
 
+function subtract_hhmmss($second, $first)
+{
+    $second_secs = intval(substr($second, 0, 2)) * 3600 + intval(substr($second, 3, 2)) * 60 + intval(substr($second, 6, 2));
+    $first_secs = intval(substr($first, 0, 2)) * 3600 + intval(substr($first, 3, 2)) * 60 + intval(substr($first, 6, 2));
+    return abs($second_secs - $first_secs);
+}
+
 function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $dte, $offset)
 {
     $taskin = file_get_contents($tmpfile, false, NULL, 0, 10000);
@@ -55,11 +62,29 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
     $waytype = [ 'TAKEOFF' => "'start'", 'SSS' => "'speed'", 'ESS' => "'endspeed'", '' => "'waypoint'" ];
     $how = [ 'ENTER' => "'entry'", 'EXIT' => "'exit'"];
     $shape = [ 'CYLINDER' => "'circle'", 'LINE' => "'semicircle'" ];
+    $tasktype = 'race';
+    $interval = 0;
+    $numgates = 1;
 
 //{"version":1,"taskType":"CLASSIC","turnpoints":[{"radius":2000,"waypoint":{"lon":146.965393,"lat":-36.757881,"altSmoothed":798,"name":"mys080","description":"MysticTO"},"type":"TAKEOFF"},{"radius":2000,"waypoint":{"lon":147.031784,"lat":-36.80389,"altSmoothed":997,"name":"7S-100","description":"SmokoRidge"},"type":"SSS"},{"radius":2000,"waypoint":{"lon":146.978851,"lat":-36.746181,"altSmoothed":339,"name":"6S-034","description":"MysticLZ"},"type":"ESS"},{"radius":1000,"waypoint":{"lon":146.891525,"lat":-36.717281,"altSmoothed":279,"name":"6L-028","description":"PorepunkAir"}}],"sss":{"type":"RACE","direction":"ENTER","timeGates":["02:00:00Z"]},"goal":{"type":"CYLINDER","deadline":"07:00:00Z"},"earthModel":"WGS84"}
 
-    $start = substr($taskjson['sss']['timeGates'][0], 0, 8);
     $finish = substr($taskjson['goal']['deadline'], 0, 8);
+    $start = $finish;
+    $gateclose = $finish;
+
+    if (array_key_exists('sss', $taskjson))
+    {
+        $start = substr($taskjson['sss']['timeGates'][0], 0, 8);
+        $numgates = sizeof($taskjson['sss']['timeGates']);
+    }
+
+    if ($numgates > 1)
+    {
+        $tasktype = "'speedrun-interval'";
+        $gateclose = substr($taskjson['sss']['timeGates'][$numgates-1], 0, 8);
+        $second = substr($taskjson['sss']['timeGates'][1], 0, 8);
+        $interval = subtract_hhmmss($second, $start);
+    }
 
     $dtef = $dte;
     if ($finish < $start)
@@ -69,11 +94,12 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
 
     $start = gmdate('H:i:s', strtotime($start) - strtotime('TODAY') + $offset*3600);
     $finish = gmdate('H:i:s', strtotime($finish) - strtotime('TODAY') + $offset*3600);
-    error_log("  $dte start=$start finish=$finish");
+    $gateclose = gmdate('H:i:s', strtotime($gateclose) - strtotime('TODAY') + $offset*3600);
+    error_log("  $dte start=$start finish=$finish gateclose=$gateclose");
 
     // insert a task sub
-    $query = "insert into tblTask (comPk, tasName, tasDate, tasTaskStart, tasFinishTime, tasStartTime, tasStartCloseTime, tasSSInterval, tasTaskType, regPk, tasDeparture, tasArrival) values ($comPk, '$name', '$dte', '$dte $start', '$dtef $finish', '$dte $start', '$dtef $finish', 0, 'race', $regPk, 'kmbonus', 'off')";
-    $result = mysql_query($query, $link) or json_die('Add task failed: ' . mysql_error());
+    $query = "insert into tblTask (comPk, tasName, tasDate, tasTaskStart, tasFinishTime, tasStartTime, tasStartCloseTime, tasSSInterval, tasTaskType, regPk, tasDeparture, tasArrival) values ($comPk, '$name', '$dte', '$dte $start', '$dtef $finish', '$dte $start', '$dtef $gateclose', $interval, $tasktype, $regPk, 'leadout', 'off')";
+    $result = mysql_query($query, $link) or json_die("Add task failed ($query): " . mysql_error());
     // Get the task we just inserted
     $tasPk = mysql_insert_id();
 
@@ -107,7 +133,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
         {
             $whow = "'exit'";
         }
-        if ($i < $count($waypoints)-1)
+        if ($i < count($waypoints) - 1)
         {
             $next = $waypoints[$i+1];
             // should physically check if inside next waypoint .. not just same point
@@ -194,8 +220,8 @@ function add_task($link, $comPk, $name, $offset)
     {
         error_log('Add empty task');
 
-        $query = "insert into tblTask (comPk, tasName, tasDate, tasTaskStart, tasFinishTime, tasStartTime, tasStartCloseTime, tasSSInterval, tasTaskType, regPk, tasDeparture, tasArrival) values ($comPk, '$name', '$date', '$date 10:00:00', '$date 18:00:00', '$date 12:00:00', '$date 14:00:00', 0, 'race', $region, 'kmbonus', 'off')";
-        $result = mysql_query($query, $link) or json_die('Add task failed: ' . mysql_error());
+        $query = "insert into tblTask (comPk, tasName, tasDate, tasTaskStart, tasFinishTime, tasStartTime, tasStartCloseTime, tasSSInterval, tasTaskType, regPk, tasDeparture, tasArrival) values ($comPk, '$name', '$date', '$date 10:00:00', '$date 18:00:00', '$date 12:00:00', '$date 14:00:00', 0, 'race', $region, 'leadout', 'off')";
+        $result = mysql_query($query, $link) or json_die("Add task failed ($query): " . mysql_error());
 
         // Get the task we just inserted
         $tasPk = mysql_insert_id();
