@@ -73,9 +73,9 @@ $formula = read_formula($task->{'comPk'});
 print Dumper($formula);
 
 # Now create the appropriate scoring object ...
-if ($formula->{'class'} eq 'gap')
+if (($formula->{'class'} eq 'gap') or ($formula->{'class'} eq 'wptgap'))
 {
-    print "GAP scoring\n";
+    print "GAP scoring: ", $formula->{'class'}, "\n";
     $scr = Gap->new();
 }
 elsif ($formula->{'class'} eq 'ozgap')
@@ -108,6 +108,11 @@ elsif ($formula->{'class'} eq 'rtgap')
     print "RTGap scoring\n";
     $scr = RTGap->new();
 }
+elsif ($formula->{'class'} eq 'timegap')
+{
+    print "Time-based scoring\n";
+    $scr = TMGap->new();
+}
 elsif ($formula->{'class'} eq 'pwc')
 {
     print "PWC scoring\n";
@@ -132,39 +137,52 @@ else
 #    $taskt->{'firstarrival'}
 #    $taskt->{'mincoeff'}
 
-$taskt = $scr->task_totals($TrackLib::dbh,$task,$formula);
-
-# Store it in tblTask
-$sql = "update tblTask set tasTotalDistanceFlown=" . $taskt->{'distance'} . 
-            ", tasPilotsTotal=" . $taskt->{'pilots'} . 
-            ", tasPilotsLaunched=" . $taskt->{'launched'} . 
-            ", tasPilotsGoal=" . $taskt->{'goal'} . 
-            ", tasFastestTime=" . $taskt->{'fastest'} . 
-            ", tasMaxDistance=" . $taskt->{'maxdist'} . 
-       " where tasPk=$tasPk";
-
-print Dumper($taskt);
-print $sql, "\n";
-$sth = $TrackLib::dbh->prepare($sql);
-$sth->execute();
-
-# Work out the quality factors (distance, time, launch)
-
-($dist,$time,$launch, $stop) = $scr->day_quality($taskt, $formula);
-$quality = $dist * $time * $launch * $stop;
-if ($quality > 1.0)
+eval
 {
-    $quality = 1.0;
-}
-$sth = $TrackLib::dbh->prepare("update tblTask set tasQuality=$quality, tasDistQuality=$dist, tasTimeQuality=$time, tasLaunchQuality=$launch, tasStopQuality=$stop where tasPk=$tasPk");
-$sth->execute();
-$taskt->{'quality'} = $quality;
+    $taskt = $scr->task_totals($TrackLib::dbh,$task,$formula);
+    
+    # Store it in tblTask
+    $sql = "update tblTask set tasTotalDistanceFlown=" . $taskt->{'distance'} . 
+                ", tasPilotsTotal=" . $taskt->{'pilots'} . 
+                ", tasPilotsLaunched=" . $taskt->{'launched'} . 
+                ", tasPilotsGoal=" . $taskt->{'goal'} . 
+                ", tasFastestTime=" . $taskt->{'fastest'} . 
+                ", tasMaxDistance=" . $taskt->{'maxdist'} . 
+           " where tasPk=$tasPk";
+    
+    print Dumper($taskt);
+    print $sql, "\n";
+    $sth = $TrackLib::dbh->prepare($sql);
+    $sth->execute();
+    
+    # Work out the quality factors (distance, time, launch)
+    
+    ($dist,$time,$launch, $stop) = $scr->day_quality($taskt, $formula);
+    $quality = $dist * $time * $launch * $stop;
+    if ($quality > 1.0)
+    {
+        $quality = 1.0;
+    }
+    $sth = $TrackLib::dbh->prepare("update tblTask set tasQuality=$quality, tasDistQuality=$dist, tasTimeQuality=$time, tasLaunchQuality=$launch, tasStopQuality=$stop where tasPk=$tasPk");
+    $sth->execute();
+    $taskt->{'quality'} = $quality;
+    
+    if ($taskt->{'pilots'} > 0)
+    {
+        # Now allocate points to pilots ..
+        $scr->points_allocation($TrackLib::dbh,$task,$taskt,$formula);
+    }
+};
 
-if ($taskt->{'pilots'} > 0)
+if ($@) 
 {
-    # Now allocate points to pilots ..
-    $scr->points_allocation($TrackLib::dbh,$task,$taskt,$formula);
+    print "Task_score error: $@\n";
+    # Handle the error, e.g., log it, try a fallback, etc.
+    `rm -f /var/lock/score_$tasPk`;
+} 
+else 
+{
+    `rm -f /var/lock/score_$tasPk`;
 }
 
-`rm -f /var/lock/score_$tasPk`;
 
