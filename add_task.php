@@ -62,7 +62,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
     $waytype = [ 'TAKEOFF' => "'start'", 'SSS' => "'speed'", 'ESS' => "'endspeed'", '' => "'waypoint'" ];
     $how = [ 'ENTER' => "'entry'", 'EXIT' => "'exit'"];
     $shape = [ 'CYLINDER' => "'circle'", 'LINE' => "'semicircle'" ];
-    $tasktype = 'race';
+    $tasktype = "'race'";
     $interval = 0;
     $numgates = 1;
 
@@ -128,9 +128,9 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
             $wtype = $waytype[$wpt['type']];
         }
         
-        // default to enter if not specified
-        
-        $whow = $wpt['type'] == "'exit'" ? "'exit'" : "'enter'";
+        // PEDRO:
+        // default to entry if not specified (not exit)
+        $whow = $wpt['type'] == "'exit'" ? "'exit'" : "'entry'";
 
         if ($wtype == "'start'")
         {
@@ -150,6 +150,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
 		
 		    $distance = haversine($lat1, $lon1, $lat2, $lon2);
 		
+            // PEDRO:
 		    // If the current cylinder is entirely inside the next, set the next as 'exit'
 		    if ($distance + $r1 <= $r2) {
 		        $waypoints[$i + 1]['type'] = "'exit'";
