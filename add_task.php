@@ -127,20 +127,34 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
         {
             $wtype = $waytype[$wpt['type']];
         }
+        
+        // PEDRO:
+        // default to entry if not specified (not exit)
+        $whow = $wpt['type'] == "'exit'" ? "'exit'" : "'entry'";
 
-        $whow = "'entry'";
         if ($wtype == "'start'")
         {
             $whow = "'exit'";
         }
         if ($i < count($waypoints) - 1)
         {
-            $next = $waypoints[$i+1];
-            // should physically check if inside next waypoint .. not just same point
-            if (($wpt['waypoint']['name'] == $next['waypoint']['name']) and ($radius < $next['radius']))
-            {
-                $whow = "'exit'";
-            }
+            $next = $waypoints[$i + 1];
+			
+		    $lat1 = $wpt['waypoint']['lat'];
+		    $lon1 = $wpt['waypoint']['lon'];
+		    $r1 = $wpt['radius'];
+		
+		    $lat2 = $next['waypoint']['lat'];
+		    $lon2 = $next['waypoint']['lon'];
+		    $r2 = $next['radius'];
+		
+		    $distance = haversine($lat1, $lon1, $lat2, $lon2);
+		
+            // PEDRO:
+		    // If the current cylinder is entirely inside the next, set the next as 'exit'
+		    if ($distance + $r1 <= $r2) {
+		        $waypoints[$i + 1]['type'] = "'exit'";
+		    }
         }
 
         $wshape = "'circle'";
@@ -253,6 +267,21 @@ function add_task($link, $comPk, $name, $offset)
     }
 
     return $tasPk;
+}
+
+function haversine($lat1, $lon1, $lat2, $lon2) {
+    $R = 6371000;
+    $phi1 = deg2rad($lat1);
+    $phi2 = deg2rad($lat2);
+    $dphi = deg2rad($lat2 - $lat1);
+    $dlambda = deg2rad($lon2 - $lon1);
+
+    $a = sin($dphi/2) * sin($dphi/2) +
+         cos($phi1) * cos($phi2) *
+         sin($dlambda/2) * sin($dlambda/2);
+    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+    return $R * $c;
 }
 
 $usePk = auth('system');
