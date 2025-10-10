@@ -6,7 +6,9 @@ CREATE database xcdb
 
 use xcdb;
 
-grant all on xcdb.* to '%MYSQLUSER%'@'%MYSQLHOST%' identified by '%MYSQLPASSWORD%';
+CREATE USER IF NOT EXISTS 'xc'@'%' IDENTIFIED BY 'airscore123';
+GRANT ALL PRIVILEGES ON xcdb.* TO 'xc'@'%';
+FLUSH PRIVILEGES;
 
 drop table if exists tblCompetition;
 create table tblCompetition

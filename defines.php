@@ -1,9 +1,8 @@
 <?php
-define('BINDIR', '%CGIBIN%');
-define('FILEDIR', '%TRACKDIR%');
-define('DATABASE', '%DATABASE%');
-define('MYSQLHOST', '%MYSQLHOST%');
-define('MYSQLUSER', '%MYSQLUSER%');
-define('MYSQLPASSWORD', '%MYSQLPASSWORD%');
+define('BINDIR', '/usr/lib/cgi-bin');
+define('FILEDIR', '/var/airscore/tracks/');
+define('DATABASE', 'xcdb');
+define('MYSQLHOST', 'db');
+define('MYSQLUSER', 'xc');
+define('MYSQLPASSWORD', 'airscore123');
 ?>
-
