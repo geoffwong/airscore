@@ -62,7 +62,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
     $waytype = [ 'TAKEOFF' => "'start'", 'SSS' => "'speed'", 'ESS' => "'endspeed'", '' => "'waypoint'" ];
     $how = [ 'ENTER' => "'entry'", 'EXIT' => "'exit'"];
     $shape = [ 'CYLINDER' => "'circle'", 'LINE' => "'semicircle'" ];
-    $tasktype = 'race';
+    $tasktype = "'race'";
     $interval = 0;
     $numgates = 1;
 
