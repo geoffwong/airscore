@@ -1,3 +1,7 @@
+<?php require_once('mysql_constants.php'); ?>
+<?php require_once('mysql_constants.php'); ?>
+<?php require_once('mysql_constants.php'); ?>
+<?php require_once('mysql_constants.php'); ?>
 <?php
 /**
  * backwards compatibility old php functions - from info@itxplain.nl
@@ -48,11 +52,14 @@ function mysql_select_db($dbname, $con=null)
 
 function mysql_query($query, $con=null) 
 {
+    ob_start();
     if ($con == null) {
         $con = $GLOBALS['mysql_cons']['default'];
     }
 
-    return $con->query($query);
+    $result = $con->query($query);
+    ob_clean();
+    return $result;
 }
 
 function mysql_real_escape_string($val, $con=null) 
@@ -90,7 +97,7 @@ function mysql_fetch_assoc($result)
     return $row;
 }
 
-function mysql_fetch_array($result, $how) 
+function mysql_fetch_array($result, $how = MYSQL_BOTH) 
 {
     $row = $result->fetch_assoc();
 
@@ -100,11 +107,18 @@ function mysql_fetch_array($result, $how)
 function mysql_result($result, $rown, $col) 
 {
     $row = $result->fetch_array();
-    if ((sizeof($row[$rown]) == 1) && ($col == 0))
-    {
-        return $row[$rown];
+    if ($row === null) {
+        return false;
     }
-    return $row[$rown][$col];
+    
+    // Convert to numeric array if needed
+    $row = array_values($row);
+    
+    if (isset($row[$col])) {
+        return $row[$col];
+    }
+    
+    return false;
 }
 
 function mysql_num_rows($result) 
