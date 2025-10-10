@@ -7,7 +7,6 @@ require DBD::mysql;
 use Time::Local;
 use Data::Dumper;
 use Airspace qw(:all);
-use Defines qw(:all);
 
 use TrackLib qw(:all);
 #use strict;
@@ -48,7 +47,7 @@ sub get_pilot_key
     # Find the pilPk
     if ((0 + $pil) > 0)
     {
-        $sql = "select * from tblPilot where pilHGFA='$pil'"; #or pilCIVL='$pil'";
+        $sql = "select * from tblPilot where pilHGFA='$pil' or pilCIVL='$pil' order by pilHGFA desc";
     }
     else
     {
@@ -66,7 +65,6 @@ sub get_pilot_key
         {
             print $ref->{'pilHGFA'}, " ", $ref->{'pilFirstName'}, " ", $ref->{'pilLastName'}, " ", $ref->{'pilBirthdate'}, "\n";
         }
-        return 0;
     }
 
     if ($ref = $sth->fetchrow_hashref())
