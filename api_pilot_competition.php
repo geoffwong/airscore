@@ -42,9 +42,13 @@ switch ($action) {
         list_competition_pilots($link, $comPk, $res);
         break;
     
+    case 'bulk_upload_pilots':
+        bulk_upload_pilots($link, $comPk, $res);
+        break;
+    
     default:
         $res['result'] = 'error';
-        $res['error'] = 'Invalid action. Supported actions: add_pilot, update_pilot, remove_pilot, get_pilot, list_pilots';
+        $res['error'] = 'Invalid action. Supported actions: add_pilot, update_pilot, remove_pilot, get_pilot, list_pilots, bulk_upload_pilots';
         print json_encode($res);
         exit;
 }
@@ -277,6 +281,180 @@ function list_competition_pilots($link, $comPk, &$res) {
     $res['data'] = $pilots;
     $res['count'] = count($pilots);
     print json_encode($res);
+}
+
+function bulk_upload_pilots($link, $comPk, &$res) {
+    // Check if CSV file was uploaded
+    if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+        $res['result'] = 'error';
+        $res['error'] = 'No CSV file uploaded or upload error occurred';
+        print json_encode($res);
+        return;
+    }
+    
+    $csvFile = $_FILES['csv_file']['tmp_name'];
+    $csvData = [];
+    $errors = [];
+    $successCount = 0;
+    $skippedCount = 0;
+    
+    // Read and parse CSV file
+    if (($handle = fopen($csvFile, "r")) !== FALSE) {
+        $header = fgetcsv($handle, 1000, ",");
+        
+        // Validate required columns
+        $requiredColumns = ['firstName', 'lastName', 'hgfa', 'civl', 'sex'];
+        $missingColumns = array_diff($requiredColumns, $header);
+        
+        if (!empty($missingColumns)) {
+            $res['result'] = 'error';
+            $res['error'] = 'Missing required columns: ' . implode(', ', $missingColumns) . '. Required columns: ' . implode(', ', $requiredColumns);
+            print json_encode($res);
+            return;
+        }
+        
+        $columnIndexes = array_flip($header);
+        $rowNumber = 1; // Start from 1 since header is row 0
+        
+        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+            $rowNumber++;
+            
+            // Skip empty rows
+            if (empty(array_filter($data))) {
+                continue;
+            }
+            
+            // Extract data from CSV row
+            $firstName = trim($data[$columnIndexes['firstName']] ?? '');
+            $lastName = trim($data[$columnIndexes['lastName']] ?? '');
+            $hgfa = trim($data[$columnIndexes['hgfa']] ?? '');
+            $civl = trim($data[$columnIndexes['civl']] ?? '');
+            $sex = trim($data[$columnIndexes['sex']] ?? '');
+            $nationCode = trim($data[$columnIndexes['nationCode']] ?? 'AUS');
+            $email = trim($data[$columnIndexes['email']] ?? '');
+            $phone = trim($data[$columnIndexes['phone']] ?? '');
+            $birthdate = trim($data[$columnIndexes['birthdate']] ?? '');
+            $regHours = trim($data[$columnIndexes['regHours']] ?? '200');
+            $handicap = trim($data[$columnIndexes['handicap']] ?? '1.0');
+            
+            // Validate required fields
+            if (empty($firstName) || empty($lastName) || empty($hgfa) || empty($civl) || empty($sex)) {
+                $errors[] = "Row $rowNumber: Missing required fields (firstName, lastName, hgfa, civl, sex)";
+                $skippedCount++;
+                continue;
+            }
+            
+            // Validate sex
+            if (!in_array(strtoupper($sex), ['M', 'F'])) {
+                $errors[] = "Row $rowNumber: Invalid sex value '$sex'. Must be 'M' or 'F'";
+                $skippedCount++;
+                continue;
+            }
+            
+            // Validate CIVL (should be numeric)
+            if (!is_numeric($civl)) {
+                $errors[] = "Row $rowNumber: CIVL must be numeric, got '$civl'";
+                $skippedCount++;
+                continue;
+            }
+            
+            // Validate regHours (should be numeric)
+            if (!is_numeric($regHours)) {
+                $regHours = 200; // Default value
+            }
+            
+            // Validate handicap (should be numeric)
+            if (!is_numeric($handicap)) {
+                $handicap = 1.0; // Default value
+            }
+            
+            // Process pilot registration
+            $pilotResult = process_pilot_registration($link, $comPk, $firstName, $lastName, $hgfa, $civl, $sex, $nationCode, $email, $phone, $birthdate, $regHours, $handicap);
+            
+            if ($pilotResult['success']) {
+                $successCount++;
+            } else {
+                $errors[] = "Row $rowNumber: " . $pilotResult['error'];
+                $skippedCount++;
+            }
+        }
+        
+        fclose($handle);
+    } else {
+        $res['result'] = 'error';
+        $res['error'] = 'Could not read CSV file';
+        print json_encode($res);
+        return;
+    }
+    
+    // Prepare response
+    $res['result'] = 'success';
+    $res['message'] = "Bulk upload completed. Successfully processed: $successCount, Skipped: $skippedCount";
+    $res['data'] = [
+        'success_count' => $successCount,
+        'skipped_count' => $skippedCount,
+        'total_processed' => $successCount + $skippedCount,
+        'errors' => $errors
+    ];
+    
+    print json_encode($res);
+}
+
+function process_pilot_registration($link, $comPk, $firstName, $lastName, $hgfa, $civl, $sex, $nationCode, $email, $phone, $birthdate, $regHours, $handicap) {
+    // Escape strings for SQL
+    $firstName = mysql_real_escape_string($firstName);
+    $lastName = mysql_real_escape_string($lastName);
+    $hgfa = mysql_real_escape_string($hgfa);
+    $civl = intval($civl);
+    $sex = mysql_real_escape_string(strtoupper($sex));
+    $nationCode = mysql_real_escape_string($nationCode);
+    $email = mysql_real_escape_string($email);
+    $phone = mysql_real_escape_string($phone);
+    $birthdate = mysql_real_escape_string($birthdate);
+    $regHours = intval($regHours);
+    $handicap = floatval($handicap);
+    
+    // Check if pilot already exists (by HGFA or CIVL)
+    $query = "SELECT pilPk FROM tblPilot WHERE pilHGFA = '$hgfa' OR pilCIVL = $civl";
+    $result = mysql_query($query, $link) or json_die('Pilot existence check failed: ' . mysql_error());
+    
+    if (mysql_num_rows($result) > 0) {
+        $row = mysql_fetch_array($result, MYSQL_ASSOC);
+        $pilPk = $row['pilPk'];
+    } else {
+        // Create new pilot
+        $query = "INSERT INTO tblPilot (pilFirstName, pilLastName, pilHGFA, pilCIVL, pilSex, pilNationCode, pilEmail, pilPhoneMobile, pilBirthdate) 
+                  VALUES ('$firstName', '$lastName', '$hgfa', $civl, '$sex', '$nationCode', '$email', '$phone', '$birthdate')";
+        $result = mysql_query($query, $link) or json_die('Pilot creation failed: ' . mysql_error());
+        $pilPk = mysql_insert_id($link);
+    }
+    
+    // Check if already registered for this competition
+    $query = "SELECT regPk FROM tblRegistration WHERE comPk = $comPk AND pilPk = $pilPk";
+    $result = mysql_query($query, $link) or json_die('Registration check failed: ' . mysql_error());
+    
+    if (mysql_num_rows($result) > 0) {
+        return ['success' => false, 'error' => 'Pilot is already registered for this competition'];
+    }
+    
+    // Add pilot to competition
+    $regarr = [];
+    $regarr['pilPk'] = $pilPk;
+    $regarr['comPk'] = $comPk;
+    $regarr['regHours'] = $regHours;
+    $clause = "comPk=$comPk and pilPk=$pilPk";
+    insertup($link, 'tblRegistration', 'regPk', $clause, $regarr);
+    
+    // Create default handicap entry
+    $query = "SELECT hanPk FROM tblHandicap WHERE comPk = $comPk AND pilPk = $pilPk";
+    $result = mysql_query($query, $link) or json_die('Handicap check failed: ' . mysql_error());
+    
+    if (mysql_num_rows($result) == 0) {
+        $query = "INSERT INTO tblHandicap (comPk, pilPk, hanHandicap) VALUES ($comPk, $pilPk, $handicap)";
+        $result = mysql_query($query, $link) or json_die('Handicap insert failed: ' . mysql_error());
+    }
+    
+    return ['success' => true, 'pilPk' => $pilPk];
 }
 
 ?>
