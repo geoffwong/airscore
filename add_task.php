@@ -125,7 +125,7 @@ function add_xctrack_task($link, $tmpfile, $comPk, $name, $regPk, $createwpts, $
         }
         else
         {
-            $wtype = $waytype[$wpt['type']];
+            $wtype = $waytype[$wpt['type']] ?? "'waypoint'";
         }
         
         // PEDRO:
