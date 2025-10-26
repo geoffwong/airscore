@@ -83,9 +83,18 @@ foreach ($compinfo as $key => $value)
         unset($compinfo[$key]);
     }
 }
+
+// Hide unused stuff.
 unset($formula['forOLCBase']);
 unset($formula['forOLCPoints']);
 unset($formula['forHBESS']);
+unset($formula['forScaleToValidity']);
+unset($formula['forDiscreteClasses']);
+unset($formula['forSpeedCalc']);
+unset($formula['forWeightDist']);
+unset($formula['forDiffCalc']);
+unset($formula['forDiffRamp']);
+unset($formula['forDiffDist']);
 unset($compinfo['comStyleSheet']);
 unset($compinfo['TotalValidity']);
 
