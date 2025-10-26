@@ -397,7 +397,7 @@ create table tblPilot
     pilValidTo      date,
     pilAddress      varchar(128),
     pilBirthdate    date, 
-    pilEmail        varchar(32),
+    pilEmail        varchar(64),
     pilPhoneHome    varchar(24),
     pilPhoneMobile  varchar(24),
     pilYearStarted  varchar(8),
