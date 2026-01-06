@@ -22,7 +22,7 @@ function get_latest_task($link, $comPk)
 function find_presub($link, $comPk)
 {
     // find latest $tasPk (if there is one)
-    $tasPk = get_lastest_task($link, $comPk);
+    $tasPk = get_latest_task($link, $comPk);
     if ($tasPk == 0) return;
 
     $query = "select CTT.traPk from tblComTaskTrack CTT, tblTask T, tblTrack TR, tblCompetition C where T.tasPk=$tasPk and CTT.comPk=$comPk and T.comPk=CTT.comPk and C.comPk=CTT.comPk and CTT.traPk=TR.traPk and CTT.tasPk is null and TR.traStart > date_sub(T.tasStartTime, interval C.comTimeOffset+1 hour) and TR.traStart < date_sub(T.tasFinishTime, interval C.comTimeOffset hour)";
