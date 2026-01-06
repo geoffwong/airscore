@@ -22,10 +22,8 @@ use TrackLib qw(:all);
 
 use strict;
 
-my $dbh;
-
 my $max_height = 3048;  # 10000' limit in oz 
-my $start_below = 100;
+my $start_below = 0;
 my $debug = 0;
 #my $max_height = 2591;  # 8500' limit in oz 
 #my $max_height = 1666;  # 5000' limit in oz 
@@ -35,7 +33,7 @@ my $debug = 0;
 #
 sub read_short_track
 {
-    my ($dbh, $traPk,$bucket) = @_;
+    my ($dbh, $traPk, $bucket) = @_;
     my %track;
     my @coords;
     my %awards;
@@ -394,7 +392,7 @@ sub cart_angle
 #
 sub find_nearby_airspace
 {
-    my ($regPk, $dist) = @_;
+    my ($dbh, $regPk, $dist) = @_;
     my @allair;
     my $ref;
     my %nearair;
@@ -589,6 +587,48 @@ sub delete_airspace
     $dbh->do("delete from tblTaskAirspace where airPk in ($allair)", undef);
     $dbh->do("delete from tblAirspaceWaypoint where airPk in ($allair)", undef);
     $dbh->do("delete from tblAirspace where airPk in ($allair)", undef);
+}
+
+sub airspace_check_task_track
+{
+    my ($dbh, $tasPk, $traPk) = @_;
+    my $ref;
+    my %result = ();
+    my @checked;
+
+    my $track = get_one_track($dbh, $traPk);
+    my $airspace = find_task_airspace($dbh, $tasPk);
+    if (scalar(@$airspace) == 0)
+    {
+        return undef;
+    }
+
+    foreach my $space (@$airspace)
+    {
+        # print "   ", cln($space->{'name'}), " with base=", cln($space->{'base'}), "\n";
+        push @checked, $space->{'name'} . " (" . cln($space->{'base'}) . ")";
+    }
+
+    $result{'checked'} = \@checked;
+
+    my $dist = 0;
+    my $name = $track->{'pilFirstName'} . " " . $track->{'pilLastName'};
+    $result{'track'} = 0+$traPk;
+    $result{'pilot'} = $name;
+    $result{'pilot_id'} = $track->{'pilPk'};
+    if (($dist = airspace_check($dbh, $traPk, $airspace)) > 0)
+    {
+        #print "\n    Maximum violation of $dist metres ($name).";
+        $result{'result'} = "violation";
+        $result{'excess'} = $dist;
+    }
+    else
+    {
+        $result{'result'} = "none";
+        $result{'excess'} = 0;
+    }
+
+    return \%result;
 }
 
 
