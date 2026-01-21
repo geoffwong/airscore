@@ -182,7 +182,15 @@ sub re_entered_start
     if ($rpt->{'how'} eq 'entry')
     {
         #print "Repeat check ", $rpt->{'type'}, " (reflag=$reflag lastin=$lastin): dist=$rdist\n";
-        if (($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))) # and ($reflag == $lastin))
+        if ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}))
+        {
+            if ($debug)
+            {
+                print "(Re)exited entry start/speed cylinder\n";
+            }
+            $newreflag = $lastin;
+        }
+        elsif (($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))) # and ($reflag == $lastin))
         {
             # last point inside ..
             #$starttime = 0 + $coord->{'time'};
@@ -202,14 +210,6 @@ sub re_entered_start
             #}
             $newreflag = -1;
             $reset = 1;
-        }
-        elsif ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}))
-        {
-            if ($debug)
-            {
-                print "(Re)exited entry start/speed cylinder\n";
-            }
-            $newreflag = $lastin;
         }
     }
 

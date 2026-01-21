@@ -22,7 +22,7 @@ our @EXPORT = qw{:ALL};
 
 our $pi = atan2(1,1) * 4;    # accurate PI.
 
-my $debug = 1;
+my $debug = 0;
 my $wptdistcache;
 my $remainingdistcache;
 my $total_distance;
@@ -423,7 +423,7 @@ sub remaining_task_dist
     {
         # Special case for entry cylinder on goal
         $remdist = $remainingdistcache->[$wmade];
-        if ($debug) { print "wpt centre = goal remdist\n"; }
+        if ($debug) { print "    ### (Task.pm) wpt centre = goal remdist\n"; }
         $remdist = $remainingdistcache->[$wmade];
         $s1{'lat'} = $nextwpt->{'lat'};
         $s1{'long'} = $nextwpt->{'long'};
@@ -435,7 +435,13 @@ sub remaining_task_dist
             $s1{'long'} = $waypoints->[$goal_point]->{'long'};
             my $rdist = qckdist2($coord, \%s1);
             $remdist = $rdist - $radius;
-            if ($debug) { print "    ### (Task.pm ess/goal)entry/entry wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n"; }
+            if ($debug) { print "    ### (Task.pm ess/goal cyl)entry/entry wmade=$wmade remdist=$remdist rdist=$rdist radius=$radius\n"; }
+            return $remdist;
+        }
+        else
+        {
+            my $remdist = qckdist2($coord, \%s1);
+            if ($debug) { print "    ### (Task.pm ess/goal line)entry/entry wmade=$wmade remdist=$remdist\n"; }
             return $remdist;
         }
     }
@@ -449,7 +455,7 @@ sub remaining_task_dist
         {
             my %st;
 
-            if ($debug) { print "remdist=$remdist normal next waypoint: ", $nextwpt->{'name'}, "(", $nextwpt->{'radius'}, ")\n"; }
+            if ($debug) { print "    ### (Task.pm) remdist=$remdist normal next waypoint: ", $nextwpt->{'name'}, "(", $nextwpt->{'radius'}, ")\n"; }
             $st{'lat'} = $waypoints->[$wmade+1]->{'short_lat'};
             $st{'long'} = $waypoints->[$wmade+1]->{'short_long'};
             $last_wpt_update = $coord->{'time'};
