@@ -21,6 +21,33 @@ function parse_latlong($str, $neg)
     return $val;
 }
 
+// 4119.343S
+// 17313.917E
+
+function parse_cu_latlong($str, $neg)
+{
+    if ($neg == "E" || $neg == "W")
+    {
+        $adeg = floatval(substr($str, 0, 3));
+        $ammm = floatval(substr($str, 3));
+    }
+    else
+    {
+        $adeg = substr($str, 0, 2);
+        $ammm = floatval(substr($str, 2));
+    }
+
+    $val = $adeg + $ammm / 60;
+
+    $ns = substr($str, -1,1);
+    if ($ns == $neg)
+    {
+        $val = -$val;
+    }
+
+    return $val;
+}
+
 function parse_gpsd_latlong($str, $neg)
 {
     $fields = explode(" ", $str);
@@ -33,6 +60,34 @@ function parse_gpsd_latlong($str, $neg)
     }
 
     return $val;
+}
+
+# CUP
+#name,code,country,lat,lon,elev,style,rwdir,rwlen,freq,desc
+#"010 OCTPUSS PARK",010OCT,,4119.343S,17313.917E,30.0m,1,,,,
+function parse_cup($regPk, $link, $lines)
+{
+    $count = 1;
+    for ($i = 1; $i < count($lines); $i++)
+    {
+        $fields = explode(",", $lines[$i]);
+        if (strlen($fields[0]) == 0)
+            continue;
+
+        $count++;
+
+        // waypoint
+        $name = addslashes($fields[1]);
+        $lat = parse_cu_latlong($fields[3], "S");
+        $long = parse_cu_latlong($fields[4], "W");
+        $alt = floatval($fields[5]);
+        $desc = rtrim(addslashes(substr($fields[0],1,01)));
+        // echo "$name $lat $long $alt $desc<br>";
+        $sql = "insert into tblRegionWaypoint (regPk, rwpName, rwpLatDecimal, rwpLongDecimal, rwpAltitude, rwpDescription) values ($regPk,'$name',$lat,$long,$alt,'$desc')";
+        $result = mysql_query($sql,$link) or json_die('Insert RegionWaypoint (cup) failed: ' . mysql_error());
+    }
+
+    return $count;
 }
 
 # Add support for:
@@ -48,7 +103,7 @@ function parse_oziwpts($regPk, $link, $lines)
     for ($i = 0; $i < count($lines); $i++)
     {
         $fields = explode(",", $lines[$i]);
-        if (0 + $fields[0] < $count) 
+        if (0 + $fields[0] == 0)
             continue;
 
         $count++;
@@ -119,7 +174,7 @@ function parse_waypoints($filen, $regPk, $link)
     if (!$fh)
     {
         json_die("Unable to read file");
-        return;
+        return 0;
     }
     clearstatcache();
     $sz = filesize($filen);
@@ -142,6 +197,11 @@ function parse_waypoints($filen, $regPk, $link)
     {
         $xml = new SimpleXMLElement($data);
         return parse_kml($regPk, $link, $xml);
+    }
+
+    if (substr($lines[0],0,4) == "name")
+    {
+        return parse_cup($regPk, $link, $lines);
     }
 
     $param = [];
@@ -185,7 +245,9 @@ function accept_waypoints($regPk, $link)
     // Copy the upload so I can use it later ..
     if ($_FILES['userfile']['tmp_name'] != '')
     {
-        $copyname = tempnam(FILEDIR, $name . "_");
+        $dte = date("Y-m-d_Hms");
+        $yr = date("Y");
+        $copyname = tempnam(FILEDIR . $yr, $name . "_" . $dte);
         copy($_FILES['userfile']['tmp_name'], $copyname);
         chmod($copyname, 0644);
 
