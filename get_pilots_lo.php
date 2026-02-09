@@ -29,8 +29,10 @@ if (sizeof($tracks) ==  0)
 $allt = "(" . implode(",", $tracks) . ")";
 
 //$sql = "select TL.* from tblTrackLog TL where TL.traPk in " . $allt . " group by TL.traPk order by TL.traPk, TL.trlTime desc";
-$sql = "select TL.* from tblTrackLog TL, (select traPk, max(trlTime) as maxTime from tblTrackLog TL where TL.traPk in " . $allt . " group by traPk) X where X.traPk=TL.traPk and X.maxTime=TL.trlTime";
+$sql = "select TLL.* from (select * from tblTrackLog TL where TL.traPk in " . $allt . ") TLL, (select traPk, max(trlTime) as maxTime from tblTrackLog TL where TL.traPk in " . $allt . " group by traPk) X where X.traPk=TLL.traPk and X.maxTime=TLL.trlTime";
 //$sql = "select T1.* from tblTrackLog T1 left outer join tblTrackLog T2 on T1.traPk in " . $allt . " and T2.traPk in " . $allt . " and T1.traPk=T2.traPk and T1.trlTime > T2.trlTime where T2.trlTime is null";
+//$sql = "select T1.* from tblTrackLog T1 where T1.traPk in " . $allt . " left outer join tblTrackLog T2 on T1.traPk in " . $allt . " and T2.traPk in " . $allt . " and T1.traPk=T2.traPk and T1.trlTime > T2.trlTime where T2.trlTime is null";
+
 $result = mysql_query($sql,$link) or die('Query failed: ' . mysql_error());
 
 $retarr = [];

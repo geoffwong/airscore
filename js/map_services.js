@@ -157,11 +157,11 @@ function add_map_server(name, count)
     }).addTo(map_array[count]);
 
     streets  = L.tileLayer(get_tileserver(esri_ts, []), {id: 'streets',
-        attribution: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer">Ersi, OSM, et al</a>',
+        attribution: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer">Esri, OSM, et al</a>',
         });
 
     topo = L.tileLayer(get_tileserver(esri_topo_ts, []), {id: 'topo',
-        attribution: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">Ersi, OSM, et al</a>',
+        attribution: 'Tiles &copy; <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">Esri, OSM, et al</a>',
         });
 
     //satoverlay = L.tileLayer(get_tileserver(esri_semi_ts, []), {id: 'satover', attribution: 'esri overlay'});

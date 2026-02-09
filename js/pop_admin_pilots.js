@@ -11,7 +11,7 @@ function clear_pilot()
     $("input[name='pilotid']").val('');
     $("input[name='first']").val('');
     $("input[name='last']").val('');
-    $("input[name='nation']").val('');
+    $("input[name='nation']").val('AUS');
     $("input[name='hgfa']").val('');
     $("input[name='flightweight']").val('');
     $("input[name='glidersize']").val('');
@@ -32,7 +32,7 @@ function addup_pilot()
     var id = $("input[name='pilotid']").val();
     var fname = $("input[name='first']").val();
     var lname = $("input[name='last']").val();
-    var nation = $("input[name='nation']").val();
+    var nation = $("#nation option:selected").val();
     var flightweight = $("input[name='flightweight']").val();
     var glidersize = $("input[name='glidersize']").val();
     var hgfa = $("input[name='hgfa']").val();
@@ -78,6 +78,7 @@ $(document).ready(function() {
         else {
             var table=$('#pilots').DataTable();
             var data = table.row(this).data();
+            console.log(data);
             table.$('tr.selected').removeClass('selected');
             $(this).addClass('selected');
             $('#control').html('Update');
@@ -86,12 +87,12 @@ $(document).ready(function() {
             $("input[name='pilotid']").val(data[0]);
             $("input[name='first']").val(data[3]);
             $("input[name='last']").val(data[4]);
-            $("input[name='nation']").val(data[6]);
+            $("#nation").val(data[6]);
             $("input[name='flightweight']").val(data[7]);
             $("input[name='glidersize']").val(data[8]);
             $("input[name='hgfa']").val(data[1]);
             $("input[name='civl']").val(data[2]);
-            $("input[name='gender']").val(data[5]);
+            $("#gender").val(data[5]);
             $("#pilotmodal").modal("show");
         }
     } );
