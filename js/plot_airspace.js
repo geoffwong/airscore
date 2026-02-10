@@ -35,7 +35,7 @@ $("#airspace")
   })
 
 $(document).ready(function() {
-    var regPk = url_parameter("regPk");
+    var regPk = url_parameter("argPk");
     var airPk = url_parameter("airPk");
     var mapdiv = document.getElementById("map");
     mapdiv.setAttribute('style', 'top: 0px; left: 0px; width:100%; height:90vh; float: left');
