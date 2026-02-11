@@ -72,13 +72,13 @@ function get_open_comps($link)
 
 function get_recent_comps($link)
 {
-    $sql = "select C.comPk, C.comName, C.comLocation, C.comClass, C.comSanction, C.comType, C.comDateFrom, C.comDateTo, count(T.tasPk) as numTasks 
+    $sql = "select C.comPk, C.comName, C.comLocation, C.comClass, C.comSanction, C.comType, C.comDateFrom, C.comDateTo, count(DISTINCT CTT.tasPk) as numTasks 
         from tblCompetition C 
-        left outer join tblTask T 
-            on T.comPk=C.comPk 
+        join tblComTaskTrack CTT
+            on CTT.comPk=C.comPk
         where C.comName not like '%test%' 
         and C.comDateTo > date_sub(curdate(), interval 4 month) and C.comDateTo < curdate()
-        group by C.comPk 
+        group by C.comPk
         order by C.comType desc, C.comDateFrom desc";
 
     $result = mysql_query($sql,$link) or die('get_recent_comps failed: ' . mysql_error());
