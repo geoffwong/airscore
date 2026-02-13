@@ -158,7 +158,7 @@ function team_agg_result($link, $comPk, $alltasks, $teamsize)
             if ($size != 0)
             {
                 $tastotal = round($tastotal,0);
-                $arr["${tasName}"] = [ 'score' => $tastotal, 'perc' => 100, 'tname' => $tasName ];
+                $arr[ "task_$tasPk" ] = [ 'tasname' => $tasName, 'score' => $tastotal, 'perc' => 100, 'tname' => $tasName ];
                 $arr[$taskmap[$tasPk]] = $tastotal;
             }
             $tasName = $row['tasName'];
@@ -222,7 +222,7 @@ function team_agg_result($link, $comPk, $alltasks, $teamsize)
     $arr['pilots'] = $pilots;
     $tastotal = round($tastotal,0);
     $arr[$taskmap[$tasPk]] = $tastotal;
-    $arr["${tasName}"] = [ 'score' => round($tastotal,0), 'perc' => 100, 'tname' => $tasName ];
+    $arr["task_$tasPk"] = [ 'tasname' => $tasName, 'score' => $tastotal, 'perc' => 100, 'tname' => $tasName ];
     $sorted["${total}!${teaPk}"] = $arr;
 
     krsort($sorted, SORT_NUMERIC);
