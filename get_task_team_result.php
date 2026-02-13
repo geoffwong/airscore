@@ -118,12 +118,16 @@ function aggregate_result($link,$tasPk,$compinfo)
             $row['tepscore'] = 1000;
         }
         $team = $row['teaName'];
-        $htable[] = [ $team,  $row['pilFirstName'] . ' ' . $row['pilLastName'], round($row['tepscore'],2), ''];
-        // $htable[] = [ '',  $row['pilFirstName'] . ' ' . $row['pilLastName'], round($row['tepscore'],2)];
+        $tepscore = round($row['tepscore'],2);
         if ($size < $compinfo['comTeamSize'])
         {
+            $htable[] = [ $team,  $row['pilFirstName'] . ' ' . $row['pilLastName'], $tepscore, ''];
             $total = round($total + $row['tepscore'],2);
             $size = $size + 1;
+        }
+        else
+        {
+            $htable[] = [ $team,  $row['pilFirstName'] . ' ' . $row['pilLastName'], "<s>$tepscore</s>", ''];
         }
         $row = mysql_fetch_array($result, MYSQL_ASSOC);
     }
@@ -222,6 +226,7 @@ $goalalt = 0;
 $tsinfo = [];
 $tsinfo["comp_name"] = $row['comName'];
 $tsinfo["comp_class"] = $row['comClass'];
+$tsinfo["comp_teamsize"] = $row['comTeamSize'];
 $tsinfo["task_name"] = $row['tasName'];
 $tsinfo["date"] = $row['tasDate'];
 $tsinfo["task_type"] = strtoupper($row['tasTaskType']);

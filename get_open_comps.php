@@ -51,7 +51,7 @@ function extract_results($result)
     return $comps;
 }
 
-function get_open_comps($link)
+function get_open_comps($link, $restrict)
 {
     $sql = "select C.comPk, C.comName, C.comLocation, C.comClass, C.comSanction, C.comType, C.comDateFrom, C.comDateTo, 
         count(T.traPk) as numTracks,
@@ -62,6 +62,7 @@ function get_open_comps($link)
     left outer join tblTrack T 
         on T.traPk=CTT.traPk 
     where C.comName not like '%test%'
+    $restrict
     and C.comDateTo >= curdate() and C.comDateFrom <= date_add(curdate(), interval 1 month)
     group by C.comPk 
     order by C.comType desc, C.comDateFrom desc";
@@ -90,7 +91,14 @@ function get_recent_comps($link)
 
 
 $data = [];
-$open = get_open_comps($link);
+$restrict = " and C.comType like '%RACE%'";
+$type = reqsval("type");
+if ($type == "routesolc")
+{
+    $restrict = " and C.comType in ('OLC', 'Route')";
+}
+
+$open = get_open_comps($link, $restrict);
 $data['data'] = $open;
 
 print json_encode($data);

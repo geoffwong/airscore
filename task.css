@@ -131,6 +131,29 @@
 #waypoints td:hover {
     cursor:move;
 }
+.dt-bold {
+    font-weight: bold;
+}
+.white-bold {
+    color:#fff;
+    font-weight: bold;
+}
+.black-bold {
+    color:#000;
+    font-weight: bold;
+}
+.pink-bold {
+    color:#FFB6C1;
+    font-weight: bold;
+}
+.yellow-bold {
+    color:#FFFF00;
+    font-weight: bold;
+}
+.blue-text {
+    color:#3333CC;
+    font-size:small;
+}
 @media (max-width: 576px) { .modal-dialog.modal-dialog-slideout {width: 80%}}
 body {
   padding-top: 54px;

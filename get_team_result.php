@@ -46,7 +46,7 @@ function team_comp_result($link, $comPk, $how, $param)
         {
             $perf = round($score, 0);
         }
-        $results[$pilPk]["${perf}${tasName}"] = array('score' => $score, 'validity' => $validity, 'tname' => $tasName);
+        $results[$pilPk]["${perf}${tasName}"] = [ 'score' => $score, 'validity' => $validity, 'tname' => $tasName ];
     }
     return $results;
 
@@ -127,40 +127,51 @@ function team_comp_result($link, $comPk, $how, $param)
     return $sorted;
 }
 
-function team_agg_result($link, $comPk, $teamsize)
+function team_agg_result($link, $comPk, $alltasks, $teamsize)
 {
-    $query = "select TM.teaPk,TK.tasPk,TK.tasName,TM.teaName,P.pilLastName,P.pilFirstName,P.pilPk,TR.tarScore*TP.tepModifier as tepscore from tblTaskResult TR, tblTask TK, tblTrack K, tblPilot P, tblTeam TM, tblTeamPilot TP, tblCompetition C where TP.teaPk=TM.teaPk and P.pilPk=TP.pilPk and C.comPk=TK.comPk and K.traPk=TR.traPk and K.pilPk=P.pilPk and TR.tasPk=TK.tasPk and TM.comPk=C.comPk and C.comPk=$comPk order by TM.teaPk,TK.tasPk,TR.tarScore*TP.tepModifier desc";
-    $result = mysql_query($query, $link) or json_die('Team aggregate query failed: ' . mysql_error());
-    $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    // create a mapping from tasPk => T1, T2, etc
+    $taskmap = [];
+    for ($tascount = 1; $tascount <= sizeof($alltasks); $tascount++)
+    {
+        $taskmap[$alltasks[$tascount-1]['tasPk']] = "T$tascount";
+    }
+
     $htable = [];
     $hres = [];
     $sorted = [];
+    $pilots = [];
     $teaPk = 0;
     $tasPk = 0;
     $tastot = 0;
+    $tastotal = 0;
     $total = 0;
     $size = 0;
+
+    // query the results
+    $query = "select TM.teaPk,TK.tasPk,TK.tasName,TM.teaName,P.pilLastName,P.pilFirstName,P.pilPk,TR.tarScore*TP.tepModifier as tepscore from tblTaskResult TR, tblTask TK, tblTrack K, tblPilot P, tblTeam TM, tblTeamPilot TP, tblCompetition C where TP.teaPk=TM.teaPk and P.pilPk=TP.pilPk and C.comPk=TK.comPk and K.traPk=TR.traPk and K.pilPk=P.pilPk and TR.tasPk=TK.tasPk and TM.comPk=C.comPk and C.comPk=$comPk order by TM.teaPk,TK.tasPk,TR.tarScore*TP.tepModifier desc";
+    $result = mysql_query($query, $link) or json_die('Team aggregate query failed: ' . mysql_error());
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
     while ($row)
     {
-        //$tasName = $row['tasName'];
         if ($tasPk != $row['tasPk'])
         {
             if ($size != 0)
             {
-                $arr["${tasName}"] = array('score' => round($tastotal,0), 'perc' => 100, 'tname' => $tasName);
+                $tastotal = round($tastotal,0);
+                $arr["${tasName}"] = [ 'score' => $tastotal, 'perc' => 100, 'tname' => $tasName ];
+                $arr[$taskmap[$tasPk]] = $tastotal;
             }
             $tasName = $row['tasName'];
             $size = 0;
             $tastotal = 0;
             $tasPk = $row['tasPk'];
-            //$arr = [];
         }
         if ($teaPk != $row['teaPk'])
         {
             if ($teaPk == 0)
             {
                 $teaPk = $row['teaPk'];
-                $tasPk = $tow['tasPk'];
+                $tasPk = $row['tasPk'];
                 $arr = [];
                 $arr['name'] = $row['teaName'];
             }
@@ -168,7 +179,11 @@ function team_agg_result($link, $comPk, $teamsize)
             {
                 // wrap up last one
                 $total = round($total,0);
+                $arr['position'] = '';
+                $arr['total'] = $total;
+                $arr['pilots'] = $pilots;
                 $sorted["${total}!${teaPk}"] = $arr;
+                $pilots = [];
                 $tastotal = 0;
                 $total = 0;
                 $size = 0;
@@ -184,20 +199,42 @@ function team_agg_result($link, $comPk, $teamsize)
             {
                 $row['tepscore'] = 1000;
             }
+            $tepscore = $row['tepscore'];
             $total = round($total + $row['tepscore'],2);
             $tastotal = round($tastotal + $row['tepscore'],2);
             $size = $size + 1;
         }
+
+        $pilotname = $row['pilFirstName'] . " " . $row['pilLastName'];
+        if (!array_key_exists($pilotname, $pilots)) 
+        {
+            $pilots[$pilotname] = [];
+        }
+        $pilots[$pilotname][] = round(0+$row['tepscore'], 0);
+
         $row = mysql_fetch_array($result, MYSQL_ASSOC);
     }
 
     // wrap up last one
     $total = round($total,0);
-    $arr["${tasName}"] = array('score' => round($tastotal,0), 'perc' => 100, 'tname' => $tasName);
+    $arr['position'] = '';
+    $arr['total'] = $total;
+    $arr['pilots'] = $pilots;
+    $tastotal = round($tastotal,0);
+    $arr[$taskmap[$tasPk]] = $tastotal;
+    $arr["${tasName}"] = [ 'score' => round($tastotal,0), 'perc' => 100, 'tname' => $tasName ];
     $sorted["${total}!${teaPk}"] = $arr;
 
     krsort($sorted, SORT_NUMERIC);
-    return $sorted;
+
+    // strip keys ..
+    $clean = [];
+    foreach ($sorted as $team => $arr)
+    {
+        $clean[] = $arr;
+    }
+
+    return $clean;
 }
 
 # find each task details
@@ -220,11 +257,13 @@ function team_result($link,$comPk,$comi)
     {
         if ($comi['comTeamScoring'] == "aggregate")
         {
-            $sorted = team_agg_result($link, $comPk, $comi['comTeamSize']);
+            $sorted = team_agg_result($link, $comPk, $taskinfo, $comi['comTeamSize']);
+            return $sorted;
         }
         else
         {
             $sorted = team_comp_result($link, $comPk, $comi['comOverall'], $comi['comOverallParam']);
+            return $sorted;
         }
     
         $count = 1;
@@ -235,10 +274,8 @@ function team_result($link,$comPk,$comi)
             $rtable[] = $arr['name'];
             $tot = 0 + $pil;
             $rtable[] = "<b>$tot</b>";
-            $taskcount = 0;
             foreach ($alltasks as $num => $name)
             {
-                $taskcount++;
                 $score = $arr[$name]['score'];
                 $perc = round($arr[$name]['perc'], 0);
                 if (!$score)
