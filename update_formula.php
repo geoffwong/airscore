@@ -37,6 +37,7 @@ $regarr['forDiffRamp'] = reqsval('DiffRamp');
 $regarr['forDiffCalc'] = reqsval('DiffCalc');
 $regarr['forDistMeasure'] = reqsval('DistMeasure');
 $regarr['forErrorMargin'] = reqfval('ErrorMargin');
+$regarr['forDeparture'] = reqsval('Departure');
 $regarr['forArrival'] = reqsval('Arrival');
 if (array_key_exists('WeightStart', $_REQUEST))
 {

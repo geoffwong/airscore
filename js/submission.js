@@ -12,12 +12,15 @@ function submit_track()
     var fd = new FormData();
     fd.append('comid' , comPk);
     fd.append('hgfanum' , $("input[name='hgfanum']").val());
+    fd.append('idselect' , $("#idsel option:selected").val());
     fd.append('lastname' , $("input[name='lastname']").val());
     fd.append('glider' , $("input[name='glider']").val());
     fd.append('dhv' , $("#dhv option:selected").val());
     fd.append('pilotsafety' , $("#pilotsafety option:selected").val());
     fd.append('pilotquality' , $("#pilotquality option:selected").val());
+    fd.append('pilotquality' , $("#pilotquality option:selected").val());
     fd.append('userfile' , $("#customFile")[0].files[0]);
+    //fd.append('create_missing_pilot' , $('#create_missing_pilot').val());
 
     var tasPk = $('#routesel').val();
     var extra='';

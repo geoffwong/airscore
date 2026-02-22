@@ -61,6 +61,8 @@
     <form enctype="multipart/form-data" id="subform" action="javascript:void(0);" method="post">
     <div class="form-group">
     <input type="hidden" name="MAX_FILE_SIZE" value="1000000000">
+    <input type="hidden" name="create_missing_pilot" id="create_missing_pilot" value="0">
+    <input type="hidden" name="firstname" id="firstname" type="text">
     <div class="form-row">
         <div class="col mb-1"><select name='comid' id='compsel' class="form-control"></select></div>
     </div>
@@ -76,7 +78,13 @@
     </div>
     </div>
     <div class="form-row">
-        <div class="col mb-1"><input name="hgfanum" type="text" class="form-control" placeholder="HGFA Number" required></div>
+        <div class="col mb-1"><input name="hgfanum" type="text" class="form-control" placeholder="ID Number" required></div>
+        <div class="col col-md-auto">
+            <select name="idsel" id="idsel" class="form-control" placeholder="Class">
+            <option value="safa">SAFA</option>
+            <option value="civl">CIVL</option>
+            </select>
+        </div>
     </div>
     <div class="form-row">
         <div class="col mb-1"><input name="lastname" type="text" class="form-control" placeholder="Last Name" required></div>
@@ -147,7 +155,7 @@
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="js/submission.js"></script>
+    <script src="js/submission.js?v=2"></script>
 
   </body>
 </html>
