@@ -18,7 +18,6 @@ function submit_track()
     fd.append('dhv' , $("#dhv option:selected").val());
     fd.append('pilotsafety' , $("#pilotsafety option:selected").val());
     fd.append('pilotquality' , $("#pilotquality option:selected").val());
-    fd.append('pilotquality' , $("#pilotquality option:selected").val());
     fd.append('userfile' , $("#customFile")[0].files[0]);
     //fd.append('create_missing_pilot' , $('#create_missing_pilot').val());
 
