@@ -49,11 +49,22 @@ function create_task()
             }
         });
 }
-function updated_compinfo(result)
+
+function updated_compinfo(data)
 {
     $('#subspin').removeClass('fa-circle-o-notch');
     $('#subspin').removeClass('fa-spin');
-    console.log(result);
+    console.log(data);
+    try {
+        if (data['result'] == 'error')
+        {
+            alert("updated_compinfo udpate failed: " + data['error']);
+        }
+    }
+    catch (e)
+    {
+        alert("updated_compinfo(2) failed: " + e);
+    }
 }
 
 function save_compinfo()

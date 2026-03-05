@@ -14,13 +14,6 @@ String.prototype.format = function()
     var args = arguments;
     return this.replace(pattern, function(capture){ return args[capture.match(/\d+/)]; });
 }
-function merge_tracks(tasPk, traPk, incPk)
-{
-    new microAjax("merge_track.php?tasPk="+tasPk+"&traPk="+traPk+"&incPk="+incPk, function(data) 
-        { 
-            window.location.href="tracklog_map.html?trackid="+traPk;
-        } );
-}
 function plot_track(jstr)
 {
     var track;
@@ -161,9 +154,14 @@ function do_add_track()
     trackid = e.options[e.selectedIndex].value;
     console.log("trackid="+trackid);
     var comPk = url_parameter('comPk');
+    var interval = url_parameter('interval');
+    if (interval == 0) 
+    {
+        interval = 5;
+    }
     if (!onscreen[trackid])
     {
-        add_track(comPk, trackid, 5);
+        add_track(comPk, trackid, interval);
     }
 }
 function plot_track_bounds(jstr)
@@ -283,7 +281,8 @@ function plot_track_header(body)
     var ihtml;
     var ovlay;
     // FIX: should show already awarded ones ...
-    ihtml = "<div class=\"trackInfo\"><b>" + body["name"] + "</b><br>\n";
+    //ihtml = "<div class=\"trackInfo\"><b>" + body["name"] + "</b><br>\n";
+    ihtml = "<details class=\"trackInfo\" open><summary><b>" + body["name"] + "</b></summary>";
     ihtml = ihtml + body["date"] + "<br>";
     ihtml = ihtml + body["glider"] + "<br>";
     if (body["goal"])
@@ -298,6 +297,7 @@ function plot_track_header(body)
     {
         ihtml = ihtml + body["comment"] + "<br>\n";
     }
+    ihtml = ihtml + "</details>";
     onlen = Object.keys(onscreen).length
     color = (onlen % 7)+1;
     strcol = sprintf("#%02x%02x%02x",200*((color&0x4)>>2),200*((color&0x2)>>1),200*(color&0x1)), 

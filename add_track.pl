@@ -9,6 +9,8 @@ use Data::Dumper;
 use Airspace qw(:all);
 
 use TrackLib qw(:all);
+use IGC qw(:all);
+
 #use strict;
 
 my $traPk;
@@ -22,8 +24,8 @@ my $sth;
 my $ref;
 my $res;
 my $ex;
+my $hdpilot;
 my ($glider,$dhv);
-
 my $pil = $ARGV[0];
 my $igc = $ARGV[1];
 my $comPk = 0 + $ARGV[2];
@@ -32,15 +34,44 @@ my $tasPk = 0 + $ARGV[3];
 my $forClass = '';
 my $forVersion = '';
 
+sub get_pilot_details
+{
+    my ($dbh, $comPk, $igc, $pilPk) = @_;
+    my $dhv = 'competition';
+    my $glider = 'unknown';
+
+    # get previous track info for pilot
+    $sql = "select traGlider, traDHV from tblTrack where pilPk=$pilPk order by traPk desc";
+    $sth = $dbh->prepare($sql);
+    $sth->execute();
+    if  ($ref = $sth->fetchrow_hashref())
+    {
+        $glider = $ref->{'traGlider'};
+        $dhv = $ref->{'traDHV'};
+    }
+    else
+    {
+        # can't find a previous track - get it from IGC
+
+        my $header = read_header($igc);
+        my $hdpilot = $header->{'pilot'};
+
+        if (defined($header->{'glider'}))
+        {
+            $glider = $hdglider;
+        }
+    }
+
+    return $hdpilot, $glider, $dhv;
+}
 
 sub get_pilot_key
 {
-    my ($dbh, $comPk, $pil) = @_;
+    my ($dbh, $comPk, $igc, $pil) = @_;
     my $sql;
     my $sth;
     my $ref;
     my $pilPk;
-    my $glider = 'unknown';
     my $hdglider;
     my $dhv = 'competition';
 
@@ -54,8 +85,6 @@ sub get_pilot_key
         # Guess on last name ...
         $sql = "select * from tblPilot where pilLastName='$pil' order by pilPk desc";
     }
-
-    print($sql, "\n");
     $sth = $dbh->prepare($sql);
     $sth->execute();
     if ($sth->rows() > 1)
@@ -63,64 +92,31 @@ sub get_pilot_key
         print "Pilot ambiguity for $pil, use pilot HGFA/FAI#\n";
         while  ($ref = $sth->fetchrow_hashref())
         {
+            $pilPk = $ref->{'pilPk'};
             print $ref->{'pilHGFA'}, " ", $ref->{'pilFirstName'}, " ", $ref->{'pilLastName'}, " ", $ref->{'pilBirthdate'}, "\n";
         }
     }
 
-    if ($ref = $sth->fetchrow_hashref())
+    ($pilot, $glider, $dhv) = get_pilot_details($dbh, $comPk, $igc, $pil);
+    if (!defined($pilPk) and defined($pilot))
     {
-        $pilPk = $ref->{'pilPk'};
-    }
-    else
-    {
-        my $header = read_header($igc);
-
-        my $pilot = $header->{'pilot'};
-        $hdglider = $header->{'glider'};
-
-        if (defined($pilot))
+        # split lastname(s) and select from database .. pick one?
+        my @arr = split(/ /, $pilot, 2);
+        my $lastname = $arr[1];
+        my $sth = $TrackLib::dbh->prepare("select pilPk from tblPilot where pilLastName='$lastname'");
+        $sth->execute();
+        my $res = $sth->fetchrow_array();
+        if ($sth->rows() == 1)
         {
-            # split lastname(s) and select from database .. pick one?
-            my @arr = split(/ /, $pilot, 2);
-            my $lastname = $arr[1];
-            my $sth = $TrackLib::dbh->prepare("select pilPk from tblPilot where pilLastName='$lastname'");
-            $sth->execute();
-            my $res = $sth->fetchrow_array();
-            if ($sth->rows() == 1)
-            {
-                # @todo: improve to use firstname if multiple results returned
-                $pilPk = $res;
-            }
-        }
-
-        if ($pilPk == 0)
-        {
-            print "Unable to identify pilot: $pil\n";
-            return 0;
+            # @todo: improve to use firstname if multiple results returned
+            $pilPk = $res;
         }
     }
 
-
-    # get previous track info for pilot
-    $sql = "select traGlider, traDHV from tblTrack where pilPk=$pilPk order by traPk desc";
-    $sth = $dbh->prepare($sql);
-    $sth->execute();
-    if  ($ref = $sth->fetchrow_hashref())
+    if ($pilPk == 0)
     {
-        print Dumper($ref);
-        $glider = $ref->{'traGlider'};
-        $dhv = $ref->{'traDHV'};
-    }
-    else
-    {
-        if (defined($hdglider))
-        {
-            $glider = $hdglider;
-        }
-        else
-        {
-            $glider = 'Unknown';
-        }
+        print "Unable to identify pilot: $pil\n";
+        return 0;
     }
 
     return $pilPk, $glider, $dhv;
@@ -237,13 +233,31 @@ sub handle_task_track
 
 if (scalar(@ARGV) < 2)
 {
-    print "add_track.pl <hgfa#> <igcfile> <comPk> [tasPk]\n";
+    print "add_track.pl [-p] <pilPk|hgfa|civl> <igcfile> <comPk> [tasPk]\n";
     exit(1);
 }
 
 $dbh = db_connect();
 
-($pilPk, $glider, $dhv) = get_pilot_key($dbh, $comPk, $pil);
+if ($ARGV[0] eq '-p')
+{
+    $debug = 1;
+    shift @ARGV;
+    $pilPk = 0 + $ARGV[0];
+    $igc = $ARGV[1];
+    $comPk = 0 + $ARGV[2];
+    $tasPk = 0 + $ARGV[3];
+    ($hdpilot, $glider, $dhv) = get_pilot_details($dbh, $comPk, $igc, $pilPk);
+}
+else
+{
+    $pil = 0 + $ARGV[0];
+    $igc = $ARGV[1];
+    $comPk = 0 + $ARGV[2];
+    $tasPk = 0 + $ARGV[3];
+    ($pilPk, $glider, $dhv) = get_pilot_key($dbh, $comPk, $igc, $pil);
+}
+
 if ($pilPk == 0)
 {
     print "Unable to identify pilot (2): $pil\n";

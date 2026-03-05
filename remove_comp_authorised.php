@@ -22,7 +22,7 @@ if (!is_admin('admin', $authed, $comPk))
 
 if ($adminPk > 0)
 {
-	$query = "delete from tblCompAuth where usePk=$adminPk and $comPk=$comPk";
+	$query = "delete from tblCompAuth where usePk=$adminPk and comPk=$comPk";
     $result = mysql_query($query, $link) or json_die('Administrator removal failed: ' . mysql_error());
 	$res['result'] = "ok";
 	json_encode($res);

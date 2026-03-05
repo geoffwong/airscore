@@ -4,6 +4,10 @@ function result_done(data)
     var table = $('#task_result').DataTable();
     table.ajax.reload();
     $('#reloadspin').hide();
+    if (data.result == "error")
+    {
+        alert(data.error);
+    }
 }
 function delete_result()
 {
@@ -25,6 +29,7 @@ function update_result()
     var tasPk = url_parameter("tasPk");
     var comPk = url_parameter("comPk");
     var hgfa = $("input[name='hgfa']").val();
+    var idsel = $('#idsel option:selected').val();
 
     var tarpk = $("input[name='tarpk']").val();
     var glider = $("input[name='glider']").val();
@@ -35,9 +40,9 @@ function update_result()
     var result = $("#resulttype option:checked").val();
     var enrating = $("#enrating option:checked").val();
 
-    console.log('tarpk='+tarpk+' glider='+glider+'dist='+dist+' penalty='+penalty+' result='+result+' enrating='+enrating+' hgfa='+hgfa);
+    console.log('tarpk='+tarpk+' glider='+glider+'dist='+dist+' penalty='+penalty+' result='+result+' enrating='+enrating+' hgfa='+hgfa+' idsel='+idsel);
     $('#reloadspin').show();
-    $.post("update_task_result.php", { 'tasPk' : tasPk, 'comPk' : comPk, 'tarpk' : tarpk, 'glider' : glider, 'dist' :  dist, 'penalty' :  penalty, 'result' : result, 'enrating' : enrating, 'hgfa' : hgfa }, result_done);
+    $.post("update_task_result.php", { 'tasPk' : tasPk, 'comPk' : comPk, 'tarpk' : tarpk, 'glider' : glider, 'dist' :  dist, 'penalty' :  penalty, 'result' : result, 'enrating' : enrating, 'hgfa' : hgfa, 'idselect' : idsel }, result_done);
 }
 function populate_modal(data)
 {
