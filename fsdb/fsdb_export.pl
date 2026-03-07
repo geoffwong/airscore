@@ -8,6 +8,8 @@
 # Geoff Wong 2009
 #
 
+
+
 use XML::Simple;
 use Data::Dumper;
 use POSIX qw(ceil floor strftime);
@@ -88,6 +90,19 @@ sub conv_time
     return $res;
 }
 
+sub dhv2en
+{
+    my ($dhv) = @_;
+    my %enmap = (
+            '1' => 'A',
+            '1/2' => 'B',
+            '2' => 'C',
+            '2/3' => 'D',
+            'competition' => 'CCC'
+        );
+
+    return $enmap{$dhv};
+}
 
 my %dud;
 my %fsx;
@@ -162,6 +177,11 @@ $fsdb->{'FsCompetition'}->{'FsScoreFormula'} = \%formula;
 $ref = read_formula($comPk);
 $comformula = $ref;
 $formula{'id'} = uc($ref->{'class'}) . $ref->{'version'};
+$formula{'is_pg_comp'} = '1';
+if ($comp->{'class'} eq 'HG')
+{
+    $formula{'is_pg_comp'} = '0';
+}
 $formula{'use_distance_points'} = '1';
 $formula{'use_time_points'} = '1';
 $formula{'use_departure_points'} = '0';
@@ -172,8 +192,8 @@ $formula{'time_points_if_not_in_goal'} = 1 - (0+$ref->{'sspenalty'});
 $formula{'use_1000_points_for_max_day_quality'} = '1';
 $formula{'time_validity_based_on_pilot_with_speed_rank'} = '1';
 
-$formula{'min_dist'} = $ref->{'mindist'};
-$formula{'nom_dist'} = $ref->{'nomdist'};
+$formula{'min_dist'} = $ref->{'mindist'} / 1000;
+$formula{'nom_dist'} = $ref->{'nomdist'} / 1000;
 $formula{'nom_launch'} = $ref->{'nomlaunch'};
 $formula{'day_quality_override'} = "0";
 $formula{'bonus_gr'} = $ref->{'glidebonus'};
@@ -243,12 +263,14 @@ $intformula{'time_weight'} = $ref->{'weightspeed'};
 $intformula{'distance_weight'} = 1 - $ref->{'weightstart'} - $ref->{'weightspeed'};
 
 $fsdb->{'FsCompetition'}->{'FsParticipants'}->{'FsParticipant'} = \@pilots;
-$sth = $dbh->prepare("select P.* from tblPilot P, tblTaskResult TR, tblTrack TK, tblTask T where P.pilPk=TK.pilPk and TK.traPk=TR.traPk and TR.tasPk=T.tasPk and T.comPk=$comPk group by P.pilPk");
+$sth = $dbh->prepare("select P.*, TK.traClass, TK.traGlider, TK.traDHV from tblPilot P, tblTaskResult TR, tblTrack TK, tblTask T where P.pilPk=TK.pilPk and TK.traPk=TR.traPk and TR.tasPk=T.tasPk and T.comPk=$comPk group by P.pilPk");
 $sth->execute();
 $ref = $sth->fetchrow_hashref();
 while (defined($ref))
 {
     my $pilot;
+    my $glider;
+    my ($wing, $dhv);
 
     $pilot = empty();
     $pilot->{'FsParticipant'} = empty();
@@ -269,7 +291,32 @@ while (defined($ref))
     $pilot->{'FsParticipant'}->{'sponsor'} = $ref->{'pilSponsor'};
     $pilot->{'FsParticipant'}->{'CIVLID'} = $ref->{'pilCIVL'};
     $pilot->{'FsParticipant'}->{'fai_license'} = '1';
+
+    #<FsCustomAttribute name="Wing Model" value="Boomerang 12 "/>
+    #<FsCustomAttribute name="Wing Manufacturer" value="Gin"/>
+    #<FsCustomAttribute name="Wing Color" value=""/>
+    #<FsCustomAttribute name="PG Certification" value="CCC"/>
+    my $custom = emarr();
+
+    if ($ref->{'traClass'} eq 'PG')
+    {
+        $wing = empty();
+        # could try to turn the name into manufacturer & model if I had a list ..
+        $wing = empty();
+        $wing->{'name'} = 'Wing Model';
+        $wing->{'value'} = $ref->{'traGlider'};
+
+        $dhv = empty();
+        $dhv = empty();
+        $dhv->{'name'} = 'PG Certification';
+        $dhv->{'value'} = dhv2en($ref->{'traDHV'});
+
+        push @$custom, $wing;
+        push @$custom, $dhv;
+    }
+
     $pilot->{'FsParticipant'}->{'FsCustomAttributes'} = empty();
+    $pilot->{'FsParticipant'}->{'FsCustomAttributes'}->{'FsCustomAttribute'} = $custom;
 
     #<xs:attribute type="xs:string" name="glider_main_colors" use="optional"/>
 
@@ -284,6 +331,7 @@ my $rankings = emarr();
 my $participants = emarr();
 $fsdb->{'FsCompetition'}->{'FsCompetitionResults'} = empty();
 $fsdb->{'FsCompetition'}->{'FsCompetitionResults'}->{'FsCompetitionResult'} = $rankings;
+#$fsdb->{'FsCompetition'}->{'FsCompetitionResults'} = $rankings;
 $task->{'FsParticipants'}->{'FsParticipant'} = $participants;
 $fsdb->{'FsCompetition'}->{'FsTasks'}->{'FsTask'} = \@tasks;
 
@@ -640,46 +688,70 @@ $taskoverall->{'FsTaskScoreParams'} = $task->{'FsTaskScoreParams'};
 $taskoverall->{'ts'} = $task->{'finish'};
 
 # results
-my %overall;
-my $ranked = emarr();
-
-$overall{'id'} = 'overall';
-$overall{'title'} = 'Overall';
-$overall{'top'} = 'all';
-$overall{'ts'} = strftime("%Y-%m-%dT%H:%M:%S+00:00", localtime);
-$overall{'task_result_pattern'} = '#0';
-$overall{'comp_result_pattern'} = '#0';
-$overall{'comp_result_pattern'} = '#0';
-$overall{'FsParticipant'} = $ranked;
-push @$rankings, \%overall;
 
 my $comp_result=`php -q ../get_json_result.php \"comPk=$comPk\"`;
 my $overall_result_data = from_json($comp_result, {utf8 => 1});
+my $count = 1;
 
 my $rank_data = $overall_result_data->{'data'};
-foreach my $rank_result (@$rank_data)
+foreach my $tk_result (@$rank_data)
 {
-    my $fsp = empty();
-    #print Dumper($rank_result);
+    my $overall = empty();
+    my $ranked = emarr();
+    my $tsklist = emarr();
+    my $first = 0;
 
-    $fsp->{'id'} = $pilmap{$rank_result->{'id'}};
-    $fsp->{'rank'} = $rank_result->{'rank'};
-    $fsp->{'points'} = $rank_result->{'score'};
-    my $tasks = $rank_result->{'tasks'};
-    my $fstask = emarr();
-    $fsp->{'FsTask'} = $fstask;
-    foreach my $task_result (@$tasks)
+    $overall->{'id'} = 'overall';
+    $overall->{'title'} = 'Open';
+    $overall->{'report_title'} = "Competition: Overall V$count";
+    $overall->{'top'} = 'all';
+    $overall->{'version'} = '2';
+    $overall->{'ts'} = strftime("%Y-%m-%dT%H:%M:%S+00:00", localtime);
+    $overall->{'task_result_pattern'} = '#0';
+    $overall->{'comp_result_pattern'} = '#0';
+    $overall->{'FsParticipant'} = $ranked;
+    push @$rankings, $overall;
+
+    foreach my $rank_result (@$tk_result)
     {
-        my $fst = empty();
-        $fst->{'id'} = $task_result->{'id'};    
-        $fst->{'points'} = $task_result->{'score'};
-        $fst->{'counting_points'} = $task_result->{'score'} * $task_result->{'perc'} / 100;
-        $fst->{'counts'} = '1';
-        push @$fstask, $fst;
+        my $fsp = empty();
+        #print Dumper($rank_result);
+
+        $fsp->{'id'} = $pilmap{$rank_result->{'id'}};
+        $fsp->{'rank'} = $rank_result->{'rank'};
+        $fsp->{'points'} = $rank_result->{'score'};
+        my $tasks = $rank_result->{'tasks'};
+        my $fstask = emarr();
+        $fsp->{'FsTask'} = $fstask;
+        foreach my $task_result (@$tasks)
+        {
+            my $fst = empty();
+            $fst->{'id'} = $task_result->{'id'};    
+            $fst->{'points'} = $task_result->{'score'};
+            $fst->{'counting_points'} = $task_result->{'score'} * $task_result->{'perc'} / 100;
+            $fst->{'counts'} = '1';
+            push @$fstask, $fst;
+            if ($first == 0)
+            {
+                push @$tsklist, $task_result->{'id'};
+            }
+        }
+        $first = 1;
+        push @$ranked, $fsp;
     }
 
-    push @$ranked, $fsp;
+    $overall->{"tasks"} = join(';', @$tsklist); 
+    $count++;
 }
+
+#    $overall->{'id'} = 'overall';
+#    $overall->{'title'} = 'Overall';
+#    $overall->{'top'} = 'all';
+#    $overall->{'ts'} = strftime("%Y-%m-%dT%H:%M:%S+00:00", localtime);
+#    $overall->{'task_result_pattern'} = '#0';
+#    $overall->{'comp_result_pattern'} = '#0';
+#    $overall->{'comp_result_pattern'} = '#0';
+#    $overall->{'FsParticipant'} = $ranked;
 
 #print Dumper(\%fsx);
 #
