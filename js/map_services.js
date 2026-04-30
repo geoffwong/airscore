@@ -294,6 +294,36 @@ function add_award_task(tasPk, trackid)
     }
     });
 }
+
+function faiSphereDistance(lat1, lon1, lat2, lon2) {
+  // The Haversine equation
+
+  var R = 6371; // Earth radius in km
+
+  var toRad = function(deg) { return deg * Math.PI / 180; };
+
+  var phi1 = toRad(lat1);
+  var phi2 = toRad(lat2);
+  var deltaPhi = toRad(lat2 - lat1);
+  var deltaLambda = toRad(lon2 - lon1);
+
+  var aRaw =
+    Math.pow(Math.sin(deltaPhi / 2), 2) +
+    Math.cos(phi1) * Math.cos(phi2) *
+    Math.pow(Math.sin(deltaLambda / 2), 2);
+
+  // Clamp because floating-point rounding can make aRaw
+  // slightly outside [0, 1], which could cause NaN
+  var a = Math.min(1, Math.max(0, aRaw));
+
+  var c = 2 * Math.atan2(
+    Math.sqrt(a),
+    Math.sqrt(1 - a)
+  );
+
+  return R * c * 1000.0; // return in meters
+}
+
 function plot_task_route(map, ssr)
 {
     line = Array();
@@ -309,16 +339,16 @@ function plot_task_route(map, ssr)
         var circle;
         lasLat = ssr[row]["rwpLatDecimal"];
         lasLon = ssr[row]["rwpLongDecimal"];
-        sLat = ssr[row]["ssrLatDecimal"];
-        sLon = ssr[row]["ssrLongDecimal"];
+        sLat = ssr[row]["ssrLatDecimal"]; // optimised point
+        sLon = ssr[row]["ssrLongDecimal"]; // optimised point
         cname = count + ".&nbsp;" + ssr[row]["rwpName"];
         crad = ssr[row]["tawRadius"];
         shape = ssr[row]["tawShape"];
 
-        gll = new L.LatLng(lasLat, lasLon);
+        gll = new L.LatLng(lasLat, lasLon); // cylinder centre
         line.push(gll);
 
-        sll = new L.LatLng(sLat, sLon);
+        sll = new L.LatLng(sLat, sLon); // optimised point
         if (!pbounds)
         {
             pbounds = new L.LatLngBounds(gll, sll);
@@ -327,7 +357,7 @@ function plot_task_route(map, ssr)
         {
             pbounds.extend(sll);
         }
-        sline.push(sll);
+        sline.push(sll); // optimised line
       
         count = count + 1;    
   
@@ -367,15 +397,28 @@ function plot_task_route(map, ssr)
         }
         else
         {
-            var adjrad = parseInt(crad);
-            adjrad = adjrad;
-            if (adjrad > 10000)
-            {
-                // try to compensate for google maps inaccuracies with large cylinders
-                adjrad = adjrad * 0.999;
+            var origRad = parseInt(crad);
+
+            // Use optimised point as a reference to get the proper cylinder radius. The map API
+            // uses "fai sphere"-like distance calc to draw a cirle, which is different from the
+            // calculation used to get the optimised point. So, get the distance between the
+            // optimised point and the centre on the FAI sphere - this gives the radius for the
+            // circle, required to put its edge right on the optimised point:
+            var adjRad = faiSphereDistance(lasLat, lasLon, sLat, sLon);
+
+            if (isNaN(adjRad) || Math.abs(adjRad - origRad) > origRad * 0.2) {
+                // adjRad is zero for the start point which is ok,
+                // let's give some margin (in meters) for rounding when checking for outliers:
+                if (adjRad > 1) {
+                    console.warn("Calculated radius " + adjRad +
+                      " differs significantly from original " + origRad + " for point " + cname +
+                      ". Using original radius.");
+                }
+
+                adjRad = origRad;
             }
             circle = new L.Circle(pos, {
-                radius:adjrad,
+                radius:adjRad,
                 stroke:true,
                 color:"#ff0000",
                 opacity:1.0,
