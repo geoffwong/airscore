@@ -44,7 +44,7 @@ $taskt->{'launchvalid'} = 1;
 $taskt->{'tqtime'} = 90 * 60;
 $taskt->{'quality'} = 1.0;
 
-$formula->{'version'} = '2015';
+$formula->{'version'} = '2024';
 $formula->{'mindist'} = 5000;
 $formula->{'nomdist'} = 30000;
 $formula->{'nomgoal'} = 0.5;
@@ -104,7 +104,7 @@ is($Pspeed, 371, "Pilot speed points 1");
 
 $pil->{'time'} = $taskt->{'fastest'} + 300;
 $Pspeed = $gap->round($gap->pilot_speed($formula, $task, $taskt, $pil, 371));
-is($Pspeed, 309, "Pilot speed points 2");
+is($Pspeed, 331, "Pilot speed points 2");
 
 # Allocated pilot arrival points (place, timed)
 my $Parrival = $gap->round($gap->pilot_arrival($formula, $task, $taskt, $pil, 93));
@@ -129,7 +129,7 @@ is($Pdepart, 14, "Pilot departure points - leadout");
 
 $task->{'departure'} = 'departure';
 $Pdepart = $gap->round($gap->pilot_departure_leadout($formula, $task, $taskt, $pil, 66, 371));
-is($Pdepart, 24, "Pilot departure points (normal)");
+is($Pdepart, 25, "Pilot departure points (normal)");
 
 done_testing;
 

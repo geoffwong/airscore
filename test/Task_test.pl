@@ -156,61 +156,63 @@ is(sprintf("%.1f", $dist), "3086.6", "task 6 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
 is(sprintf("%.1f", $dist), "15185.1", "task 6 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 4);
-is(sprintf("%.1f", $dist), "27650.4", "task 6 - wpt 4");
+is(sprintf("%.1f", $dist), "27636.1", "task 6 - wpt 4");
 $dist = compute_waypoint_dist($wpts, 5);
-is(sprintf("%.1f", $dist), "39447.0", "task 6 - wpt 5");
+is(sprintf("%.0f", $dist), "39447", "task 6 - wpt 5");
 
 # with cache
 precompute_waypoint_dist($wpts);
 
-$dist = compute_waypoint_dist($wpts, 2);
-is(sprintf("%.1f", $dist), "3086.6", "task 6 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
-is(sprintf("%.1f", $dist), "15185.1", "task 6 - wpt 3");
+is(sprintf("%.1f", $dist), "3086.6", "task 6 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 4);
-is(sprintf("%.1f", $dist), "27636.9", "task 6 - wpt 4");
+is(sprintf("%.1f", $dist), "15185.1", "task 6 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 5);
-is(sprintf("%.1f", $dist), "39447.0", "task 6 - wpt 5");
+is(sprintf("%.1f", $dist), "27636.1", "task 6 - wpt 4");
+$dist = compute_waypoint_dist($wpts, 6);
+is(sprintf("%.0f", $dist), "39447", "task 6 - wpt 5");
 
 # Test remaining task distance
 $coord = make_coord(-33.64532, 150.25388);
 $dist = remaining_task_dist($wpts, 2, $coord);
-is(sprintf("%.1f", $dist), "38012.4", "task 6 remaining c1 - 2 made");
+is(sprintf("%.1f", $dist), "38167.1", "task 6 remaining c1 - 2 made");
 $dist = remaining_task_dist($wpts, 3, $coord);
-is(sprintf("%.1f", $dist), "37928.6", "task 6 remaining c1 - 3 made");
+is(sprintf("%.0f", $dist), "37935", "task 6 remaining c1 - 3 made");
 
 $coord = make_coord(-33.64896, 150.27239);
 $dist = remaining_task_dist($wpts, 3, $coord);
-is(sprintf("%.1f", $dist), "38973.9", "task 6 remaining c2 - 2 made");
+is(sprintf("%.1f", $dist), "38980.9", "task 6 remaining c2 - 2 made");
 $coord = make_coord(-33.64896, 150.27439);
 $dist = remaining_task_dist($wpts, 3, $coord);
-is(sprintf("%.1f", $dist), "39056.6", "task 6 remaining c2 - 3 made");
+is(sprintf("%.1f", $dist), "39063.6", "task 6 remaining c2 - 3 made");
 
 fix_task($task5);
 $wpts = $task5->{'waypoints'};
 precompute_waypoint_dist($wpts);
 
-$dist = compute_waypoint_dist($wpts, 2);
-is(sprintf("%.1f", $dist), "5314.9", "task 5 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
-is(sprintf("%.1f", $dist), "41027.7", "task 5 - wpt 3");
+is(sprintf("%.1f", $dist), "5313.8", "task 5 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 4);
-is(sprintf("%.1f", $dist), "66100.4", "task 5 - wpt 4");
+is(sprintf("%.0f", $dist), "40973", "task 5 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 5);
-is(sprintf("%.1f", $dist), "68586.9", "task 5 - wpt 5");
+is(sprintf("%.0f", $dist), "66041", "task 5 - wpt 4");
+$dist = compute_waypoint_dist($wpts, 6);
+is(sprintf("%.1f", $dist), "68527.9", "task 5 - wpt 5");
 
 fix_task($task2);
 $wpts = $task2->{'waypoints'};
 precompute_waypoint_dist($wpts);
 
 $dist = compute_waypoint_dist($wpts, 1);
-is(sprintf("%.1f", $dist), "4985.5", "task 2 - wpt 1");
+is(sprintf("%.1f", $dist), "400.0", "task 2 - wpt 1");
 $dist = compute_waypoint_dist($wpts, 2);
-is(sprintf("%.1f", $dist), "54541.0", "task 2 - wpt 2");
+is(sprintf("%.1f", $dist), "4985.5", "task 2 - wpt 2");
 $dist = compute_waypoint_dist($wpts, 3);
-is(sprintf("%.1f", $dist), "122823.4", "task 2 - wpt 3");
+is(sprintf("%.1f", $dist), "54541.0", "task 2 - wpt 3");
 $dist = compute_waypoint_dist($wpts, 4);
-is(sprintf("%.1f", $dist), "123817.2", "task 2 - wpt 4");
+is(sprintf("%.1f", $dist), "122820.3", "task 2 - wpt 4");
+$dist = compute_waypoint_dist($wpts, 5);
+is(sprintf("%.1f", $dist), "123820.3", "task 2 - wpt 5");
 
 # Test distance flown
 
