@@ -442,7 +442,7 @@ CREATE TABLE tblUser
     useEmail    varchar(64)
 );
 
-insert into tblUser (useLogin, usePassword) values ('admin', 'admin');
+insert into tblUser (useLogin, usePassword) values ('admin', '%ADMINPASSWORD%');
 
 CREATE TABLE tblUserSession
 (

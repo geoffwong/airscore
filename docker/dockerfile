@@ -1,0 +1,41 @@
+FROM ubuntu:26.04
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install required packages
+RUN apt-get update && apt-get install -y \
+    apache2 \
+    mysql-server \
+    mysql-client \
+    php \
+    php-mysql \
+    php-cli \
+    php-fpm \
+    libapache2-mod-php \
+    perl \
+    libdbi-perl \
+    libdbd-mysql-perl \
+    libxml-simple-perl \
+    libxml-libxml-perl \
+    libnet-http-perl \
+    libjson-perl \
+    libmysqlclient-dev \
+    make \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Enable Apache CGI module for Perl scripts
+RUN a2enmod cgid
+
+# Set up the web directory
+WORKDIR /var/www
+
+# Expose HTTP port
+EXPOSE 80
+
+# Start it up
+COPY start.sh start.sh
+CMD ./start.sh
+
+
