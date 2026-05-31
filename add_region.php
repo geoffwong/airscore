@@ -103,7 +103,7 @@ function parse_oziwpts($regPk, $link, $lines)
     for ($i = 0; $i < count($lines); $i++)
     {
         $fields = explode(",", $lines[$i]);
-        if (0 + intval($fields[0]) == 0)
+        if (intval($fields[0]) == 0)
             continue;
 
         $count++;
@@ -269,20 +269,20 @@ function accept_waypoints($regPk, $link)
 
 function create_region($region, $link)
 {
-	# check not a dupe ..
+    # check not a dupe ..
     $query = "select * from tblRegion where regDescription like '$region'";
     $result = mysql_query($query, $link) or json_die('Find existing region failed: ' . mysql_error());
     if (mysql_num_rows($result) > 0)
-	{
-		json_die("Region ($region) already exists with that name.");
-		return 0;
-	}
+    {
+        json_die("Region ($region) already exists with that name.");
+        return 0;
+    }
 
     $query = "insert into tblRegion (regDescription) values ('$region')";
     $result = mysql_query($query, $link) or json_die('Create region failed: ' . mysql_error());
     $regPk = mysql_insert_id();
 
-	return $regPk;
+    return $regPk;
 }
 
 

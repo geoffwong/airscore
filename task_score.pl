@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I/home/geoff/bin
+#!/usr/bin/perl -I%PERLBIN%
 
 #
 # Determines how much of a task (and time) is completed

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -I%PERLBIN%
 #
 # Reads in a .sua airspace file
 #

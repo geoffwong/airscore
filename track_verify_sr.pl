@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I../../bin
+#!/usr/bin/perl -I%PERLBIN%
 
 #
 # Verify a track against a task

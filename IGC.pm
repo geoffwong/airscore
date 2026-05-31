@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I/home/geoff/bin
+#!/usr/bin/perl -I%PERLBIN%
 
 #
 # IGC (et al) parsing & tracking analysis stuff 

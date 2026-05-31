@@ -20,6 +20,7 @@ if [ ! -f INITIALISED ]; then
     ./submacro.sh ADMINPASSWORD admin
     ./submacro.sh CGIBIN /var/www/html/
     ./submacro.sh TRACKDIR /var/www/tracks
+    ./submacro.sh PERLBIN ,
     export MYSQL_PWD=
     mysql -u root < xcdb.sql
 fi

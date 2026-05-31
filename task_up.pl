@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I/home/geoff/bin
+#!/usr/bin/perl -I%PERLBIN%
 
 #
 # Task is updated - work out what to do.
