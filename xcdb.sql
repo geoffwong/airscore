@@ -410,8 +410,10 @@ create table tblPilot
     pilEmergencyContact varchar(128),
     pilEmergencyPhone varchar(24),
     pilPhoto        varchar(128),
+    pilFlightWeight integer default 100,
     pilGlider       varchar(32),
     gliGliderClass  enum('1','1/2','2','2/3','competition','floater','kingpost','open','rigid') default 'competition',
+    pilGliderSize   varchar(32) default "M",
     index indHGFA (pilHGFA),
     index indCIVL (pilCIVL)
 );
