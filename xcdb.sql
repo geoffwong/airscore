@@ -71,7 +71,7 @@ create table tblFormula
     forWeightDist    enum ( 'pre2014', 'post2014' ) default 'post2014',
     forScaleToValidity integer default 0,
     forDiscreteClasses integer default 0,
-    forErrorMargin   double default 0.05,
+    forErrorMargin   double default 0.1,
     forAllowStartJump integer default 0
 );
 

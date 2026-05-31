@@ -25,7 +25,7 @@ function add_comp($link, $usePk)
     $regarr = [];
     $regarr['comPk'] = $comPk;
     $regarr['forClass'] = 'gap';
-    $regarr['forVersion'] = '2018';
+    $regarr['forVersion'] = '2024';
     $regarr['forNomDistance'] = 35.0;
     $regarr['forMinDistance'] = 5.0;
     $regarr['forNomTime'] = 90;
