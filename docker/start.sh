@@ -18,7 +18,7 @@ if [ ! -f INITIALISED ]; then
     ./submacro.sh MYSQLPASSWORD dockerpwd
     ./submacro.sh MYSQLHOST localhost
     ./submacro.sh ADMINPASSWORD admin
-    ./submacro.sh CGIBIN /var/www/html
+    ./submacro.sh CGIBIN /var/www/html/
     ./submacro.sh TRACKDIR /var/www/tracks
     export MYSQL_PWD=
     mysql -u root < xcdb.sql
