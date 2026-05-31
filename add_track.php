@@ -5,14 +5,14 @@ header('Content-type: application/json; charset=utf-8');
 
 require_once 'authorisation.php';
 
-function upload_track($hgfa, $file, $comid, $tasPk)
+function upload_track($pilPk, $idselect, $file, $comid, $tasPk)
 {
     # Let the Perl program do it!
     $out = '';
     $retv = 0;
     $traPk = 0;
     #exec(BINDIR . "igcreader.pl $file $pilPk", $out, $retv);
-    exec(BINDIR . "add_track.pl $hgfa $file $comid $tasPk", $out, $retv);
+    exec(BINDIR . "add_track.pl -p $pilPk $file $comid $tasPk", $out, $retv);
 
     if ($retv)
     {
@@ -20,22 +20,16 @@ function upload_track($hgfa, $file, $comid, $tasPk)
         {
             if (!(strpos($out[0], 'Duplicate') === false))
             {
-                $res['result'] = "duplicate";
-                $res['output'] = $out[0];
+                json_die_code('duplicate', $out[0]);
             }
             else
             {
-                $res['result'] = "failed";
-                $res['output'] = serialize($out);
+                json_die_code('failed', serialize($out));
             }
-            print json_encode($res);
-            exit(0);
         }
         else
         {
-            $res['result'] = "failed";
-            print json_encode($res);
-            exit(0);
+            json_die('failed');
         }
     }
 
@@ -52,18 +46,20 @@ function upload_track($hgfa, $file, $comid, $tasPk)
     return $traPk;
 }
 
-function accept_track($comPk, $until, $restrict)
+function accept_track($comPk, $usePk, $until, $restrict)
 {
     //$file = addslashes($_REQUEST['userfile']);
     $hgfa = trim(reqsval('hgfanum'));
+    $idselect = reqsval('idselect');
     $name = strtolower(trim(reqsval('lastname')));
     $route = reqival('route');
+    $missing = 0;
+    $pilPk = 0;
 
     $member = 1;
-
     $link = db_connect();
 
-    $query = "select pilPk, pilHGFA from tblPilot where pilLastName='$name'";
+    $query = "select pilPk, pilHGFA, pilCIVL from tblPilot where pilLastName='$name'";
     $result = mysql_query($query) or json_die('Query failed: ' . mysql_error());
     while ($row=mysql_fetch_array($result, MYSQL_ASSOC))
     {
@@ -71,7 +67,31 @@ function accept_track($comPk, $until, $restrict)
         {
             $pilPk = $row['pilPk'];
             $member = 1;
+            $idselect = 'HGFA';
         }
+        else if ($hgfa == $row['pilCIVL'])
+        {
+            $pilPk = $row['pilPk'];
+            $member = 1;
+            $idselect = 'CIVL';
+        }
+    }
+
+    if ($usePk != 0)
+    {
+        if (reqival('create_missing_pilot') == 1)
+        {
+            $firstname = strtolower(trim(reqsval('firstname')));
+            $query = "insert into tblPilot(pilLastName, pilFirstName,  pilCIVL) values ('$name', $firstname, $hgfa)";
+            $result = mysql_query($query) or json_die('Query failed: ' . mysql_error());
+            $pilPk = mysql_insert_id();
+        }
+    }
+
+    // safety
+    if ($pilPk == 0 || $pilPk == '')
+    {
+        json_die_code('unregistered', "unknown pilot");
     }
 
     if ($restrict == 'registered')
@@ -84,23 +104,15 @@ function accept_track($comPk, $until, $restrict)
         }
     }
 
-
     $gmtimenow = time() - (int)substr(date('O'),0,3)*60*60;
     if ($gmtimenow > ($until + 7*24*3600))
     {
-        $res = [];
-        $res['result'] = "closed";
-        print json_encode($res);
-        exit(0);
+        json_die_code('closed', "$gmtimenow > $until");
     }
 
     if ($member == 0)
     {
-        $res = [];
-        $res['result'] = "unregistered";
-        $res['command'] = $query;
-        print json_encode($res);
-        exit(0);
+        json_die_code('unregistered', $query);
     }
 
     // Copy the upload so I can use it later ..
@@ -112,7 +124,7 @@ function accept_track($comPk, $until, $restrict)
 
     // Process the file
     //$maxPk = upload_track($_FILES['userfile']['tmp_name'], $pilPk, $comContact);
-    $maxPk = upload_track($hgfa, $_FILES['userfile']['tmp_name'], $comPk, $route);
+    $maxPk = upload_track($pilPk, $idselect, $_FILES['userfile']['tmp_name'], $comPk, $route);
 
     $tasPk = 'null';
     $tasType = '';
@@ -159,6 +171,7 @@ if ($comPk < 2)
     $comPk=1;
 }
 
+$usePk = check_auth('system');
 
 $comUnixTo = time() - (int)substr(date('O'),0,3)*60*60;
 $query = "select *, unix_timestamp(date_sub(comDateTo, interval ComTimeOffset hour)) as comUnixTo  from tblCompetition where comPk=$comPk";
@@ -180,7 +193,7 @@ if (mysql_num_rows($result) > 0)
    $freepin = 1; 
 }
 
-$id = accept_track($comPk, $comUnixTo, $comEntryRestrict);
+$id = accept_track($comPk, $usePk, $comUnixTo, $comEntryRestrict);
 
 $query = "select tasPk from tblComTaskTrack where traPk=$id";
 $result = mysql_query($query, $link);
