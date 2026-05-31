@@ -21,14 +21,17 @@ if (!is_admin('admin',$usePk,$comPk))
 }
 
 $id = reqival('tasPk');
-$sql = "SELECT T.*, traPk as Tadded FROM tblTask T left outer join tblComTaskTrack CTT on CTT.tasPk=$id where T.comPk=$comPk group by T.tasPk order by T.tasDate";                                                                              $result = mysql_query($sql,$link);         
-$row = mysql_fetch_array($result, MYSQL_ASSOC);
-
-if ($row and $row['Tadded'] > 0)
+#$sql = "SELECT T.*, traPk as Tadded FROM tblTask T left outer join tblComTaskTrack CTT on CTT.tasPk=$id where T.comPk=$comPk group by T.tasPk order by T.tasDate";
+$sql = "SELECT count(T.tasPk) as Tadded FROM tblTask T inner join tblComTaskTrack CTT on CTT.tasPk=$id where T.comPk=$comPk group by T.tasPk order by T.tasDate";
+$result = mysql_query($sql,$link);
+if (mysql_num_rows($result) > 0)
 {
-    json_die('Tracks associated with task, unable to delete task');
+    $row = mysql_fetch_array($result, MYSQL_ASSOC);
+    $added = $row['Tadded'];
+    json_die("Tracks ($added) associated with task, unable to delete task");
     exit(1);
 }
+
 if ($id > 0)
 {
     $query = "delete from tblTask where tasPk=$id";
