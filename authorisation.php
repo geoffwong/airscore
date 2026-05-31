@@ -305,4 +305,13 @@ function json_die($msg)
     print json_encode($res);
     exit(0);
 }
+function json_die_code($result, $msg)
+{
+    error_log($msg);
+    $ret = [];
+    $res['result'] = $result;
+    $res['error'] = $msg;
+    print json_encode($res);
+    exit(0);
+}
 ?>
