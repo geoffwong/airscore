@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     libxml-libxml-perl \
     libnet-http-perl \
     libjson-perl \
+    libinline-perl \
     libmysqlclient-dev \
     make \
     git \

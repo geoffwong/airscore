@@ -13,6 +13,7 @@ if [ ! -f INITIALISED ]; then
     git clone https://github.com/geoffwong/airscore.git html
     cd html
     chmod a+x submacro.sh
+    chmod a+x *pl *pm
     ./submacro.sh DATABASE xcdb
     ./submacro.sh MYSQLUSER xc
     ./submacro.sh MYSQLPASSWORD dockerpwd
