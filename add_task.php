@@ -13,7 +13,7 @@ function insert_waypoint($link, $regPk, $wpt)
     $lat = $wpt["lat"];
     $lon = $wpt["lon"];
     $alt = $wpt["altSmoothed"];
-    $desc = rtrim($wpt["description"]);
+    $desc = addslashes(rtrim($wpt["description"]));
 
     $map = [ 'regPk' => $regPk, 'rwpPk' => $rwpPk, 'rwpName' => $name, 'rwpLatDecimal' => $lat, 'rwpLongDecimal' => $lon, 'rwpAltitude' => $alt, 'rwpDescription' => $desc ];
 
