@@ -39,12 +39,13 @@ sub get_pilot_details
     my ($dbh, $comPk, $igc, $pilPk) = @_;
     my $dhv = 'competition';
     my $glider = 'unknown';
+    my $hdpilot;
 
     # get previous track info for pilot
     $sql = "select traGlider, traDHV from tblTrack where pilPk=$pilPk order by traPk desc";
     $sth = $dbh->prepare($sql);
     $sth->execute();
-    if  ($ref = $sth->fetchrow_hashref())
+    if ($ref = $sth->fetchrow_hashref())
     {
         $glider = $ref->{'traGlider'};
         $dhv = $ref->{'traDHV'};
@@ -52,10 +53,9 @@ sub get_pilot_details
     else
     {
         # can't find a previous track - get it from IGC
-
         my $header = read_header($igc);
-        my $hdpilot = $header->{'pilot'};
 
+        $hdpilot = $header->{'pilot'};
         if (defined($header->{'glider'}))
         {
             $glider = $hdglider;
@@ -87,7 +87,12 @@ sub get_pilot_key
     }
     $sth = $dbh->prepare($sql);
     $sth->execute();
-    if ($sth->rows() > 1)
+    if ($sth->rows() ==  1)
+    {
+        $ref = $sth->fetchrow_hashref();
+        $pilPk = $ref->{'pilPk'};
+    }
+    elsif ($sth->rows() > 1)
     {
         print "Pilot ambiguity for $pil, use pilot HGFA/FAI#\n";
         while  ($ref = $sth->fetchrow_hashref())
@@ -97,7 +102,7 @@ sub get_pilot_key
         }
     }
 
-    ($pilot, $glider, $dhv) = get_pilot_details($dbh, $comPk, $igc, $pil);
+    ($pilot, $glider, $dhv) = get_pilot_details($dbh, $comPk, $igc, $pilPk);
     if (!defined($pilPk) and defined($pilot))
     {
         # split lastname(s) and select from database .. pick one?
