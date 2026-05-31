@@ -103,7 +103,7 @@ function parse_oziwpts($regPk, $link, $lines)
     for ($i = 0; $i < count($lines); $i++)
     {
         $fields = explode(",", $lines[$i]);
-        if (0 + $fields[0] == 0)
+        if (0 + intval($fields[0]) == 0)
             continue;
 
         $count++;
