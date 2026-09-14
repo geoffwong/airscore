@@ -258,11 +258,12 @@ sub read_track_waypoints
         my %wpt;
         %wpt = ();
 
-        $wpt{'dlat'} = $ref->{'wptLatDecimal'};
-        $wpt{'dlong'} = $ref->{'wptLongtDecimal'};
+        $wpt{'dlat'} = 0+$ref->{'wptLatDecimal'};
+        $wpt{'dlong'} = 0+$ref->{'wptLongDecimal'};
+        $wpt{'lat'} = $wpt{'dlat'} * $pi / 180;
+        $wpt{'long'} = $wpt{'dlong'} * $pi / 180;
         $wpt{'position'} = $ref->{'wpPosition'};
         $wpt{'time'} = $ref->{'wpTime'};
-        $lasLon = 0.0 + $row['wptLongDecimal'];
         push @waypoints, \%wpt;
     }
 
