@@ -135,7 +135,10 @@ sub reduce_flight
 
         #$bucket{'centre'} = $coord;
         push @blist, $coord;
-        $inwpt = in_task_waypoint($task, $coord);
+        if (defined($task))
+        {
+            $inwpt = in_task_waypoint($task, $coord);
+        }
 
         #print Dumper($coord);
         $next = shift @$full; 
@@ -147,6 +150,7 @@ sub reduce_flight
             $next = shift @$full; 
             if (defined($task))
             {
+                # buckets should only contain in/out waypoints
                 if (in_task_waypoint($task, $next) != $inwpt)
                 {
                     last;
@@ -219,20 +223,22 @@ sub segment_flight
         # Start the line segment with 2 points (so it describes a line ...)
         push @track, $first;
         $next = shift @$flight;
-        if (defined($next))
+        if (!defined($next))
         {
-            push @track, $next;
-        }
-        else
-        {
+            $segtr{'track'} = \@track;
+            $segtr{'entry'} = $track[0];
+            $segtr{'exit'} =  $track[0];
+            #my $seglen = distance($segtr{'entry'}->{'centre'}, $segtr{'exit'}->{'centre'});
+            $segtr{'length'} = 0;
+            my $inwpte = $segtr{'entry'}->{'inwaypoint'};
+            my $inwptx = $segtr{'entry'}->{'inwaypoint'};
+            print("segment ine=$inwpte inx=$inwptx seglen=$seglen\n");
+            push @segment, \%segtr;
             return \@segment;
         }
 
-        $next = shift @$flight;
         while (defined($next))
         {
-
-            $son = straight_on(\@track, $next, $track_width);
             if (defined($task))
             {
                 $samesector = 0;
@@ -242,34 +248,39 @@ sub segment_flight
                 }
             }
 
+            $son = 1;
+            if (scalar @track > 1)
+            {
+                $son = straight_on(\@track, $next, $track_width);
+            }
+
             if ($son == 1 and $samesector == 1)
             {
                 # build up a straight track portion
                 push @track, $next;
-                $next = shift @$flight;
             }
             elsif ($son == -1)
             {
                 # -1 .. ignore it ..
-                $next = shift @$flight;
-                if (!defined($next))
-                {
-                    $first = $next;
-                }
             }
             else
             {
                 # otherwise start a new track segment
-                $first = $track[scalar @track - 1];
-                unshift @$flight, $next;
+                $first = $next;
                 last;
             }
+
+            $next = shift @$flight;
         }
 
         $segtr{'track'} = \@track;
         $segtr{'entry'} = $track[0];
         $segtr{'exit'} =  $track[scalar @track - 1];
-        $segtr{'length'} = distance($segtr{'entry'}->{'centre'}, $segtr{'exit'}->{'centre'});
+        my $seglen = distance($segtr{'entry'}->{'centre'}, $segtr{'exit'}->{'centre'});
+        $segtr{'length'} = $seglen;
+        my $inwpte = $segtr{'entry'}->{'inwaypoint'};
+        my $inwptx = $segtr{'entry'}->{'inwaypoint'};
+        print("segment ine=$inwpte inx=$inwptx seglen=$seglen\n");
 
         push @segment, \%segtr;
     }
@@ -586,11 +597,23 @@ sub maximise_endpoint
 }
 
 my $maxdist;
+my $inmaxdist;
 my @best;
+my @bestintask;
 my @limit;
 
 #
 # Generate all the segment combinations possible 
+# - recursive - relies on the above global variables
+# 
+# $flight - list of segments
+# $dist - total accumulated (recursive) distance of segments
+# $base - flight point to measure distance from
+# $basearr - the segements so far
+# $min - segment to start from
+# $max - last segment
+# $num - number of segments to add
+# $lim - limit
 #
 sub combo_generator
 {
@@ -615,6 +638,7 @@ sub combo_generator
         
         if ($num > 1)
         {
+            # Still have combinations to generate
             if ( ($max-($i)) >= $num )
             {
                 if (!defined($limit[$lim]) || $i < $limit[$lim])
@@ -643,6 +667,15 @@ sub combo_generator
         {
             $tdist = $dist + qckdist2($flight->[$base]->{'entry'}->{'centre'}, $flight->[$i]->{'entry'}->{'centre'});
 
+            # if it's in_waypoint_task then - then do a 'bestintask'
+            #if ($tdist > $inmaxdist)
+            #{
+            #    check all points in_waypoint_task
+            #    $inmaxdist = $tdist;
+            #    @bestintask = @$basearr;
+            #    push @bestintask, $i;
+            #    print "  new bestintask (seg=$i) dist=$maxdist: ";
+            #}
             if ($tdist > $maxdist)
             {
                 $maxdist = $tdist;
@@ -686,8 +719,7 @@ sub create_segments
         $newseg = ();
         $newseg->{'entry'} = $flight->[$best->[$i]]->{'entry'};
         $newseg->{'exit'} = $flight->[$best->[$i+1]]->{'entry'};
-        $len = distance($newseg->{'entry'}->{'centre'},
-                                        $newseg->{'exit'}->{'centre'});
+        $len = distance($newseg->{'entry'}->{'centre'}, $newseg->{'exit'}->{'centre'});
         $newseg->{'length'} = $len;
 
         push @selectsegs, $newseg;
@@ -697,6 +729,9 @@ sub create_segments
 }
 
 
+#
+# Uses combo_generator to create '@best' segments
+#
 sub bf_select_segments
 {
     my ($flight, $segments) = @_;
@@ -877,6 +912,80 @@ sub select_segments
     pop @$flight;
 
     return $result;
+}
+
+
+#
+# Remove intermediate segments which 'corner' outside a waypoint
+#
+sub filter_intask_segments
+{
+    my ($segments, $task) = @_;
+    my $waypoints = $task->{'waypoints'};
+    my $numwpts = scalar @$waypoints;
+    my $numsegs = scalar @$segments;
+    my @selected;
+    my $exclude = 0;
+    my $newseg;
+    my $len;
+
+    if ($numsegs < 3) 
+    {
+        return $segments;
+    }
+
+    # assumes first segment in sector ..
+    my $inwpt;
+    my $first = $segments->[0];
+    push @selected, $first;
+    for (my $x = 1; $x < $numsegs-1; $x++)
+    {
+        $exclude = 0;
+        $inwpt = $segments->[$x]->{'entry'}->{'inwaypoint'};
+        #print Dumper($segments->[$x]);
+        #print("checking seg=$x inwpt=$inwpt\n");
+        while ($inwpt == 0 and $x < $numsegs-1)
+        {
+            #my $t1 = $first->{'track'};
+            #my $t2 = $segments->[$x]->{'track'};
+            #$first->{'track'}= @$t1, @$t2;
+
+            $exclude = 1;
+            $len = $segments->[$x]->{'length'};
+            print("excluding $x of $numsegs ($len m)\n");
+            $x++;
+            $inwpt = $segments->[$x]->{'entry'}->{'inwaypoint'}; 
+        }
+        if ($exclude)
+        {
+            # new segment 
+            $newseg = ();
+            $newseg->{'entry'} = $first->{'entry'};
+            #$newseg->{'track'} = $first->{'track'}; 
+            $newseg->{'exit'} = $segments->[$x]->{'entry'};
+            $len = distance($newseg->{'entry'}->{'centre'}, $newseg->{'exit'}->{'centre'});
+            print("newseg len=$len m\n");
+            push @selected, $newseg;
+            $first = $newseg;
+            if ($x >= $numsegs-1) 
+            {
+                last;
+            }
+        }
+
+        # add a nonmal one
+        $len = $segments->[$x]->{'length'};
+        print("including $x of $numsegs ($len m)\n");
+        push @selected, $segments->[$x];
+        $first = $segments->[$x];
+    }
+
+    # add the last one ..
+    $len = $segments->[$x]->{'length'};
+    print("including $x of $numsegs ($len m)\n");
+    push @selected, $first;
+
+    return \@selected;
 }
 
 # 
@@ -1232,8 +1341,8 @@ if ($numb == 1)
     print "Only one bucket - redo\n";
     $reduced = reduce_flight($flight, $bucket_radius/4, $task);
 }
-#print Dumper($reduced);
 #print "num buckets=$numb\n";
+#print Dumper($reduced);
 
 $traPk = $flight->{'traPk'};
 #store_buckets($dbh, $traPk, $reduced);
@@ -1246,6 +1355,14 @@ if (!defined($segmented) || scalar @$segmented == 0)
     exit(1);
 }
 #print "Number of unreduced segments=", scalar @$segmented, "\n";
+
+if (defined($task))
+{
+    # filter out intermediate segments that aren't in a waypoint
+    #print("orig=", Dumper($segmented));
+    $segmented =  filter_intask_segments($segmented, $task);
+    #print("filtered=", Dumper($segmented));
+}
 
 # Ok .. work out total length
 foreach my $seg (@$segmented)
@@ -1261,8 +1378,9 @@ if (scalar(@$segmented) > $turnpoints)
 {
     $segmented = bf_select_segments($segmented,$turnpoints+1);
     #$segmented = select_segments($segmented,$turnpoints+1);
+    # @filter segments
     $segmented = optimise_waypoints($segmented);
-    print "Number of reduced segments=", scalar @$segmented, "\n";
+    #print "Number of reduced segments=", scalar @$segmented, "\n";
 }
 store_waypoints($dbh, $traPk, $segmented);
 
