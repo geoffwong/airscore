@@ -155,12 +155,38 @@ sub reduce_flight
     return \@reduced;
 }
 
+
+#
+# Returns 1 if the point is in one of the task waypoints
+# Assumes we're only checking within the radius of the waypoints for AAT
+#
+sub in_task
+{
+    my ($task, $point) = @_;
+    my $wpt = $task->{'waypoints'};
+    my $total = scalar @$wpt;
+
+    for (my $cnt = 0; $cnt < $total; $cnt++)
+    {
+        my $dst  = qckdist2($wpt->[$cnt], $point);
+        my $radius = $wpt->[$cnt]->{'radius'};
+
+        print("dst=$dst radius=$radius\n");
+        if ($dst <= $wpt->[$cnt]->{'radius'}) 
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 #
 # Reduce into a bunch of straight line segments.
 #
 sub segment_flight
 {
-    my ($flight) = @_;
+    my ($flight, $task) = @_;
     my $first;
     my $next;
     my $son;
@@ -171,6 +197,7 @@ sub segment_flight
     {
         my @track;
         my %segtr;
+        my $inwpt = 1;
 
         @track = ();
         %segtr = ();
@@ -193,8 +220,12 @@ sub segment_flight
 
             #print Dumper($next);
             $son = straight_on(\@track, $next, $track_width);
+            if (defined($task))
+            {
+                $inwpt = in_task($task, $next);
+            }
 
-            if ($son == 1)
+            if ($son == 1 or $inwpt == 0)
             {
                 # build up a straight track portion
                 push @track, $next;
@@ -1079,7 +1110,7 @@ my $unreduced;
 my $numb;
 my $totlen;
 
-if (scalar(@ARGV) < 1)
+if (scalar(@ARGV) < 2)
 {
     print "optimise_flight.pl <traPk> <comPk> [tasPk] [turnpoints]\n";
     exit(1);
@@ -1119,6 +1150,7 @@ if ($tasPk > 0)
     $task = read_task($tasPk);
     if ($task->{'type'} eq 'olc' or 
         $task->{'type'} eq 'free' or 
+        $task->{'type'} eq 'aat' or 
         $task->{'type'} eq 'airgain')
     {
         $flight = task_trim($task, $flight);
@@ -1191,7 +1223,7 @@ $traPk = $flight->{'traPk'};
 #store_buckets($dbh, $traPk, $reduced);
 
 # Reduce into line segments
-my $segmented = segment_flight($reduced);
+my $segmented = segment_flight($reduced, $task);
 if (!defined($segmented) || scalar @$segmented == 0)
 {
     print "Unable to segment flight\n";

@@ -245,6 +245,29 @@ sub read_track
     return \%track;
 }
 
+sub read_track_waypoints
+{
+    my ($traPk) = @_;
+    my @waypoints;
+    my $ref;
+
+    my $sth = $dbh->prepare("SELECT * FROM tblWaypoint where traPk=$traPk order by wptTime");
+    $sth->execute();
+    while ($ref = $sth->fetchrow_hashref()) 
+    {
+        my %wpt;
+        %wpt = ();
+
+        $wpt{'dlat'} = $ref->{'wptLatDecimal'};
+        $wpt{'dlong'} = $ref->{'wptLongtDecimal'};
+        $wpt{'position'} = $ref->{'wpPosition'};
+        $wpt{'time'} = $ref->{'wpTime'};
+        $lasLon = 0.0 + $row['wptLongDecimal'];
+        push @waypoints, \%wpt;
+    }
+
+    return \@waypoints;
+}
 
 #
 # Read a task from the database

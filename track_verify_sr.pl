@@ -57,9 +57,107 @@ sub validate_olc
     return \%result;
 }
 
+#
+# Extra checks for aat
+#   - turnpoints made
+#   - time taken
+#   - distance flown
+# Assumes:
+#   - validate_olc already run with the number of intermediate waypoints
+#   - all intermediate waypoints are 'entry' (rather than exit)
+#
+sub validate_aat
+{
+    my ($flight, $task, $tps) = @_;
+
+    my $traPk;
+    my $tasPk;
+    my $comPk;
+    my $dist;
+    my $out;
+    my $made = 1;
+    my %result;
+    my $taskwpt;
+    my $lasttime;
+    
+    $traPk = $flight->{'traPk'};
+    $tasPk = $task->{'tasPk'};
+    $comPk = $task->{'comPk'};
+
+    # Find optimal turnpoints
+    $out = `optimise_flight.pl $traPk $comPk $tasPk $tps`;
+
+    # Walk through flight turnpoints and ensure each waypoint made
+    my $taskwpts = $task->{'waypoints'};
+    my $optwpts = read_track_waypoints($traPk);
+    # skip start and goal
+    for my $wptcnt (1 .. scalar @{$optwpts} - 1)
+    {
+        $dist = distance($optwpts->[$wptcnt], $taslwpts->[$wptcpt]);
+        if (made_entry_waypoint($taskwpts, $made, $optwpts->[$made], $dist, 0, 0))
+        {
+            $lasttime = $optwpts->[$wptcnt]->{'time'};
+            $made++;
+        }
+    }
+
+    # Find goal time (if made) - else set to task time
+    my $coords = $flight->{'coords'};
+    my $utcmod = determine_utcmod($task, $coords->[0]);
+    # use 'startclose' as the minimum task time
+    my $goaltime = $task->{'sstartclose'};
+    my $madegoal = 0;
+    my $goalpt = $taskwpts->[scalar @$taskwpts];
+
+    if ($made == scalar @$taskwpts - 1)
+    {
+        for my $coord_count (1 .. scalar @{$coords} - 1)
+        {
+            $coord = $coords->[$coord_count];
+            $coord->{'time'} = $coord->{'time'} - $utcmod;
+            if ($coord->{'time'} < $lasttime)
+            {
+                # skip until we up to the last optimal point we saw (before goal)
+                next;
+            }
+
+            # Check the task isn't finished ..
+            $dist = distance($coord, $goalpt);
+            if (made_entry_waypoint($taskwpts, $goalpt, $coord, $dist, 0, 0))
+            {
+                $madegoal = 1;
+                if ($coord->{'time'} > $taskendtime)
+                {
+                    $goaltime = 0 + $coord->{'time'};
+                    last;
+                }
+            }
+        }
+    }
+
+    # Create output info
+    my $sth = $dbh->prepare("select * from tblTrack where traPk=$traPk");
+    my $ref;
+    $sth->execute();
+    if ($ref = $sth->fetchrow_hashref())
+    {
+        $dist = $ref->{'traLength'};
+    }
+
+    $result{'start'} = $task->{'sstart'};
+    $result{'goal'} = $madegoal;
+    $result{'startSS'} = $task->{'sstart'};
+    $result{'endSS'} = $goaltime;
+    $result{'distance'} = $dist;
+    $result{'closest'} = 0;
+    $result{'coeff'} = 0;
+    $result{'waypoints_made'} = scalar @optwpts;
+    return \%result;
+}
+
 sub made_entry_waypoint
 {
-    my ($wpt, $waypoints, $wmade, $coord, $dist, $awarded, $wpt_modifier) = @_;
+    my ($waypoints, $wmade, $coord, $dist, $awarded, $wpt_modifier) = @_;
     my $made = 0;
     my $wpt = $waypoints->[$wmade];
 
@@ -632,7 +730,7 @@ sub validate_task
         #
         if ($wpt->{'how'} eq 'entry')
         {
-            if (made_entry_waypoint($wpt, $waypoints, $wmade, $coord, $dist, $awarded, $wpt_modifier))
+            if (made_entry_waypoint($waypoints, $wmade, $coord, $dist, $awarded, $wpt_modifier))
             {
                 # Do task timing stuff
                 if (($wpt->{'type'} eq 'start') and (!defined($starttime)) or
@@ -1189,6 +1287,18 @@ if ($task->{'type'} eq 'olc')
 {
     $info = validate_olc($flight, $task, 3);
 
+}
+elsif ($task->{'type'} eq 'aat')
+{
+    my $waypts = $task->{'waypoints'};
+    my $numpts = scalar @$waypts - 2;
+    if ($numpts < 1)
+    {
+        $numpts = 1;
+    }
+    $info = validate_aat($fliat, $task, $numpts);
+
+    # now validate the turn point count + goal
 }
 elsif ($task->{'type'} eq 'free')
 {
