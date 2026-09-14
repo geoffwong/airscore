@@ -89,11 +89,15 @@ sub validate_aat
 
     # Walk through flight turnpoints and ensure each waypoint made
     my $taskwpts = $task->{'waypoints'};
+    my $numwpts = scalar @$taskwpts;
     my $optwpts = read_track_waypoints($traPk);
     # skip start and goal
+    print "optwpts=", Dumper($optwpts);
     for my $wptcnt (1 .. scalar @{$optwpts} - 1)
     {
-        $dist = distance($optwpts->[$wptcnt], $taslwpts->[$wptcpt]);
+        $dist = distance($optwpts->[$wptcnt], $taskwpts->[$wptcnt]);
+        #print Dumper($optwpts->[$wptcnt]); print Dumper($taskwpts->[$wptcnt]);
+        print("wpt=$wptcnt dist=$dist\n");
         if (made_entry_waypoint($taskwpts, $made, $optwpts->[$made], $dist, 0, 0))
         {
             $lasttime = $optwpts->[$wptcnt]->{'time'};
@@ -104,18 +108,21 @@ sub validate_aat
     # Find goal time (if made) - else set to task time
     my $coords = $flight->{'coords'};
     my $utcmod = determine_utcmod($task, $coords->[0]);
-    # use 'startclose' as the minimum task time
-    my $goaltime = $task->{'sstartclose'};
-    my $madegoal = 0;
-    my $goalpt = $taskwpts->[scalar @$taskwpts];
 
-    if ($made == scalar @$taskwpts - 1)
+    # use 'startclose' as the minimum task time
+    my $goaltime = $task->{'sstartclose'} - $utcmod;
+    my $madegoal = 0;
+    my $goalpt = $taskwpts->[$numwpts-1];
+
+    print("made=$made taskwpts=$numwpts\n");
+    if ($made == $numwpts)
     {
         for my $coord_count (1 .. scalar @{$coords} - 1)
         {
-            $coord = $coords->[$coord_count];
-            $coord->{'time'} = $coord->{'time'} - $utcmod;
-            if ($coord->{'time'} < $lasttime)
+            my $coord = $coords->[$coord_count];
+            my $ctime = 0 + $coord->{'time'} - $utcmod;
+            #print("ctime=$ctime lasttime=$lasttime\n");
+            if ($ctime < $lasttime)
             {
                 # skip until we up to the last optimal point we saw (before goal)
                 next;
@@ -123,12 +130,13 @@ sub validate_aat
 
             # Check the task isn't finished ..
             $dist = distance($coord, $goalpt);
-            if (made_entry_waypoint($taskwpts, $goalpt, $coord, $dist, 0, 0))
+            if (made_entry_waypoint($taskwpts, $numwpts-1, $coord, $dist, 0, 0))
             {
                 $madegoal = 1;
-                if ($coord->{'time'} > $taskendtime)
+                print("ctime=$ctime goaltime=$goaltime\n");
+                if ($ctime > $goaltime)
                 {
-                    $goaltime = 0 + $coord->{'time'};
+                    $goaltime = $ctime;
                     last;
                 }
             }
@@ -151,7 +159,7 @@ sub validate_aat
     $result{'distance'} = $dist;
     $result{'closest'} = 0;
     $result{'coeff'} = 0;
-    $result{'waypoints_made'} = scalar @optwpts;
+    $result{'waypoints_made'} = scalar @$optwpts;
     return \%result;
 }
 
@@ -160,7 +168,6 @@ sub made_entry_waypoint
     my ($waypoints, $wmade, $coord, $dist, $awarded, $wpt_modifier) = @_;
     my $made = 0;
     my $wpt = $waypoints->[$wmade];
-
 
     if ($awarded)
     {
@@ -193,14 +200,14 @@ sub made_entry_waypoint
     {
         if ($debug)
         {
-            print "did not make entry waypoint ($dist) ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $coord->{'time'}, "\n";
+            print "did not make entry waypoint ($dist) ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius=", $wpt->{'radius'}, " at tm=", $coord->{'time'}, "\n";
         }
         return 0;
     }
 
     if ($debug)
     {
-        print "MADE_entry_waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius ", $wpt->{'radius'}, " at ", $coord->{'time'}, " dist=$dist awarded=$awarded\n";
+        print "MADE_entry_waypoint ", $wpt->{'number'}, "(", $wpt->{'type'}, ") radius=", $wpt->{'radius'}, " at tm=", $coord->{'time'}, " dist=$dist awarded=$awarded\n";
     }
 
     return 1;
@@ -280,15 +287,7 @@ sub re_entered_start
     if ($rpt->{'how'} eq 'entry')
     {
         #print "Repeat check ", $rpt->{'type'}, " (reflag=$reflag lastin=$lastin): dist=$rdist\n";
-        if ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}))
-        {
-            if ($debug)
-            {
-                print "(Re)exited entry start/speed cylinder\n";
-            }
-            $newreflag = $lastin;
-        }
-        elsif (($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))) # and ($reflag == $lastin))
+        if (($rdist < ($rpt->{'radius'}+$rpt->{'margin'}))) # and ($reflag == $lastin))
         {
             # last point inside ..
             #$starttime = 0 + $coord->{'time'};
@@ -308,6 +307,14 @@ sub re_entered_start
             #}
             $newreflag = -1;
             $reset = 1;
+        }
+        elsif ($rdist >= ($rpt->{'radius'}-$rpt->{'margin'}))
+        {
+            if ($debug)
+            {
+                print "(Re)exited entry start/speed cylinder\n";
+            }
+            $newreflag = $lastin;
         }
     }
 
@@ -1296,7 +1303,8 @@ elsif ($task->{'type'} eq 'aat')
     {
         $numpts = 1;
     }
-    $info = validate_aat($fliat, $task, $numpts);
+    print("Found aat with $numpts pts\n");
+    $info = validate_aat($flight, $task, $numpts);
 
     # now validate the turn point count + goal
 }

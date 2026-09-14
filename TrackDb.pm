@@ -285,7 +285,7 @@ sub read_task
         print "No valid task for this track ($tasPk)\n";
         exit 1; 
     }
-    my $sth = $dbh->prepare("select unix_timestamp(T.tasStartTime) as ustime, unix_timestamp(T.tasFinishTime) as uftime,T.*, C.comTimeOffset from tblTask T, tblCompetition C where T.tasPk=$tasPk and T.comPk=C.comPk");
+    my $sth = $dbh->prepare("select unix_timestamp(T.tasTaskStart) as ustime, unix_timestamp(T.tasFinishTime) as uftime,T.*, C.comTimeOffset from tblTask T, tblCompetition C where T.tasPk=$tasPk and T.comPk=C.comPk");
     $sth->execute();
     if  ($ref = $sth->fetchrow_hashref()) 
     {
@@ -371,7 +371,7 @@ sub read_task
 
     }
 
-    $sth = $dbh->prepare("select T.*,R.*,S.ssrLatDecimal,S.ssrLongDecimal,S.ssrNumber from tblRegionWaypoint R, tblTaskWaypoint T left outer join tblShortestRoute S on S.tasPk=$tasPk and S.ssrNumber=T.tawNumber where T.tasPk=$tasPk and T.rwpPk=R.rwpPk order by T.tawNumber");
+    $sth = $dbh->prepare("select T.*,R.*,S.ssrLatDecimal,S.ssrLongDecimal,S.ssrNumber from tblRegionWaypoint R, tblTaskWaypoint T left outer join tblShortestRoute S on S.tasPk=$tasPk and S.ssrNumber=T.tawNumber where T.tasPk=$tasPk and T.rwpPk=R.rwpPk group by T.tawNumber order by T.tawNumber");
     $sth->execute();
     while ($ref = $sth->fetchrow_hashref()) 
     {

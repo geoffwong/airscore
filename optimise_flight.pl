@@ -60,7 +60,11 @@ sub task_trim
         $count++;
     }
 
-    # Check the waypoints are made?
+    # @todo: check the waypoints are made and trim points after goal is made ..
+    # my $numwpts = scalar @$waypoints;
+    # walk through coords checking if waypoints are made to goal
+    # then splice off points after that
+    # integrate into above loop
 
     return $flight;
 }
@@ -109,13 +113,13 @@ sub max_distance_from
 #
 sub reduce_flight
 {
-    my ($flight, $radius) = @_;
+    my ($flight, $radius, $task) = @_;
     my $full;
     my @reduced;
     my $dist;
     my $next;
     my $count;
-
+    my $inwpt;
 
     $full = $flight->{'coords'};
     my $coord = shift @$full; 
@@ -131,24 +135,34 @@ sub reduce_flight
 
         #$bucket{'centre'} = $coord;
         push @blist, $coord;
+        $inwpt = in_task_waypoint($task, $coord);
 
         #print Dumper($coord);
         $next = shift @$full; 
         $count = 0;
-        while (defined($next) && 
-               (($dist=qckdist2($coord, $next)) < $radius))
+        while (defined($next) and (($dist=qckdist2($coord, $next)) < $radius))
         {
             $count++;
             push @blist, $next;
             $next = shift @$full; 
+            if (defined($task))
+            {
+                if (in_task_waypoint($task, $next) != $inwpt)
+                {
+                    last;
+                }
+            }
         }
         #print Dumper($blist[int($count/2)]);
         $bucket{'centre'} = $blist[int($count/2)];
-
         $bucket{'bucket'} = \@blist;
+        if (defined($task))
+        {
+            $bucket{'inwaypoint'} = in_task_waypoint($task, $bucket{'centre'});
+        }
         push @reduced, \%bucket;
 
-        $coord = shift @$full;
+        $coord = $next;
         #print Dumper($coord);
     }
 
@@ -160,7 +174,7 @@ sub reduce_flight
 # Returns 1 if the point is in one of the task waypoints
 # Assumes we're only checking within the radius of the waypoints for AAT
 #
-sub in_task
+sub in_task_waypoint
 {
     my ($task, $point) = @_;
     my $wpt = $task->{'waypoints'};
@@ -171,9 +185,9 @@ sub in_task
         my $dst  = qckdist2($wpt->[$cnt], $point);
         my $radius = $wpt->[$cnt]->{'radius'};
 
-        print("dst=$dst radius=$radius\n");
         if ($dst <= $wpt->[$cnt]->{'radius'}) 
         {
+            # print("in waypoint ($cnt): dst=$dst radius=$radius\n");
             return 1;
         }
     }
@@ -197,7 +211,7 @@ sub segment_flight
     {
         my @track;
         my %segtr;
-        my $inwpt = 1;
+        my $samesector = 1;
 
         @track = ();
         %segtr = ();
@@ -218,27 +232,23 @@ sub segment_flight
         while (defined($next))
         {
 
-            #print Dumper($next);
             $son = straight_on(\@track, $next, $track_width);
             if (defined($task))
             {
-                $inwpt = in_task($task, $next);
+                $samesector = 0;
+                if ($first->{'inwaypoint'} == $next->{'inwaypoint'})
+                {
+                    $samesector = 1;
+                }
             }
 
-            if ($son == 1 or $inwpt == 0)
+            if ($son == 1 and $samesector == 1)
             {
                 # build up a straight track portion
                 push @track, $next;
                 $next = shift @$flight;
             }
-            elsif ($son == 0)
-            {
-                # otherwise start a new track segment
-                $first = $track[scalar @track - 1];
-                unshift @$flight, $next;
-                last;
-            }
-            else
+            elsif ($son == -1)
             {
                 # -1 .. ignore it ..
                 $next = shift @$flight;
@@ -246,6 +256,13 @@ sub segment_flight
                 {
                     $first = $next;
                 }
+            }
+            else
+            {
+                # otherwise start a new track segment
+                $first = $track[scalar @track - 1];
+                unshift @$flight, $next;
+                last;
             }
         }
 
@@ -819,8 +836,7 @@ sub select_segments
         #}
 
         # this should be a maximise endpoint function ...
-        if ((scalar @selected < $segments-1)
-             && ($selected[$num-1] < scalar @$flight))
+        if ((scalar @selected < $segments-1) and ($selected[$num-1] < scalar @$flight))
         {
             $possible{$num} = maximise_endpoint($flight, \@selected);
             #push @selected, scalar @$flight-1;
@@ -1184,7 +1200,7 @@ if ($tasPk > 0)
     }
 
     # 'Free' distance from an anchored launch point
-    if ($tasPk > 0 && $turnpoints < 1)
+    if ($tasPk > 0 and $turnpoints < 1)
     {
         my $wpt;
     
@@ -1209,12 +1225,12 @@ if ($tasPk > 0)
 }
 
 # Reduce into buckets
-my $reduced = reduce_flight($flight, $bucket_radius);
+my $reduced = reduce_flight($flight, $bucket_radius, $task);
 $numb = scalar @$reduced;
 if ($numb == 1)
 {
     print "Only one bucket - redo\n";
-    $reduced = reduce_flight($flight, $bucket_radius/4);
+    $reduced = reduce_flight($flight, $bucket_radius/4, $task);
 }
 #print Dumper($reduced);
 #print "num buckets=$numb\n";
