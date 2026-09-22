@@ -6,7 +6,7 @@ var all_enums = {
 	comTeamScoring   : [ 'aggregate', 'team-gap', 'handicap' ],
 	comTeamOver      : [ 'best', 'selected' ],
     comClass         : [ 'PG','HG','mixed' ],
-    forClass         : [ 'gap', 'ozgap', 'pwc', 'sahpa', 'nzl', 'ggap', 'nogap', 'jtgap', 'rtgap', 'timegap', 'wptgap' ],
+    forClass         : [ 'gap', 'ozgap', 'pwc', 'sahpa', 'nzl', 'ggap', 'nogap', 'jtgap', 'rtgap', 'timegap', 'wptgap', 'aatgap' ],
     forArrival       : [ 'none', 'place', 'timed' ],
     forDeparture     : [ 'none', 'departure', 'leadout', 'kmbonus' ],
     forDistMeasure   : [ 'average', 'median' ],
